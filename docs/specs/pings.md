@@ -16,7 +16,7 @@ Work often stalls on people, not code. Vantage tracks three situations where you
 
 ## Detection
 
-- **Directed at you:** mentions, DMs, review requests, assignments, replies in threads you started.
+- **Directed at you:** mentions, DMs, review requests, assignments, replies in threads you started. On GitHub the notification `reason` is only a hint: it is sticky per thread and can be overwritten, so a review request or mention is confirmed from the PR timeline and comments fetched after the thread bump ([GitHub research](../research/github.md#e3-reason-values-and-subject-shapes)).
 - **Question or request:** rules first (question mark, request phrases like "can you", "could you", "please", "any update"), then an optional yes/no judge: "Does this message ask the recipient to reply or act?" Gated by the data policy setting.
 - **Who to tell when done:** the issue reporter, the person whose message created a `commitment` item, review requesters, and anyone you promised in a thread linked to the item.
 - **Thresholds** (configurable, working hours only):
@@ -24,7 +24,7 @@ Work often stalls on people, not code. Vantage tracks three situations where you
 | Case | Default |
 |---|---|
 | `owe_reply` from a person | amber after 4 working hours, red after 1 working day |
-| `owe_reply` from a bot | ignored unless you opt in |
+| `owe_reply` from a bot | ignored unless you opt in (bots wrote 93% of comments on the owner's PRs in 90 days, recognized by actor type) |
 | `follow_up_due` | 2 working days; 1 for a review request blocking a merge |
 | `close_the_loop` | as soon as the item ships; amber after 1 working day |
 
