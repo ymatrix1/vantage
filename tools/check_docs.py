@@ -5,7 +5,7 @@ Checks:
 2. Every decision and proposal in docs/DECISIONS.md has the five required fields (D30), a valid status
    and owner, and an accepted decision is never edited or removed relative to the base branch (D69).
 3. The SQLite migration files are numbered without gaps or duplicates, named NNNN-slug.sql, and a migration
-   on the base branch is never edited, renamed or removed (D91).
+   on the base branch is never edited, renamed or removed (D93).
 4. No secrets or personal identifiers slipped into tracked text files (privacy boundary).
 
 Exits non-zero with a list of problems. Standard library only.

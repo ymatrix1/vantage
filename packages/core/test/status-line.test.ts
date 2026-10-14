@@ -41,7 +41,7 @@ describe("track glyphs per stage and proof state", () => {
     ["built, weak proof", item({ proofStatus: "weak" }), "●●◐○○○"],
     ["proven L1", item({ ...proven, proofLevel: 1 }), "●●●¹○○○"],
     ["proven L2", item({ ...proven, proofLevel: 2 }), "●●●²○○○"],
-    ["docs only", item({ docsOnly: true, proofStatus: "not_required" }), "●●◌○○○"],
+    ["docs only", item({ docsOnly: true, proofStatus: "not_required" }), "●●–○○○"],
     ["built with flag", item({ flags: ["unproven_claim"] }), "●●◍!○○○"],
     ["asked with flag", item({ stage: "asked", flags: ["forgotten"] }), "●◍!○○○○"],
     ["proven with flag", item({ ...proven, proofLevel: 2, flags: ["thrashing"] }), "●●◍!○○○"],

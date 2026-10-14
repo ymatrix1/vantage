@@ -163,8 +163,8 @@ const ledger = (): { number: number; sha256: string }[] => {
 const writeOldDatabase = (): void => {
   mkdirSync(home, { recursive: true });
   const old = new DatabaseSync(dbPath());
-  for (const m of loadMigrations().filter((x) => x.number <= 5)) old.exec(m.sql);
-  old.exec(`DELETE FROM schema_meta; INSERT INTO schema_meta (version) VALUES (5);
+  for (const m of loadMigrations().filter((x) => x.number <= 6)) old.exec(m.sql);
+  old.exec(`DELETE FROM schema_meta; INSERT INTO schema_meta (version) VALUES (6);
     INSERT INTO events (source, source_id, kind, occurred_at, ingested_at, payload_json)
       VALUES ('claude_code', 'old1', 'file.edited', '2026-01-05T09:00:00Z', '2026-01-05T09:00:00Z', '{}');`);
   old.close();

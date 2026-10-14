@@ -26,7 +26,7 @@ Read these before changing behaviour. If code and docs disagree, raise it; don't
 
 The detailed rules live in `.agents/rules/`, and all of them apply:
 
-- [plugin/a2v/rules/communication.md](plugin/a2v/rules/communication.md): how to talk to people: answer first, visual, short, one example for complex ideas. Shared with every project through the `a2v` plugin.
+- [plugin/a2v/rules/communication.md](plugin/a2v/rules/communication.md): how to talk to people: answer first, compact (one idea per line, cause → effect with →, about 12 lines unless asked), symbols for state, one example for complex ideas. Final reports from sessions follow it too. Shared with every project through the `a2v` plugin.
 - [.agents/rules/privacy-boundary.md](.agents/rules/privacy-boundary.md): what may never enter the repo, CI, issues or fixtures.
 - [.agents/rules/evidence-over-claims.md](.agents/rules/evidence-over-claims.md): prove changes before calling them done.
 - [.agents/rules/docs-and-specs.md](.agents/rules/docs-and-specs.md): keeping docs and specs in sync.

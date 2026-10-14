@@ -1,4 +1,4 @@
-// Migration runner (D91): files, checksums, historical versions. All data is synthetic.
+// Migration runner (D93): files, checksums, historical versions. All data is synthetic.
 import { DatabaseSync } from "node:sqlite";
 import {
   copyFileSync,
@@ -31,8 +31,8 @@ afterEach(() => {
 });
 
 const ALL = loadMigrations();
-/** Releases before the ledger (migration 6) kept only `schema_meta`. */
-const LEGACY_LAST = 5;
+/** Releases before the ledger (migration 7) kept only `schema_meta`. */
+const LEGACY_LAST = 6;
 
 /** Rows to add after migration N has run, so every older release's data shape is present. */
 const SEED: Record<number, string> = {

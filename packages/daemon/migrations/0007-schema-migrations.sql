@@ -1,4 +1,4 @@
--- Record of applied migrations (D91). The runner fills it: it adds a row for every migration it applies
+-- Record of applied migrations (D93). The runner fills it: it adds a row for every migration it applies
 -- and, when this migration creates the table, backfills the ones applied before it (the older
 -- `schema_meta` version carries no checksums). `schema_meta` stays as a mirror of the latest number.
 CREATE TABLE schema_migrations (

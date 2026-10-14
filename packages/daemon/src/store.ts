@@ -54,6 +54,17 @@ export class Store {
     return Number(r.changes) > 0;
   }
 
+  /** Records the branch for a tool event, whether or not the event is stored yet. First value wins. */
+  setEventBranch(source: string, sourceId: string, branch: string): void {
+    this.db
+      .prepare("INSERT OR IGNORE INTO event_branches (source, source_id, branch) VALUES (?, ?, ?)")
+      .run(source, sourceId, branch);
+  }
+
+  countEventBranches(): number {
+    return num(this.db.prepare("SELECT COUNT(*) AS n FROM event_branches").get(), "n");
+  }
+
   getCursor(source: string): number {
     return num(this.db.prepare("SELECT cursor FROM cursors WHERE source = ?").get(source), "cursor");
   }

@@ -9,7 +9,7 @@ export {
   migrate,
 } from "./migrations.ts";
 export type { Migration, MigrationErrorCode } from "./migrations.ts";
-export { BACKFILL_DAYS, backfillTranscripts, ingestSpool } from "./ingest.ts";
+export { BACKFILL_DAYS, backfillEventBranches, backfillTranscripts, ingestSpool } from "./ingest.ts";
 export type { IngestResult } from "./ingest.ts";
 export { runOnce } from "./run.ts";
 export type { RunOptions } from "./run.ts";

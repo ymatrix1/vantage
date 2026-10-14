@@ -1,4 +1,4 @@
-// Forward-only SQLite migrations (D17, D91). One file per migration, `migrations/NNNN-slug.sql`, applied in
+// Forward-only SQLite migrations (D17, D93). One file per migration, `migrations/NNNN-slug.sql`, applied in
 // numeric order, one transaction each. Applied migrations are recorded with the sha256 of their text in
 // `schema_migrations`; a changed, missing or newer migration stops startup with a MigrationError.
 // How to add one, and the rules: docs/specs/data-schema.md.

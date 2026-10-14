@@ -1,0 +1,40 @@
+<script lang="ts">
+  // What the six dots mean. Drawn with the same Dot component as the rows so the shapes match.
+  // Not modal: nothing here traps focus, and Esc (handled by the page) closes it.
+  import { TRACK_STAGES } from "@vantage/core/track";
+  import Dot from "./Dot.svelte";
+  import { DOT_WORDS, STAGE_LEGEND, STATE_LEGEND, STATE_ORDER } from "./legend";
+
+  let { onclose }: { onclose: () => void } = $props();
+</script>
+
+<section id="dot-legend" class="mb-4 rounded-lg border border-border p-4 text-sm" aria-labelledby="dot-legend-title">
+  <div class="mb-2 flex items-baseline justify-between">
+    <h2 id="dot-legend-title" class="font-medium">What the dots mean</h2>
+    <button type="button" class="text-xs text-muted-foreground underline" onclick={onclose}>Close</button>
+  </div>
+  <p class="mb-3 text-muted-foreground">
+    The shape carries the meaning; colour only reinforces it. An agent saying "done" never moves a dot: only evidence does.
+  </p>
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+      <h3 class="mb-1 text-xs font-medium text-muted-foreground">Six stages, left to right</h3>
+      <ol class="space-y-1">
+        {#each TRACK_STAGES as s (s)}
+          <li><span class="font-medium">{STAGE_LEGEND[s].name}</span> <span class="text-muted-foreground">{STAGE_LEGEND[s].question}</span></li>
+        {/each}
+      </ol>
+    </div>
+    <div>
+      <h3 class="mb-1 text-xs font-medium text-muted-foreground">Six dot states</h3>
+      <ul class="space-y-1">
+        {#each STATE_ORDER as st (st)}
+          <li class="flex items-center gap-2">
+            <Dot state={st} title={DOT_WORDS[st]} />
+            <span><span class="font-medium">{STATE_LEGEND[st].shape}.</span> <span class="text-muted-foreground">{STATE_LEGEND[st].meaning}</span></span>
+          </li>
+        {/each}
+      </ul>
+    </div>
+  </div>
+</section>
