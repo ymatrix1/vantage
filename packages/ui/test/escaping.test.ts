@@ -1,5 +1,16 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fakeApi, item, press, renderApp, rows, track, traceOf } from "./helpers";
+import {
+  cleanup,
+  emptyFacets,
+  fakeApi,
+  group,
+  item,
+  press,
+  renderApp,
+  rows,
+  track,
+  traceOf,
+} from "./helpers";
 
 afterEach(cleanup);
 
@@ -48,5 +59,34 @@ describe("API strings render as text, never HTML", () => {
     expect(text).toContain(SCRIPT);
     expect(text).toContain(BOLD);
     expect(rows(root)[0]?.textContent).toContain(`${IMG} ${BOLD}`);
+  });
+});
+
+describe("the new controls render API strings as text too", () => {
+  it("escapes group labels, facet values, active chips and the empty-result text", async () => {
+    const facets = {
+      ...emptyFacets(),
+      repo: { [IMG]: 2 },
+      branch: { [BOLD]: 1 },
+      age: { today: 1, week: 0, older: 0 },
+    };
+    fakeApi({
+      track: () => ({
+        body: track([item({ id: "g1", title: "Row" })], {
+          facets,
+          groups: [group(`g"><b id="injected">`, `${SCRIPT}${BOLD}`, [item({ id: "g1", title: "Row" })])],
+        }),
+      }),
+    });
+    const root = renderApp(`?repo=${encodeURIComponent(IMG)}&q=${encodeURIComponent(BOLD)}`);
+    await vi.waitFor(() => expect(rows(root)).toHaveLength(1));
+    expect(root.querySelector("img")).toBeNull();
+    expect(root.querySelector("script")).toBeNull();
+    expect(root.querySelector("#injected")).toBeNull();
+    expect(root.querySelector("b")).toBeNull();
+    const text = root.textContent ?? "";
+    expect(text).toContain(`${SCRIPT}${BOLD}`);
+    expect(text).toContain(IMG);
+    expect(text).toContain(BOLD);
   });
 });

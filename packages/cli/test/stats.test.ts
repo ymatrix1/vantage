@@ -266,6 +266,27 @@ describe("vantage stats on a synthetic store", () => {
     expect(text).toMatch(/Sub-agent runs\s+1/);
   });
 
+  it("shows sessions on a branch before and after the transcript branch fix (D92)", () => {
+    const store = fixture();
+    // The fixture's events all carry a branch in the payload: A, B, C on branches, D and E on main.
+    const base = json().sessions.branch;
+    expect(base).toMatchObject({ sessions: 5, before: 3, after: 3 });
+    // A tool event stored without a branch; the transcript line names one beside it.
+    put(store, "sess-late", "file.edited", ago(H), {
+      cwd: "/w/acme-secret/app",
+      path: "/w/acme-secret/app/z.ts",
+    });
+    store.setEventBranch("claude_code", "e" + seq, "feat/ftk-9-late");
+    const st = json();
+    const text = run([]).out.join("JOIN");
+    store.close();
+    expect(st.sessions.branch).toMatchObject({ sessions: 6, before: 3, after: 4 });
+    expect(st.sessions.branch.beforeShare).toBeCloseTo(0.5);
+    expect(st.sessions.branch.afterShare).toBeCloseTo(4 / 6);
+    expect(text).toMatch(/Sessions on a branch, before\s+50%/);
+    expect(text).toMatch(/Sessions on a branch, after\s+67%/);
+  });
+
   it("limits to a window with --since", () => {
     const store = fixture();
     const st = json(["--since", "7d"]);

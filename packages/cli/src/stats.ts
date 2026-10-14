@@ -57,6 +57,18 @@ export interface Stats {
     /** Session links on provisional per-session items. */
     provisional: number;
     anchoredShare: number | null;
+    /**
+     * Sessions in scope with an event on a non-default branch, counting only the branch stored in the event
+     * (before D92) and also the branch recorded beside it from the transcript (after). The gap is what the
+     * transcript branch fix added.
+     */
+    branch: {
+      sessions: number;
+      before: number;
+      after: number;
+      beforeShare: number | null;
+      afterShare: number | null;
+    };
   };
   stages: { asked: number; built: number; proven: number; other: number };
   /** Items with a code edit (Built or Proven, docs-only excluded) and how many reached Proven. */
@@ -87,6 +99,7 @@ const share = (part: number, whole: number): number | null => (whole > 0 ? part 
 const HOUR = 3_600_000;
 const SAFE_WORD = /^[a-z][a-z0-9_.-]{0,31}$/;
 
+const onBranch = (expr: string): string => `${expr} IS NOT NULL AND ${expr} NOT IN ('main', 'master')`;
 const KIND = "substr(w.item_key, 1, instr(w.item_key, ':') - 1)";
 /**
  * A fallback title: every provisional session item. Its title is built from repo, branch and date, or
@@ -204,6 +217,18 @@ export function computeStats(db: DatabaseSync, opts: StatsOptions, now: Date, db
         ...is.params,
       )
     : [];
+  const hasBranches =
+    q1("SELECT 1 AS x FROM sqlite_master WHERE type = 'table' AND name = 'event_branches'") !== undefined;
+  const payloadBranch = "json_extract(e.payload_json, '$.branch')";
+  const sideBranch = hasBranches ? "b.branch" : "NULL";
+  const br = q1(
+    `SELECT COUNT(DISTINCT e.session_id) AS total,
+            COUNT(DISTINCT CASE WHEN ${onBranch(payloadBranch)} THEN e.session_id END) AS before,
+            COUNT(DISTINCT CASE WHEN ${onBranch(`COALESCE(${payloadBranch}, ${sideBranch})`)} THEN e.session_id END) AS after
+       FROM events e ${hasBranches ? "LEFT JOIN event_branches b ON b.source = e.source AND b.source_id = e.source_id" : ""}
+       WHERE e.session_id IS NOT NULL AND ${es.where}`,
+    ...es.params,
+  );
   const counts = perItem.map((r) => n(r, "sc")).toSorted((a, b) => a - b);
   const sessions = counts.reduce((a, b) => a + b, 0);
   const derived = perItem.reduce((a, r) => a + n(r, "dc"), 0);
@@ -297,6 +322,13 @@ export function computeStats(db: DatabaseSync, opts: StatsOptions, now: Date, db
       anchored: sessions - provisional,
       provisional,
       anchoredShare: share(sessions - provisional, sessions),
+      branch: {
+        sessions: n(br, "total"),
+        before: n(br, "before"),
+        after: n(br, "after"),
+        beforeShare: share(n(br, "before"), n(br, "total")),
+        afterShare: share(n(br, "after"), n(br, "total")),
+      },
     },
     stages,
     proven: { count: provenCount, of: edited, share: share(provenCount, edited) },
@@ -465,6 +497,20 @@ function sessionLines(st: Stats): Line[] {
       value: pct(x.anchoredShare),
       goal: `>= ${pct(GOALS.anchoredSessionShare.good)}`,
       meaning: "sessions on an issue, branch or worktree item, not a provisional per-session item",
+    },
+    {
+      verdict: null,
+      label: "Sessions on a branch, before",
+      value: pct(x.branch.beforeShare),
+      goal: "",
+      meaning: "sessions with a non-default branch in the stored event itself",
+    },
+    {
+      verdict: null,
+      label: "Sessions on a branch, after",
+      value: pct(x.branch.afterShare),
+      goal: "",
+      meaning: "same, also using the branch read from the transcript (D92); the gap is what that fix added",
     },
     {
       verdict: null,
