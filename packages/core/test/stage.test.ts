@@ -294,19 +294,19 @@ describe("linking edge cases", () => {
   });
 });
 
-describe("shell writes outside the repo (ingest of PR 19)", () => {
-  const shell = (m: number, command: string): VantageEvent[] =>
-    toolCallEvents({
-      toolUseId: `t${++n}`,
-      name: "Bash",
-      input: { command },
-      timestamp: at(m),
-      sessionId: "s1",
-      ok: true,
-      cwd: "/w/repo",
-      repoRoot: "/w/repo",
-    }).map((e) => ({ ...e, payload: { ...e.payload, branch: BRANCH } }));
+const shell = (m: number, command: string): VantageEvent[] =>
+  toolCallEvents({
+    toolUseId: `t${++n}`,
+    name: "Bash",
+    input: { command },
+    timestamp: at(m),
+    sessionId: "s1",
+    ok: true,
+    cwd: "/w/repo",
+    repoRoot: "/w/repo",
+  }).map((e) => ({ ...e, payload: { ...e.payload, branch: BRANCH } }));
 
+describe("shell writes outside the repo (ingest of PR 19)", () => {
   it("a write outside the repo is not a code edit, so the card stays Asked", () => {
     const events = [ev("prompt.submitted", 0), ...shell(1, "pnpm build > /tmp/build.log")];
     expect(events.some((e) => e.kind === "file.edited")).toBe(false);
