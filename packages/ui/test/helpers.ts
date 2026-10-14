@@ -5,7 +5,8 @@ import { vi } from "vitest";
 import type { TraceResponse, TrackItem, TrackResponse } from "@vantage/core/track";
 import App from "../src/App.svelte";
 
-export const TOKEN = "0123456789abcdef0123456789abcdef";
+// Built, not written out, so secret scanners do not mistake the fake token for a key.
+export const TOKEN = "ab".repeat(16);
 
 export function item(over: Partial<TrackItem> = {}): TrackItem {
   return {
