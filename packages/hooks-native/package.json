@@ -1,0 +1,7 @@
+{
+  "name": "@vantage/hooks-native",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Rust spool hook (D72). Built with cargo; this package holds the parity test.",
+  "type": "module"
+}

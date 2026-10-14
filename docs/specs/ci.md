@@ -30,6 +30,7 @@ Runs on every push to `main` and every PR. Run locally with `pnpm check`.
 | Unit and replay tests | Vitest; event fixtures replayed through linker, stage machine and scorers |
 | OS matrix | Windows and Linux |
 | Hook budget | Hooks finish in under 100 ms and exit 0 with the daemon down |
+| Native hook parity | `packages/hooks-native/test/parity.test.ts` runs the Rust and Node hooks side by side (same line, exit 0 with the daemon down and with an unwritable spool, `Stop` handoff). It skips with a warning when `cargo` is missing; CI sets `VANTAGE_REQUIRE_NATIVE=1`, so there a missing toolchain fails |
 | Fixture scrub check | Fails on anything in fixtures that looks unscrubbed (ids, emails, URLs, tokens) |
 | Security tests | Server rejects wrong Origin or Host, missing token, state change on GET (D32) |
 
@@ -38,6 +39,12 @@ Runs on every push to `main` and every PR. Run locally with `pnpm check`.
 - "Deploy" for a personal tool means a release that installs locally (npm package or binary, open question Q18).
 - Tagged releases build artifacts, attach a changelog, and include schema migrations.
 - Upgrades back up the database first (see [operations](operations.md#upgrades-backup-and-uninstall)).
+
+### Native hook release (D72)
+
+`.github/workflows/release-native.yml` builds `packages/hooks-native` for `win32-x64`, `darwin-arm64`, `darwin-x64`, `linux-x64` and `linux-arm64`, then `tools/assemble-native-packages.mjs` writes one npm package per target (`@vantage/hook-<target>`, with `os` and `cpu`) plus the `optionalDependencies` map the main package adds. It runs on pull requests that touch the crate and on manual dispatch, and always ends in `npm publish --dry-run`.
+
+A real publish exists only as the `publish` job: manual dispatch, `publish=true`, `confirm=publish`, environment `npm-publish`, secret `NPM_TOKEN` in that environment. **The environment, the secret and the npm scope are not configured**; the job fails at the token check until the user sets them up (`vantage-d28s`).
 
 ## Rules
 

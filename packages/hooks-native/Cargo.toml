@@ -1,0 +1,17 @@
+[package]
+name = "vantage-hook"
+version = "0.0.0"
+edition = "2021"
+publish = false
+description = "Native spool hook: same {v, receivedAt, hook} line as packages/hooks/src/collect.ts (D72)"
+
+[dependencies]
+# preserve_order keeps the hook object's key order identical to JSON.stringify in collect.ts.
+serde_json = { version = "1", features = ["preserve_order"] }
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
