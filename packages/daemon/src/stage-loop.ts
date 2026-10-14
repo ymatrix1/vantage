@@ -14,6 +14,8 @@ export interface StageLoopOptions {
   statusFile?: string;
   /** Test seam; defaults to the wall clock. */
   now?: () => Date;
+  /** Called after every successful pass, e.g. to push the changes to live clients. */
+  onPass?: (result: StagePassResult, at: Date) => void;
   /** Receives errors from a pass; the loop keeps running. */
   onError?: (e: unknown) => void;
 }
@@ -37,6 +39,11 @@ export function createStageLoop(options: StageLoopOptions): StageLoop {
       } catch (e) {
         options.onError?.(e); // a failed write must not hide the pass result
       }
+    }
+    try {
+      options.onPass?.(result, at);
+    } catch (e) {
+      options.onError?.(e); // a failed push must not hide the pass result
     }
     return result;
   };

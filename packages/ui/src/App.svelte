@@ -3,6 +3,7 @@
   import type { TraceResponse, TrackItem, TrackResponse } from "@vantage/core/track";
   import { describeError, fetchTrace, fetchTrack } from "$lib/api";
   import Dots from "$lib/Dots.svelte";
+  import { applyPush, startLive } from "$lib/live";
   import Trace from "$lib/Trace.svelte";
   import { ago } from "$lib/relative-time";
 
@@ -16,6 +17,8 @@
   let open = $state<string | null>(null);
   let trace = $state<TraceResponse | null>(null);
   let showKeys = $state(false);
+  // True while the socket is open: pushes replace polling (D81).
+  let live = $state(false);
 
   const flat = $derived<TrackItem[]>(data ? data.groups.flatMap((g) => g.items) : []);
   const total = $derived(flat.length);
@@ -76,8 +79,31 @@
 
   onMount(() => {
     void load();
-    const t = setInterval(() => void load(), POLL_MS);
-    return () => clearInterval(t);
+    const t = setInterval(() => {
+      if (!live) void load();
+    }, POLL_MS);
+    const stop = startLive({
+      onOpen() {
+        live = true;
+        void load();
+      },
+      onPush(push) {
+        if (!data) return;
+        const next = applyPush(data, push);
+        if (next) {
+          data = next;
+          error = null;
+          now = new Date();
+        } else void load();
+      },
+      onDown() {
+        live = false;
+      },
+    });
+    return () => {
+      clearInterval(t);
+      stop();
+    };
   });
 </script>
 
