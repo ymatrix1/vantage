@@ -14,7 +14,7 @@ Asked → Parked (explicit user choice)
 
 | Stage | Enters when | Evidence source |
 |---|---|---|
-| **Asked** | A deterministic anchor appears: Jira ticket assigned to the user, branch or worktree created, `TodoWrite` item, a commitment message by the user in Slack, Jira or GitHub. Or an LLM proposes the item from chat and the user confirms. | Anchors, user confirmation |
+| **Asked** | A deterministic anchor appears: Jira or Linear issue assigned to the user, branch or worktree created, `TodoWrite` item, a commitment message by the user in Slack, Jira, Linear or GitHub. Or an LLM proposes the item from chat and the user confirms. | Anchors, user confirmation |
 | **Built** | The first code edit linked to the item exists, uncommitted or committed on its branch. | git, hook events |
 | **Proven** | A passing test or data check that exercises the changed code ran **after** the last linked edit. With behaviors defined, progress shows as "N of M proven". | Hook events (`PostToolUse` on Bash), exit codes, output |
 | **Reviewed** | A linked PR is approved with all blocking threads resolved. | GitHub |
@@ -73,7 +73,7 @@ Flags sit on any card, whatever the stage.
 | `unproven_claim` | Session claimed completion with edits and no qualifying proof after the last edit | amber |
 | `thrashing` | 3+ consecutive edit → failing command cycles on the same files | amber |
 | `forgotten` | Asked or Built with no activity for N days (default 5), or a user commitment with no follow-up | amber |
-| `unseen_mention` | Slack or Jira mention, or GitHub review request, with no reply or reaction from the user | amber; red if the person is blocked |
+| `unseen_mention` | Slack, Jira or Linear mention, or GitHub review request, with no reply or reaction from the user | amber; red if the person is blocked |
 | `claimed_fixed` | A reply says fixed or done on a review thread, but no later commit touches the commented lines | amber |
 | `shipped_unverified` | Deployed, but no post-deploy check ran within N hours (default 24) | amber |
 

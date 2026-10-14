@@ -15,7 +15,7 @@ The end goal is less stress from constant change: fewer things to remember, fewe
 Primary user: one developer (the author) who:
 
 - runs several Claude Code and Codex sessions in parallel, often in git worktrees;
-- works from Jira tickets, GitHub PRs with human and bot reviewers, and Slack;
+- works from Jira or Linear issues, GitHub PRs with human and bot reviewers, and Slack;
 - ships to production systems and data pipelines that need checking after deploy;
 - loses track of what was asked, built, proven, shipped and verified across sessions and days.
 
@@ -32,7 +32,7 @@ Team features are out of scope for now. The design should not prevent them later
 | P5 | **Thrashing** | Edit → fail → edit → fail loops instead of building a reproduction harness. |
 | P6 | **Review loop** | Review comments, fixes, re-review requests and "claimed fixed" replies are hard to track across PRs. |
 | P7 | **Sessions waiting on me** | A session sits on a permission prompt or question while attention is elsewhere. |
-| P8 | **Unseen mentions** | Slack and Jira mentions, and review requests, never answered. |
+| P8 | **Unseen mentions** | Slack, Jira and Linear mentions, and review requests, never answered. |
 | P9 | **No priority or effort view** | Everything looks equally urgent; no sense of difficulty or how effort was spread. |
 | P10 | **Text overload** | Reconstructing state means reading long transcripts and diffs. |
 | P11 | **Stress from constant change** | Many small updates, none batched, none marked safe to ignore. |
@@ -53,7 +53,7 @@ Team features are out of scope for now. The design should not prevent them later
 - Replacing Claude Code, Codex or session managers (Agent View, Pane, Conductor). Vantage reads from them; it does not run agents.
 - A chat UI or multi-model wrapper.
 - Team dashboards, multi-user sync, billing.
-- Two-way Jira sync. Read first; write-back only on explicit user action.
+- Two-way issue tracker sync (Jira or Linear). Read first; write-back only on explicit user action.
 - Cursor and web-chat (chatgpt.com, claude.ai) ingestion.
 - Being a monitoring system. Vantage links to existing monitoring and reads its signals.
 
@@ -100,7 +100,7 @@ Measured on the author's own usage:
 
 ## 9. Constraints and risks
 
-- **Company data.** Slack, Jira, code and monitoring are company data. Store locally; any LLM call must respect company policy and prefer zero-retention routes.
+- **Company data.** Slack, Jira or Linear, code and monitoring are company data. Store locally; any LLM call must respect company policy and prefer zero-retention routes.
 - **Wrong links destroy trust.** Every inferred link must be visible and undoable.
 - **Notification fatigue.** Interrupt only for red items.
 - **Format drift.** Claude Code and Codex log formats change; ingestion must tolerate unknown fields.

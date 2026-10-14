@@ -1,6 +1,6 @@
 # Roadmap
 
-Built in layers. Local sources first, then GitHub, then CI/CD and monitoring, then Jira and Slack. Each phase must be useful on its own.
+Built in layers. Local sources first, then GitHub, then CI/CD and monitoring, then the issue tracker (Jira or Linear) and Slack. Each phase must be useful on its own.
 
 ## Phase 0: measure (1–2 days)
 
@@ -16,7 +16,7 @@ Built in layers. Local sources first, then GitHub, then CI/CD and monitoring, th
 
 ## Phase 2: work items and board
 
-- Linker with deterministic anchors (branch or worktree, Jira key in branch, todos).
+- Linker with deterministic anchors (branch or worktree, issue key in branch, todos).
 - Stage machine for Asked, Built and Proven.
 - Local web UI: Board and Item detail; "since yesterday" filter.
 - Ghost proposals from sessions with no edits.
@@ -39,9 +39,10 @@ Built in layers. Local sources first, then GitHub, then CI/CD and monitoring, th
 - `shipped_unverified` and `regression` flags; follow-up cards.
 - Monitoring adapter for the tool actually in use.
 
-## Phase 6: Jira and Slack
+## Phase 6: issue tracker and Slack
 
-- Assigned tickets as Asked items; priority and due date.
+- Tracker adapter with Jira and Linear implementations; build whichever is in use first.
+- Assigned issues as Asked items; priority and due date.
 - Unseen mentions; commitment detection.
 
 ## Later

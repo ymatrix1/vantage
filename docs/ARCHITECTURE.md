@@ -21,7 +21,7 @@ Everything runs locally. One background process (the daemon) ingests, links and 
 | git | Local repos and worktrees | commits, branches, dirty files, merges, reverts |
 | GitHub | `gh` API, polled | PRs, reviews, threads, review requests, deployments, Actions runs |
 | CI/CD and monitoring | GitHub Actions and deployments first; monitoring through adapters (tool TBD) | deploys, post-deploy test results, alerts, incidents |
-| Jira | REST API or the Atlassian MCP, polled | assigned tickets, priority, due date, mentions, transitions |
+| Issue tracker: Jira or Linear | Jira: REST API or the Atlassian MCP. Linear: GraphQL API or the Linear MCP. Polled, behind one tracker adapter interface. | assigned issues, priority, due date, mentions, status transitions |
 | Slack | API or the Slack MCP, polled | mentions, user commitments, thread replies |
 
 Remote sources are polled at modest intervals. Nothing is pushed to them without an explicit user action.
@@ -37,7 +37,7 @@ Remote sources are polled at modest intervals. Nothing is pushed to them without
 
 See [work item model](specs/work-item-model.md).
 
-- Deterministic anchors first (Jira key, PR, branch or worktree, todo, Slack thread).
+- Deterministic anchors first (issue key, PR, branch or worktree, todo, Slack thread).
 - Inferred links (LLM or a judgment model) only as suggestions until confirmed.
 - Every link is visible and undoable.
 
@@ -72,7 +72,7 @@ Candidates: a fast decision model (for example Jev from TypeSafe AI) or a small 
 
 - All data local by default.
 - Any judgment or LLM call sends the minimum context (a hunk, a comment, a command), never whole transcripts.
-- Must comply with company policy for code, Jira and Slack data; prefer zero-retention routes.
+- Must comply with company policy for code, issue tracker and Slack data; prefer zero-retention routes.
 
 ## Tech stack (tentative)
 

@@ -1,6 +1,6 @@
 # Vantage
 
-A personal, calm view of the true state of your work across AI coding agents, git, pull requests, CI/CD, monitoring, Jira and Slack.
+A personal, calm view of the true state of your work across AI coding agents, git, pull requests, CI/CD, monitoring, Jira or Linear, and Slack.
 
 Vantage tracks **work items**, not sessions. Each item moves along one evidence-based track:
 

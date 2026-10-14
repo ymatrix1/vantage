@@ -8,11 +8,11 @@ Signals, roughly in order of weight:
 
 | Signal | Source |
 |---|---|
-| Someone is blocked on you (re-review request, direct question, mention from a person) | GitHub, Slack, Jira |
-| Due date proximity | Jira |
+| Someone is blocked on you (re-review request, direct question, mention from a person) | GitHub, Slack, Jira or Linear |
+| Due date proximity | Jira or Linear |
 | Red flags (`regression`, `collision`, `waiting_on_you`, `ai_decided`) | Vantage |
-| Jira priority | Jira |
-| Blocks other items | Jira links, PR dependencies |
+| Issue priority | Jira or Linear |
+| Blocks other items | Jira issue links, Linear relations (blocks, blocked by), PR dependencies |
 | Staleness (an item drifting toward `forgotten`) | Vantage |
 
 The user can **pin** or **demote** an item. Overrides win, and they're recorded as feedback to tune weights later.
