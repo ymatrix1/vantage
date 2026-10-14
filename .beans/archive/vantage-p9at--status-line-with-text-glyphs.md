@@ -33,4 +33,4 @@ Desktop app status line (Q29).
 
 ## Summary of Changes
 
-Pure renderer and parser in packages/core/src/status-line.ts (glyph mapping, color optional, width-aware truncation, stale and offline lines). Daemon writer packages/daemon/src/status-file.ts, called by the stage loop after every pass. Command packages/hooks/src/statusline-bin.js plus statusLineSettings snippet. Core package exports now point at dist/src (the old path did not exist), plus a status-line subpath. Decision D73 proposed. Remaining: wiring the loop into a running daemon (new bean).
+Pure renderer and parser in packages/core/src/status-line.ts (glyph mapping, color optional, width-aware truncation, stale and offline lines). Daemon writer packages/daemon/src/status-file.ts, called by the stage loop after every pass. Command packages/hooks/src/statusline-bin.js plus statusLineSettings snippet. Core package exports now point at dist/src (the old path did not exist), plus a status-line subpath. Decision D74 proposed. Remaining: wiring the loop into a running daemon (new bean).
