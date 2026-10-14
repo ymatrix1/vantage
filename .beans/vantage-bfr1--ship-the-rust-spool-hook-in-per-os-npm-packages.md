@@ -13,7 +13,7 @@ blocked_by:
 
 ## Context
 
-Blocked by: vantage-xex6 (PR #20 must merge) and the user accepting D72; this bean starts only after D72 is accepted. Related: vantage-p9x2 (installer registers the path). Built JS hook is p95 118 to 147 ms; the Rust spike is median 26 to 33 ms, p95 44 to 52 ms, 0.16 MB ([research](../docs/research/native-hook-binary.md)).
+Blocked by: vantage-xex6 (PR #20 must merge). D72 accepted 2026-10-14, so the bean is ready to start. Related: vantage-p9x2 (installer registers the path). Built JS hook is p95 118 to 147 ms; the Rust spike is median 26 to 33 ms, p95 44 to 52 ms, 0.16 MB ([research](../docs/research/native-hook-binary.md)).
 
 ## Higher Goal
 
