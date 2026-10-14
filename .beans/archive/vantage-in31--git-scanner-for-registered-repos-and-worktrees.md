@@ -26,7 +26,9 @@ Know what code exists, committed or not, without asking the agent.
 
 - [x] Registered repos and their worktrees discovered automatically
 - [x] Commits, branch checkouts, merges and dirty files emitted as events (ingestion catalog)
-- [x] Scan cadence per ingestion spec (30 s active, 10 min idle); read-only git commands with no optional locks
+- [x] Cadence helper (`scanIntervalMs`) with 30 s active, 10 min idle and battery saver doubling
+- [x] Read-only git commands with no optional locks
+- [ ] Scheduling loop that applies the cadence and persists cursors: owned by `vantage-0k45`
 - [x] Repos matched by remote URL and first commit, not path (operations edge cases)
 
 ## Out of Scope
@@ -39,4 +41,4 @@ GitHub PR data (Phase 4).
 - `packages/daemon/src/git-scanner.ts`: read-only git runner (`--no-optional-locks`), worktree discovery, per-worktree cursors, per-scan dedup of shared commits.
 - Tests: 29 total, scripted synthetic temp repos with isolated git config.
 - Shared tweaks: `lib: ES2023` in `tsconfig.base.json`; Vitest alias so `@vantage/core` resolves to source.
-- Not done: scheduling loop and cursor persistence belong to the daemon bean (cadence helper exists); git hooks fast path is `vantage-3vuw` scope.
+- Not done: scheduling loop and cursor persistence are owned by `vantage-0k45` (blocked by `vantage-3vuw`); the cadence helper exists; git hooks fast path is `vantage-3vuw` scope.
