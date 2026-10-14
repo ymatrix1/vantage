@@ -17,15 +17,110 @@ Asked → Built → Proven → Reviewed → Shipped → Verified
 
 A card moves only on evidence: a git diff, a test or data check that ran after the last edit, a PR approval, a deploy, a clean monitoring window. What an agent *says* never moves a card.
 
-> **Status:** planning. No code yet. These docs are the source of truth.
+## Status
 
-**Planned install** (see [first run](docs/specs/first-run.md#adding-an-existing-repo)): from any existing repo, run `npx vantage add`, or `/plugin install vantage` then `/vantage add` inside Claude Code. Nothing in the repo changes unless you opt in with `--team`.
+**Phase 1 (the first usable slice) is built** for Claude Code and git: hook capture into a local spool, a SQLite store, the git scanner, the linker, the stage machine (Asked, Built, Proven), a `Stop` hook gate in warn mode, a terminal status line, a secured local Track page, a one-process daemon, and the installer. It has not been used day to day for a week yet (the Phase 1 exit, see the [roadmap](docs/ROADMAP.md)), and it is not published to npm. Reviewed, Shipped and Verified need sources from later phases.
 
-**Or install with a prompt** (end goal): paste this into Claude Code or Codex in your repo:
+Tested in CI on Windows and Ubuntu. Developed and run by hand on Windows first.
+
+## Quick start (from a checkout)
+
+**You need:** Node.js 22.5 or newer (Vantage uses the built-in `node:sqlite`), [pnpm](https://pnpm.io), git, and Claude Code.
+
+```bash
+git clone https://github.com/ymatrix1/vantage.git
+cd vantage
+pnpm install
+pnpm build
+```
+
+Until the npm package exists, run the CLI as `node <checkout>/packages/cli/dist/src/main.js`. The steps below call it `vantage`; an alias keeps it short:
+
+```bash
+alias vantage='node /path/to/vantage/packages/cli/dist/src/main.js'
+```
+
+1. **See what an install would change.** From the repo you want to track:
+
+   ```bash
+   vantage add --dry-run
+   ```
+
+   It prints every file it would touch and writes nothing.
+2. **Install.** Read the plan, then:
+
+   ```bash
+   vantage add --yes
+   ```
+
+   It backs up your Claude Code `settings.json` first, adds the hooks, and registers the repo.
+3. **Start the daemon** (leave it running in a terminal):
+
+   ```bash
+   vantage start
+   ```
+4. **Check it.** In another terminal: `vantage doctor`. A FAIL names what to fix; a WARN is informational (for example, "daemon not running").
+5. **Open the Track page:** `vantage open` (use `--print` to only print the URL).
+6. **Use Claude Code as usual.** Items appear after the daemon's next pass (about 30 seconds).
+
+Or hand the whole thing to an agent. Paste this into Claude Code in your repo:
 
 ```text
 Install Vantage in this repo. Follow https://github.com/ymatrix1/vantage/blob/main/docs/install-for-agents.md exactly: show me the dry run first, wait for my OK, then install, verify with vantage doctor, and tell me what changed.
 ```
+
+### What the installer changes
+
+| Where | What | Undo |
+|---|---|---|
+| Claude Code `settings.json` (`~/.claude`, or `CLAUDE_CONFIG_DIR`) | Eight hooks: seven async spool hooks (`SessionStart`, `PostToolUse`, `PostToolUseFailure`, `PermissionRequest`, `Notification`, `PreCompact`, `SessionEnd`) and the synchronous `Stop` gate. Each command ends in `--vantage-managed`. | `vantage remove` or `vantage uninstall` removes only entries with that marker |
+| Same file | The status line, **only if you have none**. If you already use one it is left alone and `add` says so. | same |
+| `~/.vantage/config.toml` | The repo path in `repos = [...]` | `vantage remove [path]` |
+| `~/.vantage/backups/` | A copy of `settings.json` before the first edit | kept for a manual restore |
+| `~/.vantage/install.json` | A record of what `add` did | used by `remove` |
+| Git hooks | Nothing, unless you pass `--git-hooks` (opt in, chained so your own hooks still run) | `vantage uninstall` |
+
+Nothing inside your repo changes.
+
+### What you will see
+
+- **Track page** (`vantage open`): items grouped by attention, one row each with the six-dot track, proof state and flags. Click a row for its trace (why it is where it is).
+- **Status line** (if installed): a short glyph line for the current session's item.
+- **Stop gate** (warn mode): when an agent stops after editing code with no fresh test or data check, Claude Code shows a message naming the files and why. It never blocks. Set the mode with `VANTAGE_GATE_MODE=off|warn` or `proof_gate = "off"` in `config.toml`. Docs-only sessions never trigger it.
+
+### Where your data lives
+
+All local, under `~/.vantage` (or `VANTAGE_HOME`): `spool/` (one line per hook event, **including the tool input Claude Code passes to the hook**), `vantage.db` (events, links, stages, proofs), `token` (the Track page token), `status.json` and `health.json`. The daemon listens on `127.0.0.1` only, with a token and Host and Origin checks. Nothing leaves the machine, and no outside model is called. See [privacy](docs/ARCHITECTURE.md#privacy) and the [data policy](docs/specs/settings.md).
+
+### Undo
+
+```bash
+vantage remove        # stop tracking this repo
+vantage uninstall     # remove Vantage's hooks and status line from settings.json
+```
+
+Neither deletes `~/.vantage`. Delete that folder yourself if you want the data gone.
+
+### If something is off
+
+| Symptom | Fix |
+|---|---|
+| `vantage doctor` shows FAIL for hooks | Run `vantage add --dry-run` again, then `vantage add --yes`; rebuild with `pnpm build` if a hook file is missing |
+| "The UI is not built" | `pnpm build` |
+| "Port 4317 is in use" | `vantage start --port 4400` (or `VANTAGE_PORT`) |
+| "Vantage is already running" | One daemon per `~/.vantage`; use `vantage open` |
+| The Track page is empty | Use Claude Code in a registered repo and wait about 30 seconds; check `vantage doctor` |
+| Stop messages feel wrong | Set `VANTAGE_GATE_MODE=off` and tell us which case it got wrong |
+
+## Developing
+
+```bash
+pnpm check                       # type check, lint, format, tests, fixture scrub
+python tools/check_docs.py       # links, decision format and status, privacy scan
+python -m unittest discover -s tools -p "test_*.py"
+```
+
+Packages: `core` (pure logic), `daemon`, `hooks`, `hooks-native` (Rust spool hook, built in CI), `cli`, `ui`. Read [AGENTS.md](AGENTS.md) first; tasks live in [beans](https://github.com/hmans/beans) under `.beans/`.
 
 ## Documents
 
