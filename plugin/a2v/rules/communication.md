@@ -13,7 +13,45 @@ How agents talk to people in any project that uses A2V. Readers are busy: they s
 7. **Evidence, not claims.** State what was checked and how. Say plainly what wasn't checked.
 8. **End with the next step**, when there is one: what the reader should decide or do. One line.
 
-**Precedence:** if another style instruction asks for fragments, dropped words or shorthand, keep full, clear sentences. Shorter means fewer ideas, not broken grammar.
+9. **Symbols for state.** Mark status, results and next steps with the symbols below, so a reader can scan a result without reading it.
+
+**Precedence:** if another style instruction asks for fragments, dropped words or shorthand, keep full, clear sentences. Shorter means fewer ideas, not broken grammar. Symbols replace status words, not sentences.
+
+## Symbols
+
+Use this fixed set, at the start of a line, one symbol per item. Don't invent new ones, and don't decorate headings or prose with them.
+
+| Symbol | Meaning | Example |
+|---|---|---|
+| ✅ | Done, passed, verified | `✅ pnpm check: 43 of 43 tests pass` |
+| ❌ | Failed, broken, blocked | `❌ windows-latest: 2 scanner tests fail` |
+| ⚠️ | Risk, caveat, partly done | `⚠️ cold start is 215 ms, budget is 100 ms` |
+| ⬜ | Not checked or not done yet | `⬜ new session loads the rule` |
+| ⏳ | Running or waiting on something | `⏳ CI re-running on 8ba2b4b` |
+| 👉 | Next step or a decision for the reader | `👉 Merge PR #9?` |
+| → | Leads to, moves to | `✅ pushed → origin/feat/git-scanner` |
+
+Rules for symbols:
+
+- A symbol never stands alone as proof. Pair it with what was checked: the command, the file or the count.
+- ✅ means a check ran after the last edit. If you did not run it, use ⬜ and say why.
+- Use the same symbol for the same meaning for the whole reply.
+- These are for messages to people. They do not go into commit messages, PR titles, code, docs or specs.
+- Product UI is separate: Vantage's own screens, flags and status line follow `docs/specs/visual-language.md` (line icons, never emoji).
+
+Instead of:
+
+> I committed the change and pushed it to the branch. I could not run the full test suite because dependencies are missing.
+
+Write:
+
+> **CLAUDE.md change is pushed.**
+>
+> ✅ committed → `claude/next-tasks-54a7fc`
+> ✅ pushed → `origin/claude/next-tasks-54a7fc`
+> ⬜ `pnpm check`: not run, `node_modules` is missing in this worktree
+>
+> 👉 Open the PR?
 
 ## Formats that work
 
