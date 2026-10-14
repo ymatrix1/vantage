@@ -99,7 +99,8 @@ Phase 1 runtime ([D78](../DECISIONS.md#d78-phase-1-daemon-runtime-one-process-lo
 
 - Schema migrations run at daemon start after an automatic backup of the database (keep the last 5).
 - `vantage export` writes events and user actions; `vantage import` restores them.
-- `vantage uninstall` removes Claude Code and git hooks, restores any chained repo hooks, and asks before deleting `~/.vantage/`.
+- `vantage uninstall` removes Claude Code and git hooks, restores any chained repo hooks, and asks before deleting `~/.vantage/`. Phase 1 (D79): it strips only entries carrying the `--vantage-managed` marker, unsets `core.hooksPath` only if it is still Vantage's, deletes only marked wrappers, keeps edits made after `add`, and never deletes `~/.vantage/`; a copy of the settings from before `add` stays in `~/.vantage/backups/`. `vantage remove` unregisters one repo only.
+- `vantage doctor` prints one PASS, WARN or FAIL line per check (hooks registered and their files exist, status line, spool writable, daemon health fresh, database opens read-only, status file fresh, repos and transcripts) with one fix hint per problem. It exits non-zero only on FAIL, meaning capture is broken. A daemon that is not running is a WARN, because hooks still write to the spool.
 
 ## Accessibility and keyboard
 

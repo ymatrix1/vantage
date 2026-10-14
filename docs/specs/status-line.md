@@ -75,7 +75,7 @@ Add this to the Claude Code `settings.json` (the command runs the built JavaScri
 }
 ```
 
-`statusLineSettings(command)` in `@vantage/hooks` produces this block. The `vantage add` installer (`vantage-p9x2`) will write it.
+`statusLineSettings(command)` in `@vantage/hooks` produces this block. `vantage add` writes it (D79), with the `--vantage-managed` marker on the command, and leaves any other status line alone.
 
 ## Measured
 

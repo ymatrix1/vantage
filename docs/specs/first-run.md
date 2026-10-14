@@ -35,6 +35,8 @@ What it does, in under a minute:
 4. **Backfills this repo's history:** agent sessions whose working directory is the repo or one of its worktrees, plus git history, for the last 14 days.
 5. **Opens the landscape** filtered to this repo.
 
+What `vantage add` does today (Phase 1, [D79](../DECISIONS.md)): registers eight Claude Code hooks (seven async spool hooks and the synchronous `Stop` gate) and the status line in the user's Claude Code `settings.json`, and adds the repo to `repos` in `config.toml`. Every command it registers carries the `--vantage-managed` marker, and `install.json` records the change. It asks first (`--yes` skips the question; with no terminal it refuses without it), backs up an existing `settings.json`, is idempotent, merges without touching other hooks, never replaces another status line, and refuses unreadable settings. Global git hooks are opt-in with `--git-hooks`: wrapper scripts that run the repo's own hook after Vantage's (plain `.git/hooks` and Lefthook shims chain; Husky sets a repo-local `core.hooksPath`, so it is detected and reported, not chained). It does not start the daemon, backfill or open the UI yet: run `vantage start`, then `vantage doctor`.
+
 Guarantees:
 
 - **Nothing in the repo changes by default.** No files written, nothing committed.
