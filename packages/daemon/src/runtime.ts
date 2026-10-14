@@ -88,6 +88,22 @@ export function readRepos(home: string, env: NodeJS.ProcessEnv = process.env): s
   }
 }
 
+/**
+ * `flag_window_hours = 48` in `config.toml` (proposed D84): how recent an item's last activity must be for
+ * `thrashing` and `unproven_claim` to be raised. Missing, unreadable or not a number from 1 to 8760
+ * means the default (48).
+ */
+export function readFlagWindowHours(home: string): number | undefined {
+  try {
+    const text = readFileSync(join(home, "config.toml"), "utf8");
+    const m = /^\s*flag_window_hours\s*=\s*(\d+)\s*(?:#.*)?$/m.exec(text)?.[1];
+    const n = m === undefined ? NaN : Number(m);
+    return n >= 1 && n <= 8760 ? n : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function alive(pid: number): boolean {
   try {
     process.kill(pid, 0);
@@ -228,9 +244,11 @@ export async function startDaemon(options: DaemonOptions = {}): Promise<DaemonHa
     if (repos.length > 0) git.start();
     log(`watching ${repos.length} repo(s)`);
 
+    const flagWindowHours = readFlagWindowHours(home);
     stage = createStageLoop({
       store: db,
       statusFile: join(home, STATUS_FILE),
+      pass: flagWindowHours === undefined ? {} : { flagWindowHours },
       onPass: () => live.publish(),
       ...(options.stageMs ? { intervalMs: options.stageMs } : {}),
       onError: onError("stage pass"),

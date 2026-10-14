@@ -1,5 +1,5 @@
 // Branch on tool events end to end: transcript backfill, events stored before the branch was read,
-// the one-shot backfill, and migration 5. All data is synthetic (D88).
+// the one-shot backfill, and migration 6. All data is synthetic (D88).
 import { DatabaseSync } from "node:sqlite";
 import { mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -116,12 +116,12 @@ describe("events stored before the branch was read", () => {
 });
 
 describe("migration 5", () => {
-  it("adds event_branches to a version 4 database and keeps its data", () => {
+  it("adds event_branches to a version 5 database and keeps its data", () => {
     const path = join(dir, "old.db");
     const old = new DatabaseSync(path);
     old.exec(`
       CREATE TABLE schema_meta (version INTEGER NOT NULL);
-      INSERT INTO schema_meta (version) VALUES (4);
+      INSERT INTO schema_meta (version) VALUES (5);
       CREATE TABLE events (id INTEGER PRIMARY KEY AUTOINCREMENT, source TEXT NOT NULL, source_id TEXT NOT NULL,
         kind TEXT NOT NULL, occurred_at TEXT NOT NULL, ingested_at TEXT NOT NULL, session_id TEXT, repo TEXT,
         payload_json TEXT NOT NULL, payload_version INTEGER NOT NULL DEFAULT 1, UNIQUE (source, source_id));
@@ -135,7 +135,7 @@ describe("migration 5", () => {
     old.close();
     const upgraded = new Store(path);
     try {
-      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(5);
+      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(6);
       expect(upgraded.countEvents()).toBe(1);
       expect(upgraded.countEventBranches()).toBe(0);
       upgraded.setEventBranch("claude_code", "cc:tool:old:edit", "feat/ftk-2-x");

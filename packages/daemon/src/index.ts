@@ -22,7 +22,7 @@ export type {
 } from "./stages.ts";
 export * from "./stage-loop.ts";
 export * from "./status-file.ts";
-export { diagnosticsView, traceView, trackView } from "./api.ts";
+export { DEFAULT_QUERY, diagnosticsView, traceView, trackView } from "./api.ts";
 export { BIND_HOST, startHttp } from "./http.ts";
 export type { HttpHandle, HttpOptions } from "./http.ts";
 export * from "./live.ts";
@@ -31,6 +31,7 @@ export {
   AlreadyRunningError,
   DEFAULT_PORT,
   HEALTH_FILE,
+  readFlagWindowHours,
   readHealth,
   readRepos,
   startDaemon,

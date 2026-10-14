@@ -114,7 +114,7 @@ describe("migration 4", () => {
   it("adds the item_sessions view to a version 3 database and keeps its data", () => {
     const path = join(dir, "old.db");
     const old = new DatabaseSync(path);
-    // The tables the previous release created (the view reads only events and links).
+    // The tables the previous release created (the view reads only events and links; work_items is there for the later index migration).
     old.exec(`
       CREATE TABLE schema_meta (version INTEGER NOT NULL);
       INSERT INTO schema_meta (version) VALUES (3);
@@ -125,6 +125,9 @@ describe("migration 4", () => {
       CREATE TABLE links (event_id INTEGER NOT NULL REFERENCES events (id), item_key TEXT NOT NULL,
         method TEXT NOT NULL, anchor_kind TEXT NOT NULL, anchor_value TEXT NOT NULL, rule TEXT NOT NULL,
         confidence REAL NOT NULL, created_at TEXT NOT NULL, undone_at TEXT, PRIMARY KEY (event_id, item_key));
+      CREATE TABLE work_items (id INTEGER PRIMARY KEY AUTOINCREMENT, item_key TEXT NOT NULL UNIQUE, title TEXT NOT NULL,
+        repo TEXT, stage TEXT NOT NULL, proof_status TEXT NOT NULL, first_activity TEXT NOT NULL, last_activity TEXT NOT NULL,
+        created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
       INSERT INTO events (source, source_id, kind, occurred_at, ingested_at, session_id, payload_json)
         VALUES ('claude_code', 'old1', 'file.edited', '2026-01-05T09:00:00Z', '2026-01-05T09:00:00Z', 's-1', '{}');
       INSERT INTO links VALUES (1, 'issue:FTK-9', 'anchor', 'issue_key', 'FTK-9', 'issue-key-branch', 1, '2026-01-05T09:00:00Z', NULL);
@@ -132,7 +135,7 @@ describe("migration 4", () => {
     old.close();
     const upgraded = new Store(path);
     try {
-      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(5);
+      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(6);
       expect(upgraded.countEvents()).toBe(1);
       expect(itemSessionCounts(upgraded).get("issue:FTK-9")).toMatchObject({
         sessionCount: 1,
