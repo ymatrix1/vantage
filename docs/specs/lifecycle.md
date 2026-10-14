@@ -47,6 +47,16 @@ If a repo has no checks configured, the card shows Verified as "not configured" 
 
 The card stays in the Reviewed column through the loop to avoid churn; the sub-state shows on the card.
 
+Sub-states are computed from a GraphQL snapshot of the PR (reviews, review threads, commits, timeline), not from GitHub notifications, whose `reason` and `latest_comment_url` can't tell a review from a comment or a push (see the [GitHub research](../research/github.md#e6-thread-detail)).
+
+| Sub-state | Derived from |
+|---|---|
+| `waiting` | A review is requested (or the PR is ready) and no human review has landed |
+| `changes_requested` | The latest review by a reviewer is `CHANGES_REQUESTED` |
+| `fixing` | New commits after that review, and no new request yet |
+| `re_review_requested` | A `ReviewRequestedEvent` for that reviewer after their last review |
+| `approved` | `APPROVED` and no unresolved blocking review threads |
+
 ## Skips
 
 A skipped stage shows as a hollow "skipped" dot, never green.
