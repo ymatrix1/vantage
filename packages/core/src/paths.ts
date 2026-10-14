@@ -42,3 +42,22 @@ export function pathMembership(target: string, cwd: string, root: string = cwd):
   const inside = rootN.parts.every((p, i) => abs.parts[i] === p);
   return inside ? "inside" : "outside";
 }
+
+/**
+ * The longest of `roots` that contains `cwd`, or `undefined` when none does (or `cwd` can't be read).
+ * Lexical only, like `pathMembership`. Callers fall back to the cwd, which is the conservative reading.
+ */
+export function resolveRepoRoot(cwd: string, roots: readonly string[]): string | undefined {
+  if (!cwd || UNRESOLVABLE.test(cwd)) return undefined;
+  let best: { root: string; depth: number } | undefined;
+  for (const root of roots) {
+    if (!root || UNRESOLVABLE.test(root)) continue;
+    const winContext = DRIVE.test(cwd) || DRIVE.test(root);
+    const rootN = normalizeAbs(root, winContext);
+    const cwdN = normalizeAbs(cwd, winContext);
+    if (!rootN || !cwdN || rootN.win !== cwdN.win) continue;
+    if (!rootN.parts.every((p, i) => cwdN.parts[i] === p)) continue;
+    if (!best || rootN.parts.length > best.depth) best = { root, depth: rootN.parts.length };
+  }
+  return best?.root;
+}

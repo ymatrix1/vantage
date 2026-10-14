@@ -91,7 +91,11 @@ Normalized `kind` values. The payload keeps the raw source fields.
 - A command with an inside and an outside target emits one `file.edited` with only the inside paths; the outside ones stay on `command.ran`. A commit still emits `file.edited` with `via: shell-commit`.
 - Both payload fields are additive. No event kind was added, so consumers that read `file.edited` only see in-repo work, and nothing is lost: the outside paths stay on the command event.
 - Matching is lexical: separators, `.` and `..` are normalized, Windows paths (drive letter, either separator, Git Bash `/c/...`) compare case-insensitively, POSIX paths case-sensitively. Symlinks and junctions are not followed.
-- ⚠️ The daemon does not yet pass `repoRoot`, so the root is the `cwd`. A session started in a subdirectory sees `../sibling/x` as outside. Tracked in a follow-up bean.
+- The daemon passes `repoRoot` at ingest: the longest worktree root the git scanner has reported (`worktree.scanned.worktree`) that contains the session `cwd`, compared lexically. When the scanner has not reported a containing root yet (or no git scan is registered), the root stays the `cwd`, so a subdirectory session's `../sibling/x` reads as outside. That is the conservative reading; events already stored keep the classification they were ingested with. The hook itself never resolves a root (D67 budget).
+
+### Test run counts
+
+For a shell command the daemon also reads the tool output the hook spooled (`tool_response`, or a transcript `tool_result`) and, when it recognises a runner's own summary, adds `command.ran.result: {run, passed, failed, skipped}` (`run` = passed + failed + skipped; errors count as failed). Recognised: vitest, jest, pytest, `go test` (`-v` per-test lines, or every package reporting no tests), `dotnet test`. Only numbers are kept, never output text. Unrecognised output leaves `result` absent, which the stage machine reads as "unknown", not zero. `go test` without `-v` prints no counts, so a plain `ok` package is unrecognised.
 
 ## Polling budget
 
