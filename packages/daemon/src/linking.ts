@@ -39,7 +39,7 @@ export function loadEvents(store: Store): { ids: Map<string, number>; events: Va
   for (const r of rows) {
     const sessionId = textOrNull(r, "session_id");
     const payload: Record<string, unknown> = JSON.parse(text(r, "payload_json"));
-    // A branch recorded beside the event fills a payload that has none (D88); the payload stays as stored.
+    // A branch recorded beside the event fills a payload that has none (D92); the payload stays as stored.
     const stored = textOrNull(r, "stored_branch");
     if (stored && !("branch" in payload)) payload["branch"] = stored;
     const e = parseEvent(

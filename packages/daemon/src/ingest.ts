@@ -52,7 +52,7 @@ function commit(
 
 const TOOL_KINDS: ReadonlySet<string> = new Set(["file.edited", "command.ran"]);
 
-/** Keeps the transcript's branch for a tool call even when a hook stored the call first (D88). */
+/** Keeps the transcript's branch for a tool call even when a hook stored the call first (D92). */
 function noteBranch(store: Store, e: VantageEvent): void {
   const branch = e.payload["branch"];
   if (e.source === "claude_code" && TOOL_KINDS.has(e.kind) && typeof branch === "string" && branch !== "") {
@@ -64,7 +64,7 @@ const BRANCH_BACKFILL = "backfill:event-branches:v1";
 
 /**
  * One pass over the transcripts inside the window that records the branch for tool calls stored before
- * the branch was read (D88). Events are not rewritten; the branch goes beside them and the linker sees
+ * the branch was read (D92). Events are not rewritten; the branch goes beside them and the linker sees
  * it through `loadEvents`. Idempotent: the first value for an event wins, and a marker skips later runs.
  */
 export function backfillEventBranches(

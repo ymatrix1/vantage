@@ -1,5 +1,5 @@
 // Branch on tool events end to end: transcript backfill, events stored before the branch was read,
-// the one-shot backfill, and migration 6. All data is synthetic (D88).
+// the one-shot backfill, and migration 6. All data is synthetic (D92).
 import { DatabaseSync } from "node:sqlite";
 import { mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";

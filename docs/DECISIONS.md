@@ -1072,6 +1072,14 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 
 ## Proposed (pending confirmation)
 
+### D92. Tool events take the branch from the transcript line; stored events get it beside them
+
+- **Status:** proposed
+- **Context:** Measured on the live store: 125 of 137 sessions with edits had every edit in a per-session item, because transcript `file.edited` and `command.ran` events carried no branch and the linker found one only through a scanned worktree, although the transcript line names it (`gitBranch`, 506 of 518 sessions on a non-default branch). D54 already says events link by the branch at event time.
+- **Decision:** Transcript tool events carry `payload.branch`: the line's own `gitBranch`, else the nearest earlier line of the same session; a detached `HEAD` or no field means no branch. Events already stored, and calls a hook stored first, keep their payload (events are immutable, see the data schema rules): the branch is recorded beside them in `event_branches` (migration 6), `loadEvents` fills `payload.branch` from it when absent, and a one-shot backfill re-reads the transcripts inside the 14-day window. The linker needs no new rule: D25 rules 1 and 2 already read `payload.branch`.
+- **Why:** It uses a field the data carries and D54 already prescribes, with no heuristic. A side table is smaller and safer than rewriting events or re-ingesting: the hook and the transcript race for the same tool id, and only a side table lets the later reader add the branch.
+- **Alternatives:** Rewrite stored payloads (breaks immutability, and a replay would disagree). Delete the window's events and re-ingest (loses links and undo tombstones tied to event ids). Resolve the branch at link time from `cwd` and the git scanner only (the status quo, which missed most sessions).
+- **Impact:** Migration 6, `backfillEventBranches`, ingest and `loadEvents` change, specs [ingestion](specs/ingestion.md) and [work item model](specs/work-item-model.md). On the live store: sessions with an anchored edit 12 to 129 of 137, `Session` items 130 to 33 ([measurements](research/session-lineage.md)). Caveats: with no repo option set, a branch item key is `branch::<branch>`, so the same branch name in two repos shares one item; calls whose transcript is older than the window keep no branch. Revisit if the transcript `gitBranch` proves wrong for a class of sessions (for example a session started before a `git switch` inside a sub-shell).
 ### D86. Derived sessions join their parent's item, from explicit signals only
 
 - **Status:** proposed

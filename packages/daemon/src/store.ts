@@ -113,7 +113,7 @@ const MIGRATIONS: readonly string[] = [
    CREATE INDEX work_items_activity ON work_items (last_activity);
    CREATE INDEX work_items_repo ON work_items (repo, last_activity);
    CREATE INDEX work_items_stage ON work_items (stage, last_activity);`,
-  // The branch a transcript line said was checked out when a tool call ran (D88). A side table, not a
+  // The branch a transcript line said was checked out when a tool call ran (D92). A side table, not a
   // rewrite of the event: the hook may have stored the call first, and events stay immutable.
   `CREATE TABLE event_branches (
      source TEXT NOT NULL,

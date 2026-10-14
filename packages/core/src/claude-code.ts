@@ -23,7 +23,7 @@ export interface ToolCall {
   sessionId?: string | undefined;
   /** Set when a sub-agent made the call (transcript `agentId`, hook `agent_id`). */
   agentId?: string | undefined;
-  /** Branch checked out when the call ran, from the transcript line's `gitBranch` (D88). */
+  /** Branch checked out when the call ran, from the transcript line's `gitBranch` (D92). */
   branch?: string | undefined;
   timestamp: string;
   /** undefined when the outcome is unknown (transcript call with no result yet). */
@@ -250,7 +250,7 @@ export function parseTranscriptLine(line: string): TranscriptLine | null {
 }
 
 /**
- * The branch in force at a transcript line (D88): the line's own `gitBranch`, else the nearest earlier
+ * The branch in force at a transcript line (D92): the line's own `gitBranch`, else the nearest earlier
  * line of the same session in the batch. A detached HEAD (`HEAD`) means no branch, and a later line
  * without the field keeps meaning that. `undefined` when nothing in the batch says.
  */
