@@ -36,3 +36,16 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+/* Forced colours (high contrast, some print modes) replace our palette: keep every dot shape visible. */
+@media (forced-colors: active) {
+  svg[data-state] circle,
+  svg[data-state] path {
+    stroke: CanvasText;
+  }
+  svg[data-state="done"] circle,
+  svg[data-state="no_proof"] path,
+  svg[data-state="needs_you"] circle:last-of-type {
+    fill: CanvasText;
+  }
+}

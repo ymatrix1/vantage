@@ -7,7 +7,7 @@
 3. **One line per row, one action per alert.** No paragraphs. Card and row text stays under about 140 characters. Transcripts are one click away, never shown by default.
 4. **Fixed color meaning everywhere:** gray = not started, blue = in progress, amber = unproven or at risk, red = needs you, green = done.
 5. **Calm by default.** Top 3, not top 30. Interrupt only for red. Batch the rest. Say "safe to ignore" out loud.
-6. **Honest dots.** A skipped or unconfigured stage is hollow, never green.
+6. **Honest dots.** A skipped or unconfigured stage is a gray dash, never green.
 7. **Visual first.** Shape, color, size and position carry state; 2–4 word titles carry identity; about 30 words per screen. Defined in the [visual language spec](specs/visual-language.md).
 8. **Attention first, project second.** Default grouping is by what needs you, across all projects. Grouping by project is one click away.
 
@@ -51,7 +51,7 @@ Focus is drawn as the **landscape**: work items as dot characters, with needs-yo
 The main "all work" view. A table, not a board, because it stays readable with many items and keeps priority visible.
 
 - **Row:** priority chip, title, project or repo with one line of evidence, six-dot track (Asked, Built, Proven, Reviewed, Shipped, Verified), main flag, last activity.
-- **Dot states:** filled green = done, blue ring = current, amber = at risk (for example unproven), red = needs you, dashed = skipped or not configured.
+- **Dot states:** filled green = done, blue ring = current, amber = at risk (for example unproven), red = needs you, a short dash = skipped or not configured.
 - **Short tracks:** `review_request` and `commitment` items show only their relevant dots.
 - **Group by** toggle:
   - **Attention** (default): Needs you, In progress, Waiting on others, Done this week (collapsed).

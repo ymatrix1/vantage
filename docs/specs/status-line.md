@@ -14,7 +14,7 @@ Shape first, color optional (terminals may have no color, and the shape must sti
 | In progress | `◉` | blue |
 | No proof | `◐` | yellow |
 | Needs you | `◍` followed by `!` | red |
-| Skipped | `◌` | gray |
+| Skipped (no source can measure it) | `–` (en dash) | gray |
 | Not yet | `○` | gray |
 
 The track has six steps: Asked, Built, Proven, Reviewed, Shipped, Verified. Phase 1 knows the first three; the rest stay `○`.
@@ -25,7 +25,7 @@ The track has six steps: Asked, Built, Proven, Reviewed, Shipped, Verified. Phas
 | Built, no fresh proof (none, expired, failed, weak) | `●●◐○○○` |
 | Proven, L1 | `●●●¹○○○` |
 | Proven, L2 | `●●●²○○○` |
-| Docs only (proof not required) | `●●◌○○○` |
+| Docs only (proof not required) | `●●–○○○` |
 | Any open flag | the current step shows `◍!` (Asked: Built slot; Built or Proven: Proven slot) |
 
 Proof level on the Proven dot is shown as a superscript digit: `●²` = L2. Verified implies L4 and needs no digit.
