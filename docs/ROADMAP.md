@@ -56,6 +56,7 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 - [x] Linker with deterministic anchors (branch or worktree, issue key in branch). Delivered in Phase 1 (`vantage-9xbi`); todo anchors are not built.
 - [x] Stage machine for Asked, Built and Proven. Delivered in Phase 1 (`vantage-lxud`, D71).
 - [x] Derived sessions grouped under their parent's item (`vantage-o3s3`, D86 proposed): `session.derived` from copied transcript history, linker rule, `item_sessions` counts, [measurements](research/session-lineage.md). Remaining: show `sessionCount`, `derivedCount` and `subagentCount` in the Track view (follow-up bean); heuristic grouping waits on D87.
+- [x] Transcript branch on tool events (`vantage-j9ea`, D92 proposed): edits and commands carry the branch in force, the linker anchors on it, a one-shot backfill covers stored events. On the real store (137 sessions with edits) sessions with a branch, key or worktree anchored edit went from 12 to 129, `Session` items from 130 to 33.
 - [ ] Local web UI: Track (attention and project grouping), Item and Journal; "since yesterday" filter.
 - [ ] Ghost proposals from sessions with no edits.
 - [ ] **Exit:** the morning catch-up uses the board instead of terminals.
