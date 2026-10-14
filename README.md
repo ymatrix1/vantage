@@ -117,7 +117,7 @@ vantage stats --repo myrepo   # one repo, matched by name; repeat the command pe
 vantage stats --json          # the same numbers as JSON
 ```
 
-It reports items (total and active in 24 h, 7 d and 30 d), readable titles versus bare `Session` rows, anchor kinds, **Needs you** (total and last 48 h, top flag kinds), stages, Built items with no fresh proof, events by source and per day, database size and the age of the last stage pass. Each line says what it means, and a ✅, ⚠️ or ❌ shows where it stands against a goal (for example Needs you under 10). The goals are starting points, not product rules.
+It reports items (total and active in 24 h, 7 d and 30 d), readable titles versus bare `Session` rows, anchor kinds, session lineage (how many sessions sit on a real issue or branch item instead of a one-off `Session` row, sessions per item, derived sessions, sub-agent runs), **Needs you** (total and last 48 h, top flag kinds), stages, Built items with no fresh proof, events by source and per day, database size and the age of the last stage pass. Each line says what it means, and a ✅, ⚠️ or ❌ shows where it stands against a goal (for example Needs you under 10). The goals are starting points, not product rules.
 
 The output holds numbers and fixed labels only: no titles, commands, paths or repo names (the one echo is the `--repo` text you typed), so it is safe to paste into an issue. Days are UTC.
 

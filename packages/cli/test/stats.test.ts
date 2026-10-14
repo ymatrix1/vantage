@@ -151,13 +151,53 @@ describe("vantage stats on a synthetic store", () => {
 
   it("shows derived sessions only when lineage data exists", () => {
     const store = fixture();
-    expect(json().sessions).toEqual({ total: 5, derived: null, derivedShare: null });
+    expect(json().sessions).toMatchObject({ total: 5, derived: null, derivedShare: null });
     expect(run([]).out.join("\n")).not.toContain("Sessions derived");
     put(store, "sess-dddd1234", "session.derived", ago(2 * H), { parentSessionId: "sess-aaaa" });
     const st = json();
     store.close();
-    expect(st.sessions).toEqual({ total: 5, derived: 1, derivedShare: 0.2 });
+    expect(st.sessions).toMatchObject({ total: 5, derived: 1, derivedShare: 0.2 });
     expect(run([]).out.join("\n")).toContain("Sessions derived");
+  });
+
+  it("reports lineage: sessions per item, multi-session items, sub-agent runs and anchored share", () => {
+    const store = fixture();
+    const before = json().sessions;
+    expect(before).toMatchObject({
+      total: 5,
+      anchored: 3,
+      provisional: 2,
+      perItemMedian: 1,
+      perItemMax: 1,
+      multiSessionItems: 0,
+      subagentRuns: null,
+    });
+    expect(before.anchoredShare).toBeCloseTo(0.6);
+    expect(run([]).out.join("\n")).not.toContain("Sub-agent runs");
+    // A second session, with a sub-agent run, lands on the first issue item.
+    put(store, "sess-a2", "file.edited", ago(H), {
+      cwd: "/w/acme-secret/app",
+      branch: "feat/ftk-1-secret-title",
+      path: "/w/acme-secret/app/a.ts",
+      agentId: "agent-1",
+    });
+    runStagePass(store, {}, NOW);
+    const st = json();
+    const text = run([]).out.join("\n");
+    store.close();
+    expect(st.sessions).toMatchObject({
+      total: 6,
+      anchored: 4,
+      provisional: 2,
+      perItemMedian: 1,
+      perItemMax: 2,
+      multiSessionItems: 1,
+      subagentRuns: 1,
+    });
+    expect(st.sessions.anchoredShare).toBeCloseTo(4 / 6);
+    expect(text).toMatch(/Sessions anchored\s+67%/);
+    expect(text).toMatch(/Sessions per item\s+1 \/ 2/);
+    expect(text).toMatch(/Sub-agent runs\s+1/);
   });
 
   it("limits to a window with --since", () => {
@@ -215,6 +255,7 @@ describe("vantage stats on a synthetic store", () => {
       "FTK",
       "vitest",
       "sess-",
+      "agent-1",
       "dddd",
       "/w/",
       "a.ts",

@@ -37,7 +37,21 @@ export interface Stats {
   titles: { readable: number; fallback: number; readableShare: number | null };
   anchors: { issue: number; branch: number; worktree: number; session: number; other: number };
   needsYou: { total: number; recent48h: number; topFlags: { kind: string; count: number }[] };
-  sessions: { total: number; derived: number | null; derivedShare: number | null };
+  /** Lineage numbers (D86). Null fields mean the store has no such data. */
+  sessions: {
+    total: number;
+    derived: number | null;
+    derivedShare: number | null;
+    perItemMedian: number | null;
+    perItemMax: number | null;
+    multiSessionItems: number | null;
+    subagentRuns: number | null;
+    /** Session links on items anchored by issue key, branch or worktree. */
+    anchored: number;
+    /** Session links on provisional per-session items. */
+    provisional: number;
+    anchoredShare: number | null;
+  };
   stages: { asked: number; built: number; proven: number; other: number };
   builtNoFreshProof: { count: number; of: number; share: number | null };
   events: { total: number; bySource: { source: string; count: number }[] };
@@ -151,18 +165,28 @@ export function computeStats(db: DatabaseSync, opts: StatsOptions, now: Date, db
     ...is.params,
   ).map((r) => ({ kind: SAFE_WORD.test(s(r, "k")) ? s(r, "k") : "other", count: n(r, "c") }));
 
-  // Live-linked sessions and those with a parent come from the `item_sessions` view (D86), when the store has it.
+  // Per-item session counts come from the `item_sessions` view (D86), when the store has it.
   const hasView =
     q1("SELECT 1 AS x FROM sqlite_master WHERE type = 'view' AND name = 'item_sessions'") !== undefined;
-  const sess = hasView
-    ? q1(
-        `SELECT COALESCE(SUM(s.session_count), 0) AS total, COALESCE(SUM(s.derived_count), 0) AS derived
+  const perItem = hasView
+    ? q(
+        `SELECT ${KIND} AS k, s.session_count AS sc, s.derived_count AS dc, s.subagent_count AS ac
            FROM item_sessions s JOIN work_items w ON w.item_key = s.item_key WHERE ${is.where}`,
         ...is.params,
       )
-    : undefined;
-  const sessions = n(sess, "total");
-  const derived = n(sess, "derived");
+    : [];
+  const counts = perItem.map((r) => n(r, "sc")).sort((a, b) => a - b);
+  const sessions = counts.reduce((a, b) => a + b, 0);
+  const derived = perItem.reduce((a, r) => a + n(r, "dc"), 0);
+  const subagents = perItem.reduce((a, r) => a + n(r, "ac"), 0);
+  const provisional = perItem.filter((r) => s(r, "k") === "session").reduce((a, r) => a + n(r, "sc"), 0);
+  const mid = counts.length >> 1;
+  const median =
+    counts.length === 0
+      ? null
+      : counts.length % 2 === 1
+        ? (counts[mid] ?? 0)
+        : ((counts[mid - 1] ?? 0) + (counts[mid] ?? 0)) / 2;
 
   const stages = { asked: 0, built: 0, proven: 0, other: 0 };
   for (const r of q(
@@ -212,6 +236,13 @@ export function computeStats(db: DatabaseSync, opts: StatsOptions, now: Date, db
       total: sessions,
       derived: derived > 0 ? derived : null,
       derivedShare: derived > 0 ? share(derived, sessions) : null,
+      perItemMedian: median,
+      perItemMax: counts.length === 0 ? null : (counts.at(-1) ?? 0),
+      multiSessionItems: counts.length === 0 ? null : counts.filter((c) => c > 1).length,
+      subagentRuns: subagents > 0 ? subagents : null,
+      anchored: sessions - provisional,
+      provisional,
+      anchoredShare: share(sessions - provisional, sessions),
     },
     stages,
     builtNoFreshProof: { count: builtNoProof, of: builtScored, share: share(builtNoProof, builtScored) },
@@ -308,6 +339,7 @@ export const GOALS = {
   needsYouRecent: { good: 5, bad: 15 },
   readableShare: { good: 0.8, bad: 0.5 },
   builtNoProofShare: { good: 0.3, bad: 0.6 },
+  anchoredSessionShare: { good: 0.7, bad: 0.4 },
   stagePassAgeSeconds: { good: 5 * 60, bad: 30 * 60 },
   dbBytes: { good: 500 * 1024 * 1024, bad: 1024 * 1024 * 1024 },
 } as const;
@@ -338,6 +370,59 @@ interface Line {
   value: string;
   goal: string;
   meaning: string;
+}
+
+/** Lineage lines, only when the store has sessions (and derived or sub-agent runs, when it has those). */
+function sessionLines(st: Stats): Line[] {
+  const x = st.sessions;
+  if (x.total === 0) return [];
+  const out: Line[] = [
+    {
+      verdict: highIsGood(x.anchoredShare, GOALS.anchoredSessionShare),
+      label: "Sessions anchored",
+      value: pct(x.anchoredShare),
+      goal: `>= ${pct(GOALS.anchoredSessionShare.good)}`,
+      meaning: "sessions on an issue, branch or worktree item, not a provisional per-session item",
+    },
+    {
+      verdict: null,
+      label: "Sessions",
+      value: String(x.total),
+      goal: "",
+      meaning: "sessions linked to items in scope",
+    },
+    {
+      verdict: null,
+      label: "Sessions per item",
+      value: `${x.perItemMedian ?? 0} / ${x.perItemMax ?? 0}`,
+      goal: "",
+      meaning: "median / most sessions on one item",
+    },
+    {
+      verdict: null,
+      label: "Items, 2+ sessions",
+      value: String(x.multiSessionItems ?? 0),
+      goal: "",
+      meaning: "items that gathered more than one session",
+    },
+  ];
+  if (x.derivedShare !== null)
+    out.push({
+      verdict: null,
+      label: "Sessions derived",
+      value: `${x.derived ?? 0} (${pct(x.derivedShare)})`,
+      goal: "",
+      meaning: "sessions that continue or branch from a parent session",
+    });
+  if (x.subagentRuns !== null)
+    out.push({
+      verdict: null,
+      label: "Sub-agent runs",
+      value: String(x.subagentRuns),
+      goal: "",
+      meaning: "distinct sub-agent runs inside those sessions",
+    });
+  return out;
 }
 
 function lines(st: Stats): Line[] {
@@ -399,17 +484,7 @@ function lines(st: Stats): Line[] {
       goal: `<= ${pct(g.builtNoProofShare.good)}`,
       meaning: "Built items (docs-only excluded) with no passing check since the last edit",
     },
-    ...(st.sessions.derivedShare === null
-      ? []
-      : [
-          {
-            verdict: null,
-            label: "Sessions derived",
-            value: pct(st.sessions.derivedShare),
-            goal: "",
-            meaning: "sessions that continue or branch from a parent session",
-          } satisfies Line,
-        ]),
+    ...sessionLines(st),
     {
       verdict: lowIsGood(st.stagePass.ageSeconds, g.stagePassAgeSeconds),
       label: "Last stage pass",
