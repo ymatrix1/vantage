@@ -44,7 +44,7 @@ Vibe Kanban is Apache-2.0, so ideas and, where useful, code can be reused with a
 | PR creation from the card | **Later, maybe:** a hand-off action, if it stays explicit |
 | Kanban board | **Toggle only:** Track rows are the default (D15) |
 
-Details to verify in research bean R12.
+Details to verify in research bean R12. How it drives Claude Code is documented in [vibe-kanban.md](vibe-kanban.md).
 
 ## Conclusion
 

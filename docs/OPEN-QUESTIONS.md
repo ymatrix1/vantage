@@ -25,3 +25,4 @@
 | Q21 | **Why tree without a ticket.** How to draft "why we built it" from chat without inventing reasons? | Only from the user's own words and decisions, each node citing them; the user confirms before it's frozen. |
 | Q22 | **Companion character.** Still needed now that every item is a character? | Keep optional; decide after testing the landscape. |
 | Q23 | **Ping thresholds.** Are 4 working hours (owed reply) and 2 working days (follow-up) right? | Tune with real data; allow per-person overrides for key collaborators. |
+| Q24 | **"Run in Vantage" mode.** Should Vantage optionally launch sessions itself (stream-JSON protocol or Agent SDK), like Vibe Kanban, to answer permission prompts and send diff comments from its UI? | It uses headless `-p` and moves toward running agents (a non-goal), so observing stays the default. See [Vibe Kanban research](research/vibe-kanban.md). |

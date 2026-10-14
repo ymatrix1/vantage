@@ -21,6 +21,8 @@ Borrow proven UX and code where it fits Vantage's viewer role, without becoming 
 
 ## Acceptance Criteria
 
+- [x] How it launches and controls Claude Code (headless stream-JSON, stdio permissions, hook callbacks), in docs/research/vibe-kanban.md
+
 - [ ] How diff comments reach the agent, and what the UX looks like
 - [ ] MCP tools it exposes and their shapes
 - [ ] How preview and click-to-component work, and what a screenshot-based visual proof would need
