@@ -516,7 +516,7 @@ describe("migration 5", () => {
     old.close();
     const upgraded = new Store(path);
     try {
-      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(5);
+      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(6);
       const idx = upgraded.db
         .prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'work_items'")
         .all()

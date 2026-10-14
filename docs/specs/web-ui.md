@@ -27,17 +27,47 @@ Every page and panel handles all five states.
 |---|---|
 | `Ctrl+K` | Command palette (every action is listed there) |
 | `g f` / `g t` / `g j` / `g i` / `g s` | Go to Focus, Track, Journal, Inbox, Sources |
-| `j` / `k` | Next / previous row |
+| `j` / `k` | Next / previous row (rows of collapsed groups are skipped) |
 | `Enter` | Open item |
 | `Esc` | Close panel or palette |
-| `/` | Search |
+| `/` | Focus search (`Esc` leaves the box) |
+| `[` / `]` | Previous / next page of the list |
 | `p` | Pin or unpin item |
 | `z` | Park item |
 | `r` | Resume with context |
 | `a` | Ask for proof |
 | `e` | Explain the selected item, project or week |
-| `1` / `2` / `3` | Group Track by attention / project / stage |
-| `?` | Show this map |
+| `1` / `2` / `3` / `4` | Group Track by attention / repo / stage / no grouping (proposed D85; no `g` chords, since `g s` is Sources) |
+| `?` | Show this map and the dot legend |
+
+## Track controls
+
+Built in `packages/ui` (`vantage-4ty4`, proposed D85). The request mirrors the `GET /api/track` query contract; the response adds `page`, `facets` and `groups` with `id`, `label`, `total` and the current page's rows.
+
+| Control | Behaviour |
+|---|---|
+| Search | Title, repo and branch, at most 80 characters, sent after a 250 ms pause or on `Enter`; typing replaces the history entry instead of adding one |
+| Filters | Chips with live counts from `facets`: since (24 h, 7 d, 30 d, all), has code edits, repo, branch, stage, proof, flag. Each count is computed without its own filter, so a chip shows what choosing it would give. Active filters show as removable chips; "Clear all filters" keeps sort, group and page size |
+| Sort and group | Sort by activity, stage, title, repo or flags, with direction (title and repo start A to Z, the rest newest or highest first). Group by attention, repo, stage or none |
+| Groups | Real headings with the group total; "(N on this page)" when paging splits a group. Each collapses. Grouped by attention, the page folds rows without code edits into "Conversations without code" and, for 30 days or all time, rows older than 7 days into "Older" (both collapsed by default). A row shows "N sessions" when the daemon sends a `sessionCount` above 1 |
+| Pagination | First, previous, next, last, "26 to 50 of 312", and 25, 50 or 100 per page. Any filter, sort or group change returns to page 1; a page past the end lands on the last page |
+| Flags | Each flag shows its `reason` text on the row |
+
+**Dots, label and legend.** Each row shows the six dots and, beside them, a short label from the item's own fields: "Asked", "Built · no proof yet" (or expired, failed, weak), "Built · needs you", "Built · docs only, proof not required", "Proven · L1". Below the `md` breakpoint the label moves next to the repo line; the dots never hide. "What the dots mean" in the page header (and `?`) opens a non-modal legend: the six stages with their question, the six states drawn with the same dot component, and the rule that the shape carries the meaning and an agent saying "done" never moves a dot. `Esc` or its Close button closes it. The skipped state is a short dash with no ring, so it cannot be mistaken for the thin "not yet" ring (proposed D91); in forced-colours mode every dot shape takes the system text colour. Each dot keeps its tooltip (stage and state) on hover; the dots sit inside the row button, so they take no focus of their own and the row's accessible name lists all six.
+
+Default view: group by attention, since 7 days, sorted by recent activity, 25 per page.
+
+**View state.** Everything above lives in the URL query string (only what differs from the default), so a view is shareable and the back button works. The last view's query string is also kept in `localStorage` (`vantage.view`) and used when the page opens with no query. The token never enters the query string, history or `localStorage` (D75).
+
+**Screen states for Track.**
+
+| State | What the user sees |
+|---|---|
+| Loading, first load | Skeleton rows |
+| Loading, a control changed | The previous rows stay, dimmed and marked busy, until the new response lands; a stale request is cancelled |
+| Empty, no work at all | "No work yet. Run `vantage init` in a repo to start." |
+| Empty, filters removed everything | "Nothing matches these filters." plus one line per filter that, removed on its own, would bring items back ("The repo filter hides 10 items. Remove it"), and Clear all filters. With only the default 7 days: "Nothing active in the last 7 days." with a way to widen it |
+| Live push | Rows on the page update in place; rows never appear, vanish or move. Counts refresh at most once a second. Reconnect and `resync` refetch the current page |
 
 ## API (daemon to UI)
 

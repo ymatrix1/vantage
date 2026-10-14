@@ -49,7 +49,25 @@ The heuristic finds 68 of the 79 derived sessions (86%) and adds 19 unconfirmed 
 
 ## Side findings
 
-- 506 of 518 sessions are on a non-default branch by the transcript's `gitBranch`, but `file.edited` and `command.ran` events from transcripts carry no `branch` (only the prompt does), so the linker finds the branch only through a scanned worktree. ❓ Unverified on the live store whether this is why many sessions end as provisional items; a follow-up bean tracks it.
+- 506 of 518 sessions are on a non-default branch by the transcript's `gitBranch`, but `file.edited` and `command.ran` events from transcripts carried no `branch` (only the prompt did), so the linker found the branch only through a scanned worktree. Confirmed on the live store (below) and fixed in `vantage-j9ea` (D92).
+
+## Branch on tool events: before and after
+
+Same copy of the live store (about 32.7 thousand events, 163 sessions, 137 with edits), linked with the code before and after the change; after = the one-shot backfill over the 14-day transcripts, then a link pass. Counts only.
+
+| Measure | Before | After |
+|---|---|---|
+| Sessions with an edit anchored by branch, issue key or worktree | 12 of 137 (9%) | 129 of 137 (94%) |
+| Sessions whose edits are all in a per-session item | 125 | 8 |
+| Edit events in a per-session item | 7,790 of 8,097 (96%) | 1,174 of 8,097 (14%) |
+| `Session <id>` items | 130 | 33 |
+| Branch items | 296 | 361 |
+| Issue items | 37 | 48 |
+| Worktree items | 4 | 4 |
+| All items | 467 | 446 |
+| Tool events with a `branch` in the stored payload | 0 | 0 (the branch sits in `event_branches`; 87,493 rows after the backfill, one per tool call seen in the 14-day transcripts) |
+
+❓ The 8 sessions and 1,174 edits still in per-session items are on the default branch, detached, or have no `gitBranch`; the split was not measured. Total items fall only a little (467 to 446) because sessions that were separate rows now share a branch item: that is the intended effect, and it moves 97 rows from untitled `Session <id>` to a named branch or key.
 
 ## Method
 

@@ -75,6 +75,7 @@ Counts for the Track view come from the `item_sessions` view (see [data schema](
 - **Every link is visible and undoable** from the item view.
 - **A session can feed several items** (one chat touching two tickets). Events are linked individually, not whole sessions.
 - **Implementation (Phase 1).** `packages/core/src/linker.ts` replays events in time order and links each event by its own branch (D54), resolving branch-less events through the worktree path of the latest git event. Order: issue key, branch, detached linked worktree, then the family's anchored item or the provisional per-session item (derived sessions share their root's). Each link stores its `method` (`anchor`) and a `rule` explaining why. The daemon persists links in `links` and an undo sets `undone_at`; later passes never re-create an undone link. Default branches and issue-key prefixes are options, not hard-coded per repo.
+- **Branch from the transcript (D92, proposed).** Tool events from transcripts carry the branch in force at their line (see [ingestion](ingestion.md#branch-on-tool-events)), so a session on a named branch, including a worktree branch such as `claude/<name>`, anchors to `branch:<repo>:<branch>` or to the issue key in the name. The default branch, a detached HEAD and a line with no `gitBranch` keep the earlier behaviour (a provisional item per session, or the family's item for a derived session).
 - **Ghosts:** a session with user requests, no edits and no anchor yields a *proposed* Asked item that the user confirms or dismisses.
 
 ## Project assignment
