@@ -951,4 +951,13 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 
 ## Proposed (pending confirmation)
 
-None right now.
+### D77. Capture accuracy: repo root from scanned worktrees, test counts from runner summaries
+
+- **Status:** proposed
+- **Context:** D70 left `repoRoot` unset, so a session started in a subdirectory lost real edits to sibling paths (`vantage-1ulu`). D71 left output capture open, so a run that executed zero tests could still count as proof (`vantage-ci4u`). The hook only appends the raw payload to the spool (D67, D72), so any parsing happens in the daemon.
+- **Decision:**
+  1. **Repo root:** at ingest, `repoRoot` is the longest worktree path from stored `worktree.scanned` events that lexically contains the session `cwd`. No match keeps today's reading (`cwd` is the root). No `git` call runs in the hook or in ingest.
+  2. **Test counts:** from the spooled `tool_response` (or a transcript `tool_result`) the daemon parses the summary of vitest, jest, pytest, `go test` and `dotnet test` into `command.ran.result {run, passed, failed, skipped}` with `run` = passed + failed + skipped and errors counted as failed. Only numbers are stored. Output with no recognised summary leaves `result` absent. `go test` without `-v` reports counts only when every package says it has no tests; a plain `ok` is left unrecognised.
+- **Why:** Worktree roots are already collected by the scanner, so a lexical lookup is free and keeps the hook inside its budget. Parsing the runner's own summary is evidence, not an agent claim (D3), and storing numbers keeps output text out of the store (privacy boundary).
+- **Alternatives:** Run `git rev-parse --show-toplevel` per session (a process spawn per event, and wrong for deleted worktrees); walk up looking for `.git` (filesystem access in ingest, and still misses repos the user never registered); parse output in the hook (breaks the 100 ms budget); store a capped output excerpt (privacy risk, no extra evidence); count `go test` packages as tests (invents counts).
+- **Impact:** Updates the [ingestion spec](specs/ingestion.md). An event ingested before the scanner reports its worktree keeps the cwd-based classification, since events are immutable. A missed or novel runner format stays "unknown", never zero. Revisit if repos outside the scanner's registered set matter, or when another runner (dbt, cargo, mvn) is needed.

@@ -170,3 +170,32 @@ describe("runOnce", () => {
     expect(r).toEqual({ spool: 0, transcripts: 0 });
   });
 });
+
+describe("repo root from scanned worktrees", () => {
+  it("a subdirectory session editing a sibling counts as an edit once the worktree is known", () => {
+    const spool = join(dir, "spool");
+    mkdirSync(spool);
+    store.insertEvent(
+      {
+        source: "git",
+        sourceId: "git:r:scan:1",
+        kind: "worktree.scanned",
+        timestamp: "2026-10-14T10:00:00.000Z",
+        payload: { worktree: "/w/repo", branch: "main", head: "abc", dirty: false },
+      },
+      NOW.toISOString(),
+    );
+    const hook = {
+      hook_event_name: "PostToolUse",
+      session_id: "s-1",
+      tool_use_id: "t-1",
+      tool_name: "Bash",
+      tool_input: { command: "echo a > ../docs/a.md" },
+      tool_response: { stdout: "" },
+      cwd: "/w/repo/src",
+    };
+    appendFileSync(join(spool, "2026-10-14.jsonl"), spoolLine(hook));
+    ingestSpool(store, spool, NOW);
+    expect(sourceIds()).toContain("cc:tool:t-1:edit");
+  });
+});

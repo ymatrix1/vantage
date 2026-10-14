@@ -2,6 +2,8 @@
 // Source of truth: docs/specs/ingestion.md (event catalog) and docs/research/claude-code-hooks.md.
 import { createHash } from "node:crypto";
 import { classifyWrites, detectShellEffects } from "./shell.ts";
+import { resolveRepoRoot } from "./paths.ts";
+import { parseTestSummary } from "./test-summary.ts";
 import type { VantageEvent } from "./events.ts";
 
 export const SOURCE = "claude_code";
@@ -25,6 +27,26 @@ export interface ToolCall {
   cwd?: string | undefined;
   /** The session's repo or worktree root, when known. Defaults to cwd for shell-write classification. */
   repoRoot?: string | undefined;
+  /** The tool's combined output text, read only to extract test counts and never stored. */
+  output?: string | undefined;
+}
+
+/** Context the daemon supplies at ingest (the hook only spools raw payloads). */
+export interface IngestContext {
+  /** Known repo and worktree roots; a call's root is the longest one containing its cwd. */
+  repoRoots?: readonly string[];
+}
+
+const rootFor = (cwd: string | undefined, ctx: IngestContext | undefined): string | undefined =>
+  cwd && ctx?.repoRoots ? resolveRepoRoot(cwd, ctx.repoRoots) : undefined;
+
+/** Text of a hook `tool_response` (Bash returns stdout and stderr), or a transcript result. */
+function outputText(v: unknown): string | undefined {
+  if (typeof v === "string") return v;
+  if (Array.isArray(v)) return v.map((b) => (isRec(b) ? (str(b["text"]) ?? "") : "")).join("\n");
+  if (!isRec(v)) return undefined;
+  const parts = [str(v["stdout"]), str(v["stderr"]), str(v["output"])].filter((x) => x !== undefined);
+  return parts.length > 0 ? parts.join("\n") : undefined;
 }
 
 /**
@@ -53,6 +75,7 @@ export function toolCallEvents(call: ToolCall): VantageEvent[] {
     const command = str(call.input["command"]) ?? "";
     const fx = detectShellEffects(command);
     const scope = classifyWrites(fx, command, call.cwd, call.repoRoot);
+    const result = call.output ? parseTestSummary(call.output) : null;
     const writesInRepo = scope.inRepo.length > 0 || (fx.opaqueWrite && !scope.opaqueOutside);
     events.push({
       ...base,
@@ -63,6 +86,7 @@ export function toolCallEvents(call: ToolCall): VantageEvent[] {
         ...common,
         command: command.slice(0, MAX_COMMAND_CHARS),
         ...(fx.commit ? { commit: true } : {}),
+        ...(result ? { result } : {}),
         ...(scope.outside.length > 0 ? { outsidePaths: scope.outside } : {}),
         ...(scope.opaqueOutside ? { opaqueOutsideRepo: true } : {}),
       },
@@ -106,7 +130,7 @@ export function parseSpoolRecord(line: string): SpoolRecord | null {
 
 const digest = (s: string): string => createHash("sha1").update(s).digest("hex").slice(0, 16);
 
-export function hookEvents(record: SpoolRecord): VantageEvent[] {
+export function hookEvents(record: SpoolRecord, ctx?: IngestContext): VantageEvent[] {
   const h = record.hook;
   const name = str(h["hook_event_name"]);
   const sessionId = str(h["session_id"]);
@@ -152,6 +176,8 @@ export function hookEvents(record: SpoolRecord): VantageEvent[] {
         sessionId,
         ok: name === "PostToolUse",
         cwd,
+        repoRoot: rootFor(cwd, ctx),
+        output: outputText(h["tool_response"]) ?? outputText(h["error"]),
       });
     }
     default:
@@ -207,7 +233,7 @@ export function parseTranscriptLine(line: string): TranscriptLine | null {
 }
 
 /** Events for one batch of transcript lines; pairs tool calls with their results within the batch. */
-export function transcriptEvents(lines: TranscriptLine[]): VantageEvent[] {
+export function transcriptEvents(lines: TranscriptLine[], ctx?: IngestContext): VantageEvent[] {
   const calls = new Map<string, ToolCall>();
   const prompts: VantageEvent[] = [];
 
@@ -226,6 +252,7 @@ export function transcriptEvents(lines: TranscriptLine[]): VantageEvent[] {
           timestamp: ts,
           sessionId: l.sessionId,
           cwd: l.cwd,
+          repoRoot: rootFor(l.cwd, ctx),
         });
       }
       continue;
@@ -234,7 +261,10 @@ export function transcriptEvents(lines: TranscriptLine[]): VantageEvent[] {
     for (const b of l.content) {
       if (b["type"] === "tool_result") {
         const call = calls.get(str(b["tool_use_id"]) ?? "");
-        if (call) call.ok = b["is_error"] !== true;
+        if (call) {
+          call.ok = b["is_error"] !== true;
+          call.output = outputText(b["content"]);
+        }
       } else if (b["type"] === "text") isPrompt = true;
     }
     if (isPrompt && !l.isMeta && !l.isSidechain && l.uuid) {
