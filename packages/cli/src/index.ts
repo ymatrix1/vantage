@@ -6,6 +6,7 @@ export type { Check, CheckStatus } from "./doctor.ts";
 export {
   MANAGED,
   mergeSettings,
+  findNativeBinary,
   resolveHookCommands,
   resolvePaths,
   runAdd,

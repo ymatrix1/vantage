@@ -24,6 +24,7 @@ import {
   gitHookScript,
   mergeSettings,
   removeRepoFromConfig,
+  findNativeBinary,
   resolveHookCommands,
   resolvePaths,
   stripSettings,
@@ -90,6 +91,9 @@ beforeEach(() => {
     GIT_CONFIG_GLOBAL: p("home", "gitconfig"),
     GIT_CONFIG_NOSYSTEM: "1",
     VANTAGE_HOOKS_DIR: p("hooks"),
+    // Point the native lookups at temp dirs so a real build or install on this machine never leaks in.
+    VANTAGE_NATIVE_PACKAGES_DIR: p("npm"),
+    VANTAGE_NATIVE_BUILD_DIR: p("cargo"),
   };
   mkdirSync(p("home"), { recursive: true });
   repo = p("repo");
@@ -430,5 +434,152 @@ describe("vantage doctor", () => {
     writeFileSync(p("vh", "vantage.db"), "not a database");
     expect(status("daemon")).toBe("warn");
     expect(status("database")).toBe("fail");
+  });
+});
+
+const EXE = process.platform === "win32" ? ".exe" : "";
+const fwdp = (x: string): string => x.replaceAll("\\", "/");
+const fakePackageBin = (): string => {
+  const dir = p("npm", "@vantage", `hook-${process.platform}-${process.arch}`, "bin");
+  mkdirSync(dir, { recursive: true });
+  const f = join(dir, `vantage-hook${EXE}`);
+  writeFileSync(f, "fake binary");
+  return fwdp(f);
+};
+const fakeLocalBin = (): string => {
+  mkdirSync(p("cargo"), { recursive: true });
+  const f = p("cargo", `vantage-hook${EXE}`);
+  writeFileSync(f, "fake binary");
+  return fwdp(f);
+};
+const hookCommand = (): string =>
+  String(firstHook(asRec(readSettings()["hooks"]), "SessionStart")["command"]);
+
+describe("native hook resolution (D72, D76)", () => {
+  it("uses node when there is no package and no local build", () => {
+    const c = resolveHookCommands(env);
+    expect(c.kind).toBe("node-js");
+    expect(c.hook).toBe(`node "${fwdp(p("hooks", "bin.js"))}" ${MANAGED}`);
+    expect(c.reason).toContain("no native binary");
+    expect(findNativeBinary(env)).toBeNull();
+  });
+
+  it("prefers a local build over node", () => {
+    const bin = fakeLocalBin();
+    const c = resolveHookCommands(env);
+    expect(c.kind).toBe("native-local");
+    expect(c.hook).toBe(`"${bin}" "${fwdp(p("hooks", "bin.js"))}" ${MANAGED}`);
+    expect(c.files).toContain(bin);
+  });
+
+  it("prefers the package over a local build", () => {
+    fakeLocalBin();
+    const pkg = fakePackageBin();
+    const c = resolveHookCommands(env);
+    expect(c.kind).toBe("native-package");
+    expect(c.hook.startsWith(`"${pkg}" `)).toBe(true);
+  });
+
+  it("native command: Node entry is the first non-flag argument and the marker is last", () => {
+    fakePackageBin();
+    const quoted = [...resolveHookCommands(env).hook.matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+    expect(quoted).toHaveLength(2);
+    expect(quoted[1]).toMatch(/bin\.js$/);
+    expect(resolveHookCommands(env).hook.endsWith(` ${MANAGED}`)).toBe(true);
+  });
+
+  it("keeps the status line on node", () => {
+    fakePackageBin();
+    expect(resolveHookCommands(env).statusLine.startsWith("node ")).toBe(true);
+  });
+
+  it("handles Windows-style backslash paths by writing forward slashes", () => {
+    const bin = fakeLocalBin();
+    expect(bin).not.toContain("\\");
+    expect(resolveHookCommands(env).hook).not.toContain("\\");
+  });
+
+  it("add --dry-run says which hook it would register and why", async () => {
+    fakeLocalBin();
+    expect(await cli(["add", "--dry-run"])).toBe(0);
+    expect(out.join("\n")).toContain("Hook: native binary built in this checkout");
+    out = [];
+    rmSync(p("cargo"), { recursive: true });
+    expect(await cli(["add", "--dry-run"])).toBe(0);
+    expect(out.join("\n")).toContain("Hook: no native binary found");
+  });
+
+  it("add updates the managed hooks in place: node to native and back", async () => {
+    expect(await cli(["add", "--yes"])).toBe(0);
+    expect(hookCommand().startsWith("node ")).toBe(true);
+    const bin = fakeLocalBin();
+    out = [];
+    expect(await cli(["add", "--yes"])).toBe(0);
+    expect(hookCommand().startsWith(`"${bin}" `)).toBe(true);
+    for (const e of HOOK_EVENTS) expect(asList(asRec(readSettings()["hooks"])[e])).toHaveLength(1);
+    rmSync(p("cargo"), { recursive: true });
+    expect(await cli(["add", "--yes"])).toBe(0);
+    expect(hookCommand().startsWith("node ")).toBe(true);
+    for (const e of HOOK_EVENTS) expect(asList(asRec(readSettings()["hooks"])[e])).toHaveLength(1);
+  });
+
+  it("re-running add with the same native binary changes nothing", async () => {
+    fakeLocalBin();
+    expect(await cli(["add", "--yes"])).toBe(0);
+    out = [];
+    expect(await cli(["add", "--yes"])).toBe(0);
+    expect(out.join("\n")).toContain("Already installed");
+  });
+});
+
+const hooksCheck = () => runChecks(env).find((c) => c.name === "hooks");
+const nativeCheck = () => runChecks(env).find((c) => c.name === "native hook");
+
+describe("vantage doctor and the native hook", () => {
+  it("none: reports hooks missing and no native warning", () => {
+    expect(hooksCheck()?.status).toBe("fail");
+    expect(nativeCheck()).toBeUndefined();
+  });
+
+  it("node registered, no native available: passes with no warning", async () => {
+    await cli(["add", "--yes"]);
+    expect(hooksCheck()?.detail).toContain("node hook");
+    expect(nativeCheck()).toBeUndefined();
+  });
+
+  it("node registered while a native binary is available: warns, with the one-line fix", async () => {
+    await cli(["add", "--yes"]);
+    fakeLocalBin();
+    expect(hooksCheck()?.status).toBe("pass");
+    const w = nativeCheck();
+    expect(w?.status).toBe("warn");
+    expect(w?.fix).toContain("vantage add --yes");
+    out = [];
+    await cli(["doctor"]);
+    expect(out.join("\n")).toContain("fix: Run `vantage add --yes`");
+  });
+
+  it("native registered: passes, no warning", async () => {
+    fakeLocalBin();
+    await cli(["add", "--yes"]);
+    expect(hooksCheck()?.detail).toContain("native hook");
+    expect(hooksCheck()?.status).toBe("pass");
+    expect(nativeCheck()).toBeUndefined();
+  });
+
+  it("fails when the registered native binary is gone", async () => {
+    fakeLocalBin();
+    await cli(["add", "--yes"]);
+    rmSync(p("cargo"), { recursive: true });
+    expect(hooksCheck()?.status).toBe("fail");
+    expect(hooksCheck()?.detail).toContain("vantage-hook");
+  });
+
+  it("fails when the Node entry of a native hook is gone", async () => {
+    fakeLocalBin();
+    await cli(["add", "--yes"]);
+    rmSync(p("hooks", "bin.js"));
+    expect(hooksCheck()?.status).toBe("fail");
+    expect(hooksCheck()?.detail).toContain("bin.js");
   });
 });
