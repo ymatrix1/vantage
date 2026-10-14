@@ -51,6 +51,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 | [D35](#d35-landscape-home-with-dot-characters) | 2026-10-14 | Landscape home with dot characters |
 | [D36](#d36-calm-gamification-rules) | 2026-10-14 | Calm gamification rules |
 | [D37](#d37-explain-through-the-connected-agent) | 2026-10-14 | Explain through the connected agent |
+| [D38](#d38-track-pings-draft-never-send) | 2026-10-14 | Track pings; draft, never send |
 
 ---
 
@@ -350,6 +351,14 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Why:** Uses tools the user already pays for; keeps the model from deciding status; progressive disclosure serves both the 30-second reader and the deep dive.
 - **Alternatives:** Free-form LLM summaries (unverifiable, can invent status); a separate API key and model (more cost and setup).
 - **Impact:** A JSON schema, renderer components and caching; gated by the data policy decision; [Explain spec](specs/explain.md).
+
+### D38. Track pings; draft, never send
+
+- **Context:** Work stalls on people: questions seen but not answered, reviews nobody picked up, finished work nobody was told about. `unseen_mention` cleared once a message was seen, even without a reply.
+- **Decision:** Three flags: `owe_reply`, `follow_up_due`, `close_the_loop`, with working-hour thresholds. One click drafts the message in the right place; the user always sends it. Flags clear only when Vantage sees the user's message in the source.
+- **Why:** Owed replies and silent waits are a large, invisible source of stress and delay; drafting removes friction while keeping the user in control of what's said.
+- **Alternatives:** Only track unseen mentions (misses seen-but-unanswered); auto-send nudges (risky, impersonal, could embarrass the user).
+- **Impact:** Question detection rules plus an optional judge (data policy), thresholds per case, Inbox sections and landscape badges; [pings spec](specs/pings.md).
 ---
 
 ## Proposed (pending confirmation)

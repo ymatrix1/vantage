@@ -75,6 +75,9 @@ Flags sit on any card, whatever the stage.
 | `forgotten` | Asked or Built with no activity for N days (default 5), or a user commitment with no follow-up | amber |
 | `unseen_mention` | Slack, Jira or Linear mention, or GitHub review request, with no reply or reaction from the user | amber; red if the person is blocked |
 | `claimed_fixed` | A reply says fixed or done on a review thread, but no later commit touches the commented lines | amber |
+| `owe_reply` | Someone asked you a question or request and you haven't replied, even if you saw it (see [pings](pings.md)) | amber; red after 1 working day if they're blocked |
+| `follow_up_due` | You're waiting on someone (question, review, blocker) and nothing came back within the threshold | amber |
+| `close_the_loop` | The item shipped or was verified and the person who asked for it hasn't been told | amber |
 | `shipped_unverified` | Deployed, but no post-deploy check ran within N hours (default 24) | amber |
 
 ## What counts as proof

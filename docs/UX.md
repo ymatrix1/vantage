@@ -80,9 +80,9 @@ The main "all work" view. A table, not a board, because it stays readable with m
 
 ### Inbox
 
-- Grouped by person, then by item.
+- Grouped by person, then by item, in three sections: **You owe** (`owe_reply`), **Nudge** (`follow_up_due`) and **Tell them** (`close_the_loop`). See [pings](specs/pings.md).
 - Mentions, review requests and commitments, with "seen" state as defined in [operations](specs/operations.md#seen-state).
-- One action per row: Open, Reply (opens the source), Mark done.
+- One action per row: Reply, Nudge or Tell (each drafts a message you send yourself), or Mark done.
 
 ### Sources
 

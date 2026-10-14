@@ -25,3 +25,4 @@
 | Q20 | **Landscape at scale.** Does the landscape stay readable with 25+ items? | Build a stress-test mockup before Phase 3; caps and "+N" counts are the first answer. |
 | Q21 | **Why tree without a ticket.** How to draft "why we built it" from chat without inventing reasons? | Only from the user's own words and decisions, each node citing them; the user confirms before it's frozen. |
 | Q22 | **Companion character.** Still needed now that every item is a character? | Keep optional; decide after testing the landscape. |
+| Q23 | **Ping thresholds.** Are 4 working hours (owed reply) and 2 working days (follow-up) right? | Tune with real data; allow per-person overrides for key collaborators. |

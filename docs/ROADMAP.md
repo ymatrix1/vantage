@@ -57,6 +57,7 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 
 - GitHub PR ingestion; Reviewed stage and sub-states.
 - `claimed_fixed` detector; re-review tracking.
+- Pings on GitHub: `owe_reply` for review requests and questions, `follow_up_due` for reviews you requested, `close_the_loop` for PR requesters.
 
 ## Phase 5: ship and verify
 
@@ -69,6 +70,7 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 - Tracker adapter with Jira and Linear implementations; build whichever is in use first.
 - Assigned issues as Asked items; priority and due date.
 - Unseen mentions; commitment detection.
+- Pings on Slack, Jira and Linear: owed replies, nudges and close-the-loop drafts.
 
 ## Later
 

@@ -27,6 +27,7 @@ A card moves only on evidence: a git diff, a test or data check that ran after t
 | [Spec: data schema](docs/specs/data-schema.md) | Tables, immutability, migrations, merge linking |
 | [Spec: visual language](docs/specs/visual-language.md) | Dot alphabet, proof shine, dot characters, landscape home, calm gamification |
 | [Spec: Explain](docs/specs/explain.md) | Answer-first briefs, SCR, MECE issue trees with click-to-expand, via the connected agent |
+| [Spec: pings](docs/specs/pings.md) | Who you owe a reply, who to nudge, who to tell it's done |
 | [Spec: web UI](docs/specs/web-ui.md) | Navigation, screen states, keyboard map, API, performance budgets |
 | [Spec: CI/CD](docs/specs/ci.md) | Docs checks now, code checks in Phase 1, releases later |
 | [Mockups](docs/mockups/index.html) | Static HTML mockups with synthetic data |

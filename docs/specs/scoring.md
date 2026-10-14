@@ -8,7 +8,7 @@ Signals, roughly in order of weight:
 
 | Signal | Source |
 |---|---|
-| Someone is blocked on you (re-review request, direct question, mention from a person) | GitHub, Slack, Jira or Linear |
+| Someone is blocked on you (re-review request, direct question, mention from a person, `owe_reply`) | GitHub, Slack, Jira or Linear |
 | Due date proximity | Jira or Linear |
 | Red flags (`regression`, `collision`, `waiting_on_you`, `ai_decided`) | Vantage |
 | Issue priority | Jira or Linear |
@@ -45,3 +45,6 @@ Unit: active minutes when available, otherwise event count. Hover shows per-sess
 - Changes that aren't red are queued and shown at user-chosen times (default 10:00 and 14:00).
 - The digest summarizes per item ("PR #412 needs 2 fixes"), never a raw event feed.
 - It always ends with a "safe to ignore" count: items with no change and no flags.
+## Pings
+
+`owe_reply`, `follow_up_due` and `close_the_loop` follow the thresholds in the [pings spec](pings.md), counted in working hours only. The digest summarizes them per person ("Sam is waiting on 2 answers"), never as a raw list.

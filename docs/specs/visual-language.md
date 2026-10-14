@@ -48,6 +48,9 @@ One line-icon set (no emoji, which renders differently per machine), each on a t
 | `forgotten` | Moon |
 | `unseen_mention` | At sign |
 | `regression` | Falling star |
+| `owe_reply` | Speech bubble with a question mark |
+| `follow_up_due` | Clock |
+| `close_the_loop` | Speech bubble with a check |
 
 ## Dot characters
 
