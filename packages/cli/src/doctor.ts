@@ -4,7 +4,15 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { readHealth } from "@vantage/daemon";
-import { HOOK_EVENTS, MANAGED, readSettings, resolvePaths, type InstallIo, listRepos } from "./install.ts";
+import {
+  HOOK_EVENTS,
+  MANAGED,
+  findNativeBinary,
+  readSettings,
+  resolvePaths,
+  type InstallIo,
+  listRepos,
+} from "./install.ts";
 
 export type CheckStatus = "pass" | "warn" | "fail";
 export interface Check {
@@ -20,8 +28,10 @@ const STATUS_FRESH_MS = 5 * 60_000;
 
 /** The file a registered command runs: the first double-quoted path in it. */
 const commandFile = (cmd: string): string | null => /"([^"]+)"/.exec(cmd)?.[1] ?? null;
+/** Every file a registered hook command needs: a native command quotes the binary and the Node entry. */
+const commandFiles = (cmd: string): string[] => [...cmd.matchAll(/"([^"]+)"/g)].map((m) => m[1] ?? "");
 
-function hooksCheck(settingsPath: string): Check[] {
+function hooksCheck(settingsPath: string, env: NodeJS.ProcessEnv): Check[] {
   let settings: Record<string, unknown>;
   try {
     settings = readSettings(settingsPath);
@@ -61,8 +71,8 @@ function hooksCheck(settingsPath: string): Check[] {
     });
     return out;
   }
-  const gone = [...new Set([...registered.values()].map(commandFile))].filter(
-    (f): f is string => f !== null && !existsSync(f),
+  const gone = [...new Set([...registered.values()].flatMap(commandFiles))].filter(
+    (f) => f !== "" && !existsSync(f),
   );
   if (gone.length > 0) {
     out.push({
@@ -73,10 +83,21 @@ function hooksCheck(settingsPath: string): Check[] {
     });
     return out;
   }
-  const kind = [...registered.values()].some((c) => c.startsWith("node "))
-    ? "built JavaScript"
-    : "native binary";
-  out.push({ name: "hooks", status: "pass", detail: `${HOOK_EVENTS.length} events registered (${kind})` });
+  const node = [...registered.values()].some((c) => c.startsWith("node "));
+  out.push({
+    name: "hooks",
+    status: "pass",
+    detail: `${HOOK_EVENTS.length} events registered (${node ? "node" : "native"} hook)`,
+  });
+  const native = findNativeBinary(env);
+  if (node && native) {
+    out.push({
+      name: "native hook",
+      status: "warn",
+      detail: `the node hook is registered (about 130 ms per event) but a native binary is available at ${native.path}`,
+      fix: "Run `vantage add --yes` to re-register the hooks with the native binary.",
+    });
+  }
   return out;
 }
 
@@ -220,7 +241,7 @@ function sourcesCheck(home: string, env: NodeJS.ProcessEnv, userHome: string): C
 export function runChecks(env: NodeJS.ProcessEnv, now = new Date()): Check[] {
   const p = resolvePaths(env);
   return [
-    ...hooksCheck(p.settings),
+    ...hooksCheck(p.settings, env),
     statusLineCheck(p.settings),
     spoolCheck(p.home),
     daemonCheck(p.home, now),

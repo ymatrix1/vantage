@@ -1010,6 +1010,15 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 
 ## Proposed (pending confirmation)
 
+### D80. The installer picks the native hook by lookup, in a fixed order, and doctor nudges when it is unused
+
+- **Status:** proposed
+- **Context:** D72 and D76 ship a native spool hook as per-OS npm packages, but nothing registers it. The packages are not published yet, and developers build the crate locally. `vantage add` must choose a hook without a network call or a build step, and must not leave a slower Node hook in place once the native one exists.
+- **Decision:** `resolveHookCommands` (the single place that decides) picks, in order: (1) the `@vantage/hook-<os>-<cpu>` package binary when it resolves, (2) a binary built in this checkout at `packages/hooks-native/target/release/vantage-hook` (`.exe` on Windows), (3) `node <packages/hooks/dist/src/bin.js>`. A native choice registers `"<binary>" "<node entry>" --vantage-managed` (D76), the status line stays on Node. `vantage add --dry-run` prints the choice and why. `vantage doctor` reports native or node, fails when the binary or the Node entry is missing, and warns (never fails) when the Node hook is registered while a native binary is available, with the fix `vantage add --yes`. Re-running `add` updates the managed entries in place.
+- **Why:** A plain lookup keeps `add` offline and fast, and works before the packages are published. Putting the local build second lets a developer get the 29 ms hook today. A warning, not a failure, because the Node hook still works, only slower (p95 about 130 ms against the 100 ms budget).
+- **Alternatives:** Registering native only when a package resolves (leaves developers on the slow hook until publish). Building the crate from `vantage add` (needs a toolchain, slow, surprising). Failing doctor on the Node hook (breaks machines with no native build).
+- **Impact:** `packages/cli` only. A moved or deleted local build breaks the registered hook, so doctor fails on a missing binary and `vantage add --yes` repairs it. Revisit when the packages are published, since the local build then rarely matters.
+
 ### D82. UI component tests: Vitest project with happy-dom and Svelte's own `mount`
 
 - **Status:** proposed
@@ -1018,4 +1027,3 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Why:** It adds one dev dependency and no wrapper library, runs on ubuntu and windows with no extra step, and keeps the Node packages off the browser build of Svelte.
 - **Alternatives:** `jsdom` (heavier, slower to start, same coverage here). `@testing-library/svelte` (two more dependencies for queries that `querySelector` already covers in a page this small). Playwright component tests or end-to-end runs (a browser download in CI; out of scope for this bean).
 - **Impact:** `pnpm test` also runs the UI tests. Browser-only behaviour that happy-dom lacks (layout, real focus rings) is not covered and would need a browser test. Revisit if the UI grows past what `querySelector` assertions keep readable.
-
