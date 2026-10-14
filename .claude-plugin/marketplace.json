@@ -5,7 +5,7 @@
     {
       "name": "a2v",
       "source": "./plugin/a2v",
-      "description": "A2V working method: top-down communication rule, output style and the explain-top-down skill."
+      "description": "A2V working method: top-down communication, output style, and the explain-top-down, prove-it and record-decision skills."
     }
   ]
 }

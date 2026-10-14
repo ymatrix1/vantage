@@ -1,6 +1,6 @@
 {
   "name": "a2v",
   "description": "A2V (Asked to Verified) working method for AI agents: top-down communication, and later proof, decisions and calm practices.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": { "name": "ymatrix1" }
 }
