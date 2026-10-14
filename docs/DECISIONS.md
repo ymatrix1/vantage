@@ -99,6 +99,7 @@ Rules:
 | [D70](#d70-shell-writes-count-as-edits-only-inside-the-repo) | 2026-10-14 | Shell writes count as edits only inside the repo |
 | [D71](#d71-phase-1-stage-machine-rules-the-specs-left-open) | 2026-10-14 | Phase 1 stage machine rules the specs left open |
 | [D72](#d72-ship-the-spool-hook-as-a-rust-binary-in-per-os-npm-packages-with-a-node-fallback) | 2026-10-14 | Ship the spool hook as a Rust binary in per-OS npm packages, with a Node fallback |
+| [D73](#d73-how-the-phase-1-stop-gate-reads-state-and-takes-its-mode) | 2026-10-14 | How the Phase 1 Stop gate reads state and takes its mode |
 
 ---
 
@@ -903,13 +904,10 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** Accept built JS (no new toolchain, but p95 stays 118 to 147 ms and the sync `Stop` gate has no headroom). Go (same speed, 13 times larger, a second toolchain beside Oxc). Download on first run (needs hosted releases, checksums, and a mark that makes SmartScreen apply). Build from source (needs a toolchain on every user's machine). A Bun-compiled binary (114 to 117 ms in D67, slower than built Node).
 - **Impact:** Adds a Rust crate (about 60 lines), release CI that builds 5 targets, and 5 small npm packages; `vantage-p9x2` gains path resolution and the fallback. A parity test must assert the same line as `collect.ts` and exit 0 with the daemon down. Windows antivirus behavior of an unsigned binary is untested and must be checked before release; revisit signing if it is flagged. Revisit the whole decision if hook latency never shows up as a real cost, since hooks are async (D59). Not implemented: needs the user's confirmation first.
 
----
-
-## Proposed (pending confirmation)
-
 ### D73. How the Phase 1 Stop gate reads state and takes its mode
 
-- **Status:** proposed
+- **Status:** accepted 2026-10-14
+- **Decided by:** user (delegated to the parent session on 2026-10-14; checked against measured data and D53, D59, D60, D67)
 - **Context:** Building the gate (`vantage-8nb2`) and `session.stopped` capture (`vantage-cji5`) hit choices D53, D59 and D60 leave open. The Stop hook is the only synchronous hook and has no latency headroom (D59, D67). The daemon derives item state on a 30 second pass, so the state a Stop hook reads can lag the last few edits. Config is `~/.vantage/config.toml` (*tentative*), and a TOML parser would add a dependency to the hot path.
 - **Decision:**
   1. **One command for Stop.** It appends `session.stopped` to the spool like every hook, then runs the gate. `Stop` is registered without `async`; the other seven events stay async.
@@ -920,3 +918,9 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Why:** Reading tables keeps the hook near the Node start-up floor (about 85 ms median locally, ruled by D67), at the cost of up to one 30 second pass of lag (see Impact). A line match avoids a TOML dependency in the hot path. Silence on any doubt matches D3 and the rule that the gate must never teach users to ignore it (D53).
 - **Alternatives:** Replay the spool inside the hook (always fresh, but needs the stage machine and linker in a 100 ms budget); ask the daemon over HTTP (a second moving part, and a down daemon would need a timeout); a full TOML parser (no dependency headroom); wiring exit 2 now (policy is Q11).
 - **Impact:** Updates the [proof spec](specs/proof.md#the-gate), [ingestion](specs/ingestion.md) and [operations](specs/operations.md). A check run in the last 30 seconds before the Stop may not be seen yet, which produces a false warning; the Stop event also raises `unproven_claim` only after the daemon's next pass. Revisit if false warnings from that lag show up in use (a "run a pass now" call from the hook would fix it), or when block mode is wired.
+
+---
+
+## Proposed (pending confirmation)
+
+None right now.
