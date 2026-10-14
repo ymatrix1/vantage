@@ -10,6 +10,19 @@ Every decision records five things:
 
 Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-confirmation) in the same format.
 
+Each decision also carries its lifecycle, checked by `tools/check_docs.py`:
+
+- **Status:** `proposed`, `accepted`, `superseded` or `rejected`, optionally followed by a date and a note (`accepted 2026-10-14`).
+- **Decided by:** who accepted or rejected it (a person; for an agent's proposal that the user merged, name the PR). Not needed while `proposed`.
+- **Superseded by:** a later decision id (`D70`), required when the status is `superseded`.
+
+Rules:
+
+- Only the user moves a decision to `accepted` or `rejected`. An agent writes `proposed` and puts it under [Proposed](#proposed-pending-confirmation).
+- An accepted decision is frozen. CI rejects any change to its text or its removal; only the `Status`, `Decided by` and `Superseded by` lines may change.
+- A changed decision is a new decision. Add it, mark the old one `superseded`, and name the new id in `Superseded by`.
+- Not an item-level record: the product's own decision log for work items has a different lifecycle (see [decision log](specs/decision-log.md)).
+
 ## Index
 
 | # | Date | Decision |
@@ -82,10 +95,14 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 | [D66](#d66-pnpm-workspaces-on-node) | 2026-10-14 | pnpm workspaces on Node |
 | [D67](#d67-spool-hook-runs-built-javascript-native-binary-deferred) | 2026-10-14 | Spool hook runs built JavaScript; native binary deferred |
 | [D68](#d68-one-settings-view-for-engines-budgets-and-data-policy) | 2026-10-14 | One Settings view for engines, budgets and data policy |
+| [D69](#d69-decisions-have-a-status-an-owner-and-are-frozen-once-accepted) | 2026-10-14 | Decisions have a status and an owner, and are frozen once accepted |
 
 ---
 
 ### D1. Track work items, not sessions
+
+- **Status:** accepted 2026-10-13
+- **Decided by:** user
 
 - **Context:** The user runs many Claude Code and Codex sessions in parallel and loses track of what was asked, built and shipped. Tools like Agent View, Pane, Vibe Kanban and Conductor already show sessions.
 - **Decision:** Vantage's core object is a work item (one goal, one card). Sessions are evidence attached to items.
@@ -95,6 +112,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D2. The six-step track
 
+- **Status:** accepted 2026-10-13
+- **Decided by:** user
+
 - **Context:** The pains (lost state, unproven claims, review loop, nothing checked after release) needed one visual model that's easy to read.
 - **Decision:** Every own-work item moves along Asked → Built → Proven → Reviewed → Shipped → Verified.
 - **Why:** One spine shows where each item really is and exposes each pain as a stuck or flagged step.
@@ -102,6 +122,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Impact:** All UI, scoring and specs use these six names. Becomes the A2V track (D29). Changing a step later means changing every doc and the stage machine.
 
 ### D3. Cards move only on evidence
+
+- **Status:** accepted 2026-10-13
+- **Decided by:** user
 
 - **Context:** Agents often claim "done, fixed, optimized" without running anything.
 - **Decision:** A step completes only when its evidence exists (diff, captured check, review, deploy, monitoring). Agent text never moves a card.
@@ -111,6 +134,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D4. Proof expires
 
+- **Status:** accepted 2026-10-13
+- **Decided by:** user
+
 - **Context:** A test that passed before a later edit says nothing about the new code.
 - **Decision:** Any linked edit after the latest proof moves the card from Proven (or Reviewed) back to Built.
 - **Why:** Proof of old code isn't proof of new code.
@@ -118,6 +144,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Impact:** Needs code fingerprints per proof (see D28). Cards may move backward, so the UI must show it clearly rather than silently.
 
 ### D5. Review loop stays inside Reviewed
+
+- **Status:** accepted 2026-10-13
+- **Decided by:** user
 
 - **Context:** Reviews loop: changes requested, fixes, re-review, sometimes several rounds.
 - **Decision:** The card stays in the Reviewed column through the loop, with sub-states (waiting, changes requested, fixing, re-review requested, approved).
@@ -127,6 +156,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D6. Shipped means deployed; Verified means checked
 
+- **Status:** accepted 2026-10-13
+- **Decided by:** user
+
 - **Context:** Merged code can still fail in production; regressions often surface days later.
 - **Decision:** Shipped needs merge plus a deploy event. Verified needs post-deploy checks and a clean monitoring window (default 2 days).
 - **Why:** Merged isn't the same as working.
@@ -134,6 +166,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Impact:** Adds CI/CD and monitoring sources to the architecture and Phase 5 to the roadmap. Repos without deploy or checks show these steps hollow (D8).
 
 ### D7. Regressions spawn follow-up cards
+
+- **Status:** accepted 2026-10-13
+- **Decided by:** user
 
 - **Context:** A problem found after release could either reopen the original card or create new work.
 - **Decision:** A regression adds a red flag to the original card and creates a linked follow-up card in Asked.
@@ -143,6 +178,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D8. Honest dots
 
+- **Status:** accepted 2026-10-13
+- **Decided by:** user
+
 - **Context:** Some repos have no PR step, no deploy or no checks.
 - **Decision:** Skipped or unconfigured steps are drawn hollow, never green.
 - **Why:** Green must always mean "evidence exists".
@@ -150,6 +188,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Impact:** The UI needs a distinct "skipped" style in every theme (D27 guardrails).
 
 ### D9. Parked only by the user
+
+- **Status:** accepted 2026-10-13
+- **Decided by:** user
 
 - **Context:** Old ideas and stalled work could be auto-hidden to reduce noise.
 - **Decision:** Only the user parks an item. Vantage never hides work on its own.
@@ -159,6 +200,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D10. Scores computed in code
 
+- **Status:** accepted 2026-10-13
+- **Decided by:** user
+
 - **Context:** Priority, difficulty and flags could be produced by an LLM or by explicit rules.
 - **Decision:** Scores come from explicit signals computed in code. LLM or judgment models only answer fuzzy yes/no questions behind one interface.
 - **Why:** Explainable ("why is this ranked here?"), cheap, testable and deterministic.
@@ -166,6 +210,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Impact:** Each score must show its reasons in the UI. A judgment layer is optional and gated by the data policy decision.
 
 ### D11. Local-first
+
+- **Status:** accepted 2026-10-13
+- **Decided by:** user
 
 - **Context:** Vantage reads code, transcripts, Slack, Jira and monitoring, all company data.
 - **Decision:** All data stays on the user's machine by default. Remote sources are read-only unless the user acts.
@@ -175,6 +222,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D12. Build order
 
+- **Status:** accepted 2026-10-13
+- **Decided by:** user
+
 - **Context:** Many sources; building all at once is too much.
 - **Decision:** Local sources (agents, git) → GitHub → CI/CD and monitoring → issue tracker and Slack.
 - **Why:** Each layer is useful alone, and the most reliable data comes first.
@@ -182,6 +232,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Impact:** Sets the roadmap phases. Review features arrive in Phase 4, tracker and Slack in Phase 6.
 
 ### D13. Pluggable issue tracker
+
+- **Status:** accepted 2026-10-13
+- **Decided by:** user
 
 - **Context:** Different projects use Jira or Linear.
 - **Decision:** The issue tracker sits behind one adapter interface with Jira and Linear implementations.
@@ -191,6 +244,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D14. Six pages
 
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
 - **Context:** The UI needed to stay calm and easy while covering many needs.
 - **Decision:** Focus, Track, Item, Journal, Inbox, Sources, plus status line, toasts and badge.
 - **Why:** One question per page keeps each screen simple.
@@ -198,6 +254,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Impact:** Defines the UI scope for Phases 2 and 3.
 
 ### D15. Track is rows, not a board
+
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
 
 - **Context:** Options were a Trello-like board, a graph, rows with a stage track, or a timeline.
 - **Decision:** Track is a table of rows with an inline six-dot track. Board is an optional toggle; a graph appears only inside Item.
@@ -207,6 +266,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D16. Group by attention by default
 
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
 - **Context:** Work spans several projects and both work and personal contexts.
 - **Decision:** Default grouping is by attention (needs you, in progress, waiting on others, done). Group by project or stage is a toggle. Projects are Jira epics, Linear projects or repo groups; contexts (Work, Personal) sit above.
 - **Why:** Stress comes from attention jumping across projects; projects still matter for overview.
@@ -214,6 +276,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Impact:** Adds `context` and `project` to the data model and a context switch to the UI.
 
 ### D17. SQLite live, DuckDB for analysis
+
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
 
 - **Context:** The user asked whether DuckDB would be faster than SQLite.
 - **Decision:** SQLite in WAL mode is the live store. DuckDB is used for analysis and Phase 0 measurement.
@@ -223,6 +288,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D18. Personal tool first
 
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
 - **Context:** Earlier brainstorming discussed selling Vantage; the PRD described one user.
 - **Decision:** Build for one user first, without blocking a product later.
 - **Why:** Keeps setup, OS support and polish minimal while the idea is proven.
@@ -230,6 +298,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Impact:** Windows first, minimal setup. The method is documented separately so it can be sold later (D29).
 
 ### D19. Pull is the backbone
+
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
 
 - **Context:** The laptop sleeps, restarts and goes offline; push channels miss events while it's off.
 - **Decision:** Every source supports catch-up from a stored cursor. Push channels only make updates arrive faster.
@@ -239,6 +310,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D20. No public endpoint by default
 
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
 - **Context:** Webhooks need an internet-reachable URL.
 - **Decision:** Nothing listens on the internet by default. Webhooks only through an optional relay, later.
 - **Why:** Local-first (D11) and company data.
@@ -246,6 +320,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Impact:** Slightly slower updates for GitHub, Jira, Linear and monitoring. Relay needs company approval (Q13).
 
 ### D21. Hooks only append to a spool file
+
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
 
 - **Context:** Claude Code and git hooks run inside the user's workflow on every action.
 - **Decision:** Hooks append one line to a local spool file and return in under 100 ms. The daemon reads the spool.
@@ -255,6 +332,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D22. GitHub notifications as the main GitHub trigger
 
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
 - **Context:** GitHub events could come from webhooks, broad API polling or the Notifications API.
 - **Decision:** Poll the Notifications API with conditional requests; fetch thread details on demand.
 - **Why:** It's already filtered to what involves the user, carries read state, and unchanged polls don't count against rate limits.
@@ -262,6 +342,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Impact:** Coverage must be verified (research R4). Gives "seen" state for free.
 
 ### D23. Slack via Socket Mode
+
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
 
 - **Context:** Slack mentions and commitments need near real-time detection without a public URL.
 - **Decision:** Use a Slack app with Socket Mode and user-scoped events if approved; otherwise poll search.
@@ -271,6 +354,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D24. Four item kinds
 
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
 - **Context:** Not everything needing attention is the user's own code: review requests and promises matter too.
 - **Decision:** Item kinds `own_work`, `review_request`, `commitment`, `follow_up`, with shorter tracks for review requests and commitments.
 - **Why:** Reviews and promises are a big source of stress and get forgotten.
@@ -278,6 +364,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Impact:** UI shows short tracks; scoring treats "someone is blocked on you" as a top priority signal.
 
 ### D25. Work item boundary rules
+
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
 
 - **Context:** One session can touch two tickets; one ticket can span many sessions.
 - **Decision:** Issue key wins, then branch or worktree, then provisional per-session items. User Split and Merge always win.
@@ -287,6 +376,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D26. Agent setup ported from PortPS5
 
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
 - **Context:** The user already has a working agent setup in another repo.
 - **Decision:** `AGENTS.md` as canonical instructions, shared `.agents/rules` and `.agents/skills`, beans for task tracking, `beans prime` hooks. No Ouroboros.
 - **Why:** One familiar setup across projects and agents.
@@ -294,6 +386,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Impact:** All task work goes through beans with the structured template; skills are shared across agents.
 
 ### D27. Calm default look and custom themes
+
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
 
 - **Context:** The user likes Pane's calm Folio theme and wants personalization.
 - **Decision:** A calm default inspired by Folio, with token-based themes and user custom themes that may change style but not meaning (contrast and distinguishability checked).
@@ -303,6 +398,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D28. Proof is first-class
 
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
 - **Context:** Proof rules were spread across several docs; proof is the heart of evidence over claims.
 - **Decision:** Proof gets its own spec: types, levels L0–L4, freshness by code fingerprint, fake proof detection. Agents can only reference proof Vantage captured.
 - **Why:** Proof must be hard to fake and visible when weak.
@@ -311,6 +409,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D29. The method is named A2V
 
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
 - **Context:** The user wants a name for the method that could be sold later.
 - **Decision:** **A2V: Asked to Verified**, documented in `docs/METHOD.md` separately from the product, always written in full the first time.
 - **Why:** Short, names the track itself, works as a badge. Common phrases (evidence-driven, proof-driven, receipts) are already taken.
@@ -318,6 +419,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Impact:** Docs refer to "the A2V track". An unrelated "Agility to Value (A2V)" framework exists, so a trademark and domain check is required before selling (bean `vantage-uye1`).
 
 ### D30. Decisions record context, why, alternatives and impact
+
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
 
 - **Context:** The decision log was a one-line table that lost the reasoning behind each choice.
 - **Decision:** Every decision and proposal records Context, Decision, Why, Alternatives and Impact.
@@ -328,6 +432,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D31. Phase 1 is a thin usable slice
 
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
 - **Context:** Only Phase 0 was broken into tasks; Phase 1 mixed infrastructure with UI and had no clear minimum.
 - **Decision:** Phase 1 covers only Claude Code and git, only Asked, Built and Proven, the warn-mode gate, the status line and a minimal Track page.
 - **Why:** Get to daily use fast; the kill rule (PRD) needs a usable version to judge.
@@ -335,6 +442,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Impact:** GitHub, reviews, ship stages, Focus and trackers move to later phases. Phase 1 beans come from this list.
 
 ### D32. Local server is locked down
+
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
 
 - **Context:** A localhost web UI with work data can be reached by other local programs and, through the browser, by malicious sites.
 - **Decision:** Bind to 127.0.0.1, require a per-install token, check Origin and Host, no CORS, no state changes on GET, user-only file permissions.
@@ -344,6 +454,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D33. Events are the source of truth
 
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
 - **Context:** Bugs in the linker or scorers could corrupt derived state.
 - **Decision:** Events and user actions are immutable; every other table can be rebuilt by replaying them. Merges link through PR numbers and branches, not commit ids.
 - **Why:** Safe recovery and testable logic; squash merges and rebases change commit ids.
@@ -351,6 +464,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Impact:** Replay command and fixtures; schema in `docs/specs/data-schema.md`.
 
 ### D34. Visual first with a dot alphabet
+
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
 
 - **Context:** The user wants to read less: colors, drawings and visuals instead of text. A first attempt removed titles and used emoji, which made items unidentifiable and rendered inconsistently.
 - **Decision:** Shape, color, size and position carry state; 2–4 word titles carry identity; about 30 words per screen. Six dot states differ by shape first, then color. Proof level shows as 1 to 4 green arcs around the Proven dot (count, not shine, which blurred at small sizes). Flags use one line-icon set, never emoji.
@@ -360,6 +476,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D35. Landscape home with dot characters
 
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
 - **Context:** A visual list was still a list, and the product name (a view from a high point) was unused. OpenAI's dots showed characters as the things themselves.
 - **Decision:** Each work item is a dot character (body = project, ring = A2V track, face = attention, badge = reason). Focus is a landscape: needs-you in the foreground, moving in the middle, waiting on the horizon, verified as stars, parked on a shelf. Track rows remain the fallback.
 - **Why:** Spatial memory and depth show urgency at a glance; the metaphor matches the name; it makes progress feel tangible.
@@ -367,6 +486,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Impact:** Caps per band, stable placement, scene palettes per time of day and theme. Must pass a scale test (Q20) before Phase 3a.
 
 ### D36. Calm gamification rules
+
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
 
 - **Context:** The user wants a more gamified, less stressful app.
 - **Decision:** Reward good practice, never volume or speed: proof arcs, stars for verified work, gentle streaks that pause instead of breaking, rare badges for A2V practices, an evening landing that closes open loops. No leaderboards, points for commits or lines, breaking streaks or random rewards. Quiet mode turns it off.
@@ -376,6 +498,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D37. Explain through the connected agent
 
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
 - **Context:** People with little time need status explained top-down, McKinsey-style (answer first, SCR, MECE), with the option to drill into detail.
 - **Decision:** An Explain quick action runs the user's connected agent headless (for example `claude -p`) on Vantage's structured facts. The model returns typed blocks (headline, SCR, tree, missing, diagram, example, follow-ups) that Vantage renders. Every claim cites evidence or is dropped. Issue trees start collapsed and expand on click; MECE is checked silently by Vantage. Two trees: *why we built it* (frozen intent) and *where it stands* (live). The engine part is refined by D46.
 - **Why:** Uses tools the user already pays for; keeps the model from deciding status; progressive disclosure serves both the 30-second reader and the deep dive.
@@ -383,6 +508,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Impact:** A JSON schema, renderer components and caching; gated by the data policy decision; [Explain spec](specs/explain.md).
 
 ### D38. Track pings; draft, never send
+
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
 
 - **Context:** Work stalls on people: questions seen but not answered, reviews nobody picked up, finished work nobody was told about. `unseen_mention` cleared once a message was seen, even without a reply.
 - **Decision:** Three flags: `owe_reply`, `follow_up_due`, `close_the_loop`, with working-hour thresholds. One click drafts the message in the right place; the user always sends it. Flags clear only when Vantage sees the user's message in the source.
@@ -392,6 +520,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D39. Landscape scene rules from the 25-item test
 
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
 - **Context:** D35 required the landscape to pass a scale test (Q20). A render with 25 items showed green grass hiding the green done arcs, rings merging with the dot body, badges covering arcs, and cryptic corner labels.
 - **Decision:** Neutral ground (no meaning colors in scenery); a clear gap between body and ring; white arcs for remaining steps; badges just outside the ring; "+N" overflow labels; moon and shelf icons with counts in the corners. Band caps (3 foreground, 8 middle) confirmed.
 - **Why:** With these fixes the 25-item view stays readable at a glance and green keeps one meaning.
@@ -399,6 +530,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Impact:** Closes Q20. Scene palettes for dusk, night and dark mode still to design in the UI phase.
 
 ### D40. Measure felt load, not just usage
+
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
 
 - **Context:** The product's promise is less stress, but the success metrics only measured usage and speed.
 - **Decision:** The evening landing ends with an optional one-tap check: "How heavy does work feel? 1–5." Stored locally; the PRD tracks its trend over the first month.
@@ -408,6 +542,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D41. Status line uses text glyphs
 
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
 - **Context:** The terminal status line is always visible but can't draw the SVG dot alphabet; some terminals have no color.
 - **Decision:** Map dot states to Unicode shapes (● ◉ ◐ ◍ ◌ ○), with color optional and proof level as a superscript digit. Layout drops segments from the right to fit.
 - **Why:** Keeps the shape-first rule (D34) in the terminal, with no emoji and no dependency on color.
@@ -415,6 +552,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Impact:** [Status line spec](specs/status-line.md); glyph rendering tests.
 
 ### D42. A decision log for every AI and person decision
+
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
 
 - **Context:** Decisions were scattered: the `ai_decided` detector covered business rules in diffs, `user_actions` logged raw actions, and choices made in agent chats, PR reviews or Slack were invisible.
 - **Decision:** A readable, append-only decision log per item, project and week. Each record has Context, Decision, Why, Alternatives, Impact, who (AI or person) and status. AI decisions start as proposed and need a person's approval or change. Unstated fields are marked "not stated", never invented.
@@ -424,6 +564,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D43. Guard the scope
 
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
 - **Context:** Planning added many features (pings, Explain, decision log, gamification, landscape) without measuring anything yet. Phase 0 grew from 2 days to 14 research beans; Phase 3 held everything visual with no cut line.
 - **Decision:** Phase 0 is timeboxed to one week with four must-have beans (R1, R2, R4, R13); the rest wait for the phase that needs them. Phase 3 splits into 3a (landscape), 3b (understanding) and 3c (calm), each with its own exit criterion. The PRD lists what's deliberately not in v1. Flags live in one registry.
 - **Why:** The kill rule only works if there's an early, small version to judge. Most open questions need real data, not more design.
@@ -431,6 +574,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Impact:** Roadmap and PRD updated; [flag registry](specs/flags.md) replaces the flag tables in other specs. Next step is Phase 0, not more planning.
 
 ### D44. A daemon plus one Claude Code plugin
+
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
 
 - **Context:** The user asked whether Vantage should be built as MCP, skills, or something else.
 - **Decision:** The core is a local daemon with a web UI. Claude Code integration ships as one plugin: hooks for capture and the proof gate, a status line, skills that teach the A2V method, and MCP config for agents to cooperate. Explain runs in layers, with headless `claude -p` only as an opt-in fallback (D46).
@@ -440,6 +586,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D45. Local-only telemetry
 
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
 - **Context:** An always-on daemon needs debugging; the resource budget said "no telemetry".
 - **Decision:** Structured logs, metrics and per-event traces are kept locally with retention limits. Nothing is sent anywhere. A scrubbed debug bundle is created only on the user's command. Every card can show "why did this change?" from its trace.
 - **Why:** Debugging and trust both need to see what happened; sending data out would break local-first (D11).
@@ -447,6 +596,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Impact:** Logs, metrics and trace storage; Diagnostics tab; `vantage doctor` and `vantage debug-bundle`; an optional local OTLP receiver for Claude Code's own telemetry (R2).
 
 ### D46. Explain runs in layers; headless is opt-in
+
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
 
 - **Context:** D37 had Explain call the agent headless (`claude -p`) on every use. The user asked whether hooks and existing sessions could avoid that, and headless use may be billed separately in future.
 - **Decision:** Four layers: (1) evidence-only Explain built from Vantage data, on by default; (2) byproduct capture, where agents record decisions and summaries through a skill and MCP during normal work; (3) in-session Explain through a slash command; (4) headless `claude -p` or `codex exec` only as an opt-in fallback, with official CLIs only, a user-chosen order, a daily budget and caching.
@@ -456,6 +608,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 ### D47. Diff comments become prompts
 
 - **Status:** accepted 2026-10-14 (was proposal V1); details confirmed by research R12.
+- **Decided by:** user
 
 - **Context:** Giving feedback on agent work means switching to the right terminal and explaining where. Vibe Kanban lets users comment on a diff and sends it to the agent.
 - **Decision:** From the Item page, the user comments on a diff hunk and Vantage turns it into a prompt for the session that owns the item.
@@ -466,6 +619,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 ### D48. A Vantage MCP server
 
 - **Status:** accepted 2026-10-14 (was proposal V2); details confirmed by research R12.
+- **Decided by:** user
 
 - **Context:** Agents could help structure work (behaviors, proof references, decisions) if they had a channel to Vantage.
 - **Decision:** An MCP server where agents register behaviors, reference captured proof runs, propose items and ask the user for decisions. Agents can never move a stage.
@@ -476,6 +630,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 ### D49. Visual proof by screenshot
 
 - **Status:** accepted 2026-10-14 (was proposal V3); details confirmed by research R12.
+- **Decided by:** user
 
 - **Context:** UI changes are often best proven by looking. Vibe Kanban has a built-in preview browser.
 - **Decision:** A `visual` proof type: a screenshot of the running app after the last edit, stored by Vantage. No browser inside Vantage.
@@ -486,6 +641,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D50. One command to add an existing repo
 
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
 - **Context:** Most repos already exist with their own hooks and history; setup must be easy and safe there.
 - **Decision:** `npx vantage add` (or `/vantage add` inside Claude Code) registers the repo, installs hooks once per machine (user-level Claude Code hooks, global git hooks that chain the repo's own), backfills 14 days of this repo's sessions and git history, and opens the landscape. Nothing in the repo changes unless the user opts in with `--team`.
 - **Why:** One command removes friction; machine-level hooks avoid touching every repo; chaining keeps existing hook managers working.
@@ -494,6 +652,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ### D51. Logo and wordmark
 
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
 - **Context:** The project needed a logo that is modern but calm and fits the vantage-point idea.
 - **Decision:** A rounded-square icon of rolling hills at dusk under a warm sun, and a wordmark reading "Vantage" (capital V) in Bree Serif converted to outlines, with its cap height centered on the icon. Separate wordmark files for light and dark backgrounds.
 - **Why:** The scene tells the product story (a calm view over your work) and reads at 16 px; Bree Serif is warm and calm, matching the goal of reducing stress.
@@ -501,6 +662,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Impact:** `assets/` holds the icon and two wordmarks; a Brand section in the visual-language spec.
 
 ### D52. Install with a prompt
+
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
 
 - **Context:** The end goal is that installing Vantage takes one prompt to the agent the user already uses.
 - **Decision:** Publish an agent-readable install guide (`docs/install-for-agents.md`) and a copy-paste prompt in the README. The agent checks prerequisites, shows a dry run, waits for the user's OK, installs, runs `vantage doctor` and reports what changed and how to undo it. It never adds credentials or commits.
@@ -511,6 +675,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 ### D53. The proof gate skips docs-only sessions
 
 - **Status:** accepted 2026-10-14 (was proposal P1).
+- **Decided by:** user
 
 - **Context:** R1 ([baseline](research/baseline.md#unproven-edits-p2-q3)) found 16 edit sessions in 90 days whose edits were only documentation; 50% of them ended with no qualifying check, because no test or data check applies to prose.
 - **Decision:** The `Stop` gate and `unproven_claim` ignore a session whose linked edits are all documentation files (`.md`, `.mdx`, `.txt`, `.rst`). Docs checks such as a link checker may still record proof when they run.
@@ -521,6 +686,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 ### D54. Events take the branch at event time
 
 - **Status:** accepted 2026-10-14 (was proposal P2).
+- **Decided by:** user
 
 - **Context:** R1 ([baseline](research/baseline.md#mapping-to-an-anchor-q1-d25)) found 130 of 255 edit sessions saw more than one non-default branch. Sessions start in a worktree on one branch and create or switch to another.
 - **Decision:** Under D25 rule 2, each event is linked by the branch recorded on that event, not by the session's first branch. A session that changes branch splits into the items of each branch; rule 6 still re-anchors renames.
@@ -531,6 +697,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 ### D55. Thrashing counts only failures not cleared by a passing check
 
 - **Status:** accepted 2026-10-14 (was proposal P3).
+- **Decided by:** user
 
 - **Context:** R1 ([baseline](research/baseline.md#thrash-loops-p5)) found 0 sessions with 3+ cycles when any successful command resets the count, and 5 (2.0% of edit sessions) when only a passing qualifying check resets it.
 - **Decision:** The `thrashing` flag keeps its threshold of 3 consecutive cycles on the same file. A cycle is edits to the file, then the commands until the next edit, with at least one failing command. Only a passing qualifying check (per the proof spec) resets the count.
@@ -541,6 +708,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 ### D56. GitHub notifications are a wake-up signal; state comes from GraphQL
 
 - **Status:** accepted 2026-10-14 (was proposal P4).
+- **Decided by:** user
 
 - **Context:** D22 made the Notifications API the main GitHub trigger. R4 ([research](research/github.md)) found that every comment or review on the owner's PRs bumps the PR's thread (784 of 784 PRs), but the payload can't say what happened: one thread per PR, a sticky `reason` that later notifications overwrite, no review state, and no CI notifications (0 of 909 threads, despite recent Actions runs). 4 of 27 direct review requests had no thread.
 - **Decision:** Keep D22 for *waking* the adapter. For every bumped PR thread, fetch a GraphQL snapshot (reviews, review threads, commits, timeline, `statusCheckRollup`) and derive events and Reviewed sub-states by diffing it against the stored snapshot. Never read an event from `reason`. Add slow reconcile polls: `review-requested:@me` every 5–10 min, CI rollup for open PRs (on bump, then 2–5 min while pending), authored-PR catch-up on start and hourly. Treat `X-GitHub-SSO` as a health warning.
@@ -551,6 +719,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 ### D57. Vantage owns status and tree shape; the model writes text only
 
 - **Status:** accepted 2026-10-14 (was proposal P5).
+- **Decided by:** user
 
 - **Context:** Research R13 ran `claude -p --json-schema` 20 times on one synthetic item. The output was always schema-valid, but the model chose three different headline statuses for identical facts and built trees with 2 to 5 branches, never by A2V step. See [Explain engine research](research/explain-engine.md).
 - **Decision:** For layers 2–4, Vantage builds the status tree, the headline status and the `missing` list from evidence (layer 1) and sends them with node ids. The model returns only text keyed by those ids (headline text, SCR, node labels, follow-ups) plus the why tree, diagrams and examples. The output schema puts the input's evidence ids in an `enum`, and the flag and gate names in an `enum` for `missing`.
@@ -561,6 +730,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 ### D58. Headless Explain runs as an isolated background job
 
 - **Status:** accepted 2026-10-14 (was proposal P6).
+- **Decided by:** user
 
 - **Context:** R13 measured a 52.5 s median and 76.2 s p95 for `claude -p` with Haiku. The CLI accepted an invalid schema silently, and `--bare` can't use a subscription login.
 - **Decision:** Layer 4 runs as a background job with a 120 s timeout. It uses `claude -p --model haiku --output-format json --json-schema`, with `--tools ""`, `--strict-mcp-config`, `--setting-sources ""`, `--no-session-persistence` and an empty working folder; never `--bare`. Vantage validates its own schema at build time and every output itself. Any nonzero exit, `is_error: true`, timeout or failed validation is a failure: retry once only on validation failure, then follow the user's agent order, then layer 1.
@@ -573,6 +743,7 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 ### D59. Claude Code spool hooks run async
 
 - **Status:** accepted 2026-10-14 (was proposal P7).
+- **Decided by:** user
 
 - **Context:** Hooks must finish in under 100 ms (D21). On the user's Windows laptop a Node append hook takes 97 ms median and 115 ms max before any real work, and the user's existing hooks already add seconds to `SessionStart`.
 - **Decision:** Register every Vantage spool hook (`SessionStart`, `PostToolUse`, `PostToolUseFailure`, `PermissionRequest`, `Notification`, `PreCompact`, `SessionEnd`) as a command hook with `"async": true`. Only the `Stop` gate runs synchronously.
@@ -583,6 +754,7 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 ### D60. Stop gate output contract
 
 - **Status:** accepted 2026-10-14 (was proposal P8).
+- **Decided by:** user
 
 - **Context:** The proof gate spec said "warn adds a message" and "block returns exit 2" without saying how Claude Code reads each. R2 found exit 1 is a hook error, `additionalContext` continues the turn, and a blocking hook can loop.
 - **Decision:** Warn = exit 0 with JSON `{"systemMessage": "..."}`. Block = exit 2 with the message on stderr, only when `stop_hook_active` is false. Never exit 1.
@@ -593,6 +765,7 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 ### D61. Claude Code OpenTelemetry as an optional local source
 
 - **Status:** accepted 2026-10-14 (was proposal P9).
+- **Decided by:** user
 
 - **Context:** Operations listed Claude Code's OTel export as "to be verified". R2 confirmed OTLP/HTTP JSON reaches a receiver on `127.0.0.1:4318`, with `session.id` and `prompt.id` on every record, and identity attributes (`user.email`, account ids) too.
 - **Decision:** An opt-in local OTLP receiver adds token and cost, tool result and Claude Code hook timing data. It binds to `127.0.0.1`, drops identity attributes on ingest, and keeps Claude Code's default redaction. It is a supplement; hooks and transcripts stay the spine.
@@ -602,6 +775,9 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 
 ### D62. Svelte for the web UI
 
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
 - **Context:** Open question Q17 asked which UI framework to use; the UI must be fast, keyboard-first and built on theme tokens.
 - **Decision:** Svelte (with Vite) for the local web UI.
 - **Why:** Small bundles and fast updates suit a calm, always-open local page; components map cleanly to the dot alphabet and theme tokens.
@@ -609,6 +785,9 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Impact:** Phase 1 scaffolds a Svelte app served by the daemon. Revisit if a needed component library exists only for React.
 
 ### D63. npm package for install
+
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
 
 - **Context:** Open question Q18 asked whether to ship an npm package or a single binary.
 - **Decision:** Ship Vantage as an npm package, run with `npx vantage add` and installed globally on request.
@@ -618,6 +797,9 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 
 ### D64. Oxc tools for lint and format
 
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
 - **Context:** The Phase 1 scaffold (bean `vantage-vnn4`) needs a linter and a formatter. The bean assumed ESLint.
 - **Decision:** Use the Oxc family: Oxlint with type-aware rules (`--type-aware`) for lint, and Oxfmt for format. No ESLint or Prettier. `tsc --noEmit` stays the type check.
 - **Why:** The user's choice. Both are Rust tools that run in milliseconds, which keeps local checks and CI fast. Type-aware linting is stable since July 2026 and covers 59 of typescript-eslint's 61 type-aware rules. Oxfmt passes Prettier's JS and TS conformance tests.
@@ -625,6 +807,9 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Impact:** Oxfmt is still beta (0.x), so pin exact versions and expect small format churn on upgrades. A Svelte rule or plugin that only exists for ESLint is not available; revisit if the UI needs one, or add ESLint for `.svelte` files only.
 
 ### D65. shadcn-svelte for UI components
+
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
 
 - **Context:** D62 picked Svelte but no component library. The UI needs accessible, keyboard-first components that follow Vantage's theme tokens and dot alphabet.
 - **Decision:** Use shadcn-svelte (components copied into the repo, built on Bits UI) with Tailwind CSS. Theme tokens become Tailwind CSS variables.
@@ -634,6 +819,9 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 
 ### D66. pnpm workspaces on Node
 
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
 - **Context:** The Phase 1 scaffold has five packages (core, daemon, hooks, cli, ui) and needs a package manager. Bun was also raised, as package manager and runtime.
 - **Decision:** pnpm workspaces for development, pinned with `packageManager`, exact versions and `minimumReleaseAge: 1440`. Node stays the runtime; users still install from npm (D63).
 - **Why:** The user's choice. First-class workspaces and filters, strict dependencies (no undeclared imports), a shared store, install scripts blocked unless allowed, and a delay on brand-new releases as a supply-chain guard.
@@ -641,6 +829,9 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Impact:** Contributors need pnpm (corepack). Revisit Bun for a compiled hook binary only if Node hooks miss the 100 ms budget.
 
 ### D67. Spool hook runs built JavaScript; native binary deferred
+
+- **Status:** accepted 2026-10-14
+- **Decided by:** user (merged PR #17)
 
 - **Context:** The real hook command (`node src/bin.ts`) cold-started in a median 126 to 133 ms on the dev laptop (Windows 11, Node 24, 40 runs, interleaved). Node itself needs a median 82 ms (`node -e ''`) here, so the 100 ms budget (D21) leaves about 18 ms for everything else. About 45 ms of the overhead was Node stripping TypeScript types at start-up. Hooks are async (D59), so the agent is not blocked either way.
 - **Decision:** Register `node <repo>/packages/hooks/dist/src/bin.js` (plain JavaScript built by `tsc -b`) instead of the `.ts` source. `pnpm test` builds first. A native binary is not adopted now; it is the recorded next step if the budget must hold strictly (new bean).
@@ -650,11 +841,25 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 
 ### D68. One Settings view for engines, budgets and data policy
 
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
 - **Context:** The design chose no model and had no place to see or control one. Explain layer 4 (D46), the judgment layer (Q4) and embeddings (Q25) all depend on engine choices, and the company data policy (`vantage-h8fv`) is undecided. UX listed settings without model fields.
 - **Decision:** Add a Settings tab on the Sources page, specified in [settings](specs/settings.md). It holds Engines (one row per AI-assisted job), Budgets (daily runs and fallback order) and a Data policy (a master switch for outside calls plus one switch per kind of content: code, transcripts, chat, tickets). Everything that leaves the machine defaults to off. Values live in `~/.vantage/config.toml`, edited through `GET` and `POST /api/settings`.
 - **Why:** The user decides what may leave the machine, in one place, before any engine runs. It keeps D10 (scores in code) and the privacy rules visible instead of buried in specs, and it lets the open model choices (Q4, Q25) land as a setting later without a redesign.
 - **Alternatives:** A config file only (works, but hides what is on and what is sent); a per-feature toggle on each page (scatters privacy controls); hard-coding Haiku or one vendor (breaks the official-CLI rule and the user-chosen order in D46).
 - **Impact:** New spec and API rows, with links from UX, operations and the README. No code yet. Revisit when Q4 or Q25 is answered, when `vantage-h8fv` records the company policy (its answer may change the defaults), or if the file and the `settings` table in [data schema](specs/data-schema.md) must be reconciled.
+
+### D69. Decisions have a status and an owner, and are frozen once accepted
+
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
+- **Context:** `docs/DECISIONS.md` holds 68 decisions with five fields each, but no status, no owner and no protection against edits. The rule that an agent's proposal stays "Proposed" until the user confirms it was convention only, and a changed decision overwrote the old reasoning. Prosper's ADRs (status, owner-only acceptance, frozen accepted text, supersede by a new record) showed the pattern.
+- **Decision:** Every decision records `Status` (`proposed`, `accepted`, `superseded`, `rejected`), `Decided by`, and `Superseded by` when superseded. Only the user accepts or rejects. An accepted decision's text is frozen and a change is a new decision that supersedes the old one. `tools/check_docs.py` checks the fields, that proposals sit under Proposed, that a superseded decision names an existing successor, and (in CI, against the base branch) that no accepted decision was edited or removed.
+- **Why:** It makes the existing "only the user confirms" rule checkable, keeps the history of why we chose something true, and costs one line per decision. It stays in one file, so reading and linking are unchanged.
+- **Alternatives:** One file per decision in `docs/adr/` with a numbered template, as Prosper does (cleaner diffs, but a migration of 68 entries and more ceremony; revisit if the file becomes hard to review); status only with no freeze (leaves the overwrite problem); keeping the convention without a check (already drifting).
+- **Impact:** All 68 existing decisions are marked accepted by the user, as D67 and D68 are (their PRs were merged on the user's instruction). New decisions from agents need a `Status: proposed` line and a place under Proposed until accepted. `.agents/rules/docs-and-specs.md`, `AGENTS.md` and the `update-spec` skill name the new fields. Revisit if accepted decisions need small corrections often (the freeze would then need an erratum line) or if the single file outgrows review.
 
 ---
 
