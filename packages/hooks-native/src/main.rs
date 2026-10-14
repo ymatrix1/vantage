@@ -3,7 +3,7 @@
 // and exit 0 on any error so a broken spool never breaks or slows the agent.
 //
 // Stop (D76): the one synchronous hook also runs the proof gate, which is Node code. When argv[1] names
-// the Node entry (`dist/src/bin.js`), a Stop payload is handed to `node <entry>` untouched, so the gate
+// the Node entry (`dist/src/bin.js`; flags such as the installer's `--vantage-managed` marker are skipped), a Stop payload is handed to `node <entry>` untouched, so the gate
 // and its spool line stay in one place. Without it (or if node can't start) Stop is spooled natively
 // and the gate is skipped, which fails open.
 use std::fs::{create_dir_all, OpenOptions};
@@ -73,7 +73,7 @@ fn run() -> Option<()> {
         return None;
     }
     if is_stop(&hook) {
-        if let Some(entry) = std::env::args().nth(1) {
+        if let Some(entry) = std::env::args().skip(1).find(|a| !a.starts_with("--")) {
             if hand_off(&entry, &input) {
                 return Some(());
             }

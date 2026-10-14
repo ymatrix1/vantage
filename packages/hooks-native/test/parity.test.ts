@@ -123,6 +123,25 @@ describe.skipIf(!usable)("native hook parity with the Node hook", () => {
       },
     );
 
+    it("finds the Node entry whichever side of the installer's --vantage-managed marker it is on", T, () => {
+      for (const order of ["entry-first", "marker-first"]) {
+        const home = fresh();
+        const entry = join(home, "entry.js");
+        // A stand-in entry that only proves it ran, so a handoff is told apart from a native spool.
+        writeFileSync(entry, `require("node:fs").writeFileSync(${JSON.stringify(join(home, "ran"))}, "1");`);
+        const args = order === "entry-first" ? [entry, "--vantage-managed"] : ["--vantage-managed", entry];
+        expect(native(stop, { VANTAGE_HOME: home }, args).status).toBe(0);
+        expect(existsSync(join(home, "ran"))).toBe(true);
+        expect(existsSync(join(home, "spool"))).toBe(false);
+      }
+    });
+
+    it("spools natively when only the marker is given", T, () => {
+      const home = fresh();
+      expect(native(stop, { VANTAGE_HOME: home }, ["--vantage-managed"]).status).toBe(0);
+      expect(spoolLines(home)).toHaveLength(1);
+    });
+
     it("spools natively and fails open when no Node entry is given or it is missing", T, () => {
       for (const args of [[], [join(fresh(), "missing.js")]]) {
         const home = fresh();
