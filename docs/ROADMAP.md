@@ -4,9 +4,9 @@ Built in layers. Local sources first, then GitHub, then CI/CD and monitoring, th
 
 ## Phase 0: measure and research (timebox: 1 week)
 
-- [ ] Use DuckDB to mine existing Claude Code and Codex transcripts (queried directly as `.jsonl`) plus `gh` data to get baselines: share of sessions ending with unproven edits, thrash loops, abandoned dirty work, review rounds per PR, time to first review.
-- [ ] **Exit:** a short baseline report in `docs/research/baseline.md` that ranks the pains by real numbers.
-- Epic bean: `vantage-pdgc`.
+- [x] Use DuckDB to mine existing Claude Code and Codex transcripts (queried directly as `.jsonl`) plus `gh` data to get baselines: share of sessions ending with unproven edits, thrash loops, abandoned dirty work, review rounds per PR, time to first review.
+- [x] **Exit:** a short baseline report in `docs/research/baseline.md` that ranks the pains by real numbers.
+- Epic bean: `vantage-pdgc` (completed 2026-10-14: R1, R2, R4 and R13 done; see [baseline](research/baseline.md)). Other research beans stay open for the phase that needs them.
 - **Must-haves** for the timebox: R1 baseline (`vantage-mmum`), R2 Claude Code hooks (`vantage-o3sq`), R4 GitHub notifications (`vantage-ql2e`), R13 Explain engine (`vantage-2vum`). Everything else waits for the phase that needs it (the "Needed by" column).
 
 | Lane | Beans | Blocked by | Needed by |
@@ -21,6 +21,16 @@ Built in layers. Local sources first, then GitHub, then CI/CD and monitoring, th
 ## Phase 1: first usable slice
 
 The smallest version worth using daily. Only Claude Code and git; only Asked, Built and Proven.
+
+- Epic bean: `vantage-fmfh`.
+
+| Lane | Beans | Blocked by |
+|---|---|---|
+| Foundation | `vantage-vnn4` (scaffold, tests, code CI) | none |
+| Capture | `vantage-3vuw` (hooks, spool, ingest, backfill), `vantage-in31` (git scanner) | scaffold |
+| Core | `vantage-9xbi` (linker), then `vantage-lxud` (stage machine and proof) | capture |
+| Surfaces | `vantage-8nb2` (Stop gate), `vantage-p9at` (status line), `vantage-olgf` (Track page) | stage machine |
+| Delivery | `vantage-p9x2` (install with a prompt, `vantage add`, `doctor`) | capture and surfaces |
 
 - [ ] Hook collector writing to the spool; daemon ingesting it into SQLite; transcript backfill.
 - [ ] git scanner for registered repos and worktrees.
