@@ -6,6 +6,11 @@
       "name": "a2v",
       "source": "./plugin/a2v",
       "description": "A2V working method: top-down communication, output style, and skills for explaining, proof, decisions, handoffs, landing the day and answering reviews."
+    },
+    {
+      "name": "vantage",
+      "source": "./plugin/vantage",
+      "description": "Vantage slash commands for Claude Code: /vantage:open, :start, :doctor, :status, :add. Each wraps one CLI call."
     }
   ]
 }

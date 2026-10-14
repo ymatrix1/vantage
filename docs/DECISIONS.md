@@ -1042,3 +1042,12 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Why:** It adds one dev dependency and no wrapper library, runs on ubuntu and windows with no extra step, and keeps the Node packages off the browser build of Svelte.
 - **Alternatives:** `jsdom` (heavier, slower to start, same coverage here). `@testing-library/svelte` (two more dependencies for queries that `querySelector` already covers in a page this small). Playwright component tests or end-to-end runs (a browser download in CI; out of scope for this bean).
 - **Impact:** `pnpm test` also runs the UI tests. Browser-only behaviour that happy-dom lacks (layout, real focus rings) is not covered and would need a browser test. Revisit if the UI grows past what `querySelector` assertions keep readable.
+
+### D83. Plugin commands are `/vantage:<command>`; `add --yes` is never pre-approved
+
+- **Status:** proposed
+- **Context:** The first-run spec planned `/vantage add`. Claude Code documents plugin commands as `/<plugin>:<command>` and describes no plugin form that takes `open` as an argument. The plugin must wrap the CLI without widening what `add` may do (D79).
+- **Decision:** The `vantage` plugin ships `commands/{open,start,doctor,status,add}.md`, invoked as `/vantage:open` and so on. Each has `disable-model-invocation: true` and an `allowed-tools` list naming only the read-only lookups and its own CLI call; unrestricted Bash, `uninstall` and `remove` never appear (`tools/plugin_check.py`, run by `tools/check_docs.py`). `add` pre-approves only `--dry-run`; `--yes` runs after an explicit yes in chat and stays behind Claude Code's own permission prompt. `status` reads `status.json` and makes no server call. The CLI is found through `PATH`, then `VANTAGE_CLI`, then the checkout named by `install.json`.
+- **Why:** The namespaced form is the documented one; a gate on `--yes` keeps the confirmation in the user's hands even if the agent misreads a reply; reading the status file adds no server feature.
+- **Alternatives:** A skill named `vantage` taking an argument (a bare `/vantage open` is undocumented for plugins, unverified); `/vantage:add` pre-approving `--yes` (one prompt less, no second gate); `status` calling the API with the token (needs the token in the agent's context).
+- **Impact:** First-run spec and README say `/vantage:add`. Commands live under `commands/`, which the docs call legacy next to `skills/`; revisit if `commands/` is removed. Live runs in a real session are still to do.

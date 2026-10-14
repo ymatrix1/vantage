@@ -18,6 +18,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import decisions_check  # noqa: E402
+import plugin_check  # noqa: E402
 LINK = re.compile(r"\]\(([^)\s]+)\)")
 PRIVACY = [
     (re.compile(r"\bgh[opsu]_[A-Za-z0-9]{20,}"), "GitHub token"),
@@ -111,6 +112,21 @@ def check_decisions():
     return problems
 
 
+def check_plugin():
+    base = ROOT / "plugin" / "vantage"
+    commands = sorted((base / "commands").glob("*.md"))
+    problems = []
+    for f in commands:
+        problems += plugin_check.check_command(f.stem, f.read_text(encoding="utf-8"))
+    problems += plugin_check.check_plugin(
+        (base / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"),
+        (ROOT / ".claude-plugin" / "marketplace.json").read_text(encoding="utf-8"),
+        "vantage",
+        [f.stem for f in commands],
+    )
+    return [f"plugin/vantage: {p}" for p in problems]
+
+
 def check_privacy(files):
     problems = []
     for f in files:
@@ -125,7 +141,7 @@ def check_privacy(files):
 
 def main():
     files = tracked_files()
-    problems = check_links(files) + check_tables(files) + check_decisions() + check_privacy(files)
+    problems = check_links(files) + check_tables(files) + check_decisions() + check_plugin() + check_privacy(files)
     for p in problems:
         print(p)
     print(f"{len(problems)} problem(s) in {len(files)} tracked files")

@@ -1,0 +1,6 @@
+{
+  "name": "vantage",
+  "description": "Slash commands for Vantage: open the Track page, start the daemon, run doctor, see the current item's status, and add a repo (dry run first, then your yes). Each command runs one Vantage CLI call.",
+  "version": "0.1.0",
+  "author": { "name": "ymatrix1" }
+}
