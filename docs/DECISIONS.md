@@ -478,7 +478,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 ### D51. Logo and wordmark
 
 - **Context:** The project needed a logo that is modern but calm and fits the vantage-point idea.
-- **Decision:** A rounded-square icon of rolling hills at dusk under a warm sun, and a wordmark in Bree Serif converted to outlines, with its x-height centered on the icon. Separate wordmark files for light and dark backgrounds.
+- **Decision:** A rounded-square icon of rolling hills at dusk under a warm sun, and a wordmark reading "Vantage" (capital V) in Bree Serif converted to outlines, with its cap height centered on the icon. Separate wordmark files for light and dark backgrounds.
 - **Why:** The scene tells the product story (a calm view over your work) and reads at 16 px; Bree Serif is warm and calm, matching the goal of reducing stress.
 - **Alternatives:** A dot character, a V monogram, layered V bands, an earthy palette (the user preferred the dusk colors), and the fonts Inter, Geist, Manrope, Outfit, Plus Jakarta Sans, Sora, Quantico, Chakra Petch, Zen Dots and Odibee Sans.
 - **Impact:** `assets/` holds the icon and two wordmarks; a Brand section in the visual-language spec.

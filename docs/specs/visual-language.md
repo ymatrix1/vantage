@@ -141,6 +141,6 @@ These are first proposals; research bean R14 (`vantage-700a`) validates contrast
 | Wordmark, dark backgrounds | `assets/logo-wordmark-dark.svg` | Dark UI |
 
 - **The icon** is the view from a vantage point: rolling hills at dusk under a warm sun, in a rounded square.
-- **The wordmark** uses Bree Serif (SIL Open Font License, by TypeTogether), converted to outlines so it renders the same everywhere. Its x-height band is centered on the icon's middle.
+- **The wordmark** reads "Vantage" in Bree Serif (SIL Open Font License, by TypeTogether), converted to outlines so it renders the same everywhere. Its cap-height band (baseline to the top of the V) is centered on the icon's middle; the "g" hangs below.
 - Don't recolor, stretch or add effects to the icon.
 
