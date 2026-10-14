@@ -10,7 +10,7 @@ afterEach(() => {
 });
 
 const trackCalls = (api: ReturnType<typeof fakeApi>): number =>
-  api.mock.calls.filter(([u]) => u === "/api/track").length;
+  api.mock.calls.filter(([u]) => u.startsWith("/api/track")).length;
 
 async function ready() {
   const api = fakeApi({ track: () => ({ body: track([item({ id: "a", title: "Before" })]) }) });

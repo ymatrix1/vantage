@@ -1,69 +1,45 @@
 // Synthetic data only. Pure view logic for the live push path (D81); no DOM, no network.
 import { describe, expect, it } from "vitest";
-import { ATTENTION_LABEL, ATTENTION_ORDER, type TrackResponse } from "@vantage/core/track";
+import type { TrackRow, TrackView } from "../src/lib/contract";
 import {
   BACKOFF_MAX_MS,
   BACKOFF_START_MS,
   applyPush,
+  mergeCounts,
   nextBackoff,
   parsePush,
   type LivePush,
 } from "../src/lib/live";
+import { group, item, track } from "./helpers";
 
-const item = (id: string, over: Record<string, unknown> = {}) => ({
-  id,
-  title: id,
-  repo: "r",
-  stage: "built",
-  proofStatus: "none",
-  proofLevel: 0,
-  docsOnly: false,
-  flags: [] as { kind: string; severity: string; reason: string }[],
-  lastActivity: "2026-01-05T09:00:00Z",
-  ...over,
-});
-const view = (items: ReturnType<typeof item>[]): TrackResponse => ({
+const row = (id: string, over: Partial<TrackRow> = {}): TrackRow => item({ id, title: id, ...over });
+const view = (items: TrackRow[]): TrackView => ({
+  ...track(items),
   generatedAt: "2026-01-05T10:00:00Z",
   lastPassAt: "2026-01-05T10:00:00Z",
-  stale: false,
-  groups: ATTENTION_ORDER.map((attention) => ({
-    attention,
-    label: ATTENTION_LABEL[attention],
-    items: attention === "in_progress" ? items : [],
-  })),
-  sources: [],
 });
 const env = { at: "2026-01-05T10:00:01Z", lastPassAt: "2026-01-05T10:00:01Z" };
-const ids = (v: TrackResponse, a: string): string[] =>
-  v.groups.find((g) => g.attention === a)?.items.map((i) => i.id) ?? [];
+const ids = (v: TrackView): string[] => v.groups.flatMap((g) => g.items.map((i) => i.id));
 
-describe("applyPush", () => {
-  it("merges changed fields and moves an item into Needs you when a flag appears", () => {
-    const flag = { kind: "claimed_without_proof", severity: "red", reason: "r" };
-    const push: LivePush = { ...env, type: "item.changed", id: "a", isNew: false, fields: { flags: [flag] } };
-    const next = applyPush(view([item("a"), item("b")]), push);
-    expect(ids(next!, "needs_you")).toEqual(["a"]);
-    expect(ids(next!, "in_progress")).toEqual(["b"]);
-    expect(next?.groups.flatMap((g) => g.items).find((i) => i.id === "a")?.title).toBe("a");
+describe("applyPush (the page the user is on never changes under them)", () => {
+  it("merges changed fields into a visible row in place and asks for fresh counts", () => {
+    const flag = { kind: "unproven_claim", severity: "red", reason: "claimed done, no proof" };
+    const push: LivePush = {
+      ...env,
+      type: "item.changed",
+      id: "b",
+      isNew: false,
+      fields: { flags: [flag], title: "B2" },
+    };
+    const { view: next, refresh } = applyPush(view([row("a"), row("b"), row("c")]), push);
+    expect(ids(next)).toEqual(["a", "b", "c"]);
+    expect(next.groups[0]?.items[1]?.title).toBe("B2");
+    expect(next.groups[0]?.items[1]?.flags).toEqual([flag]);
+    expect(refresh).toBe("facets");
   });
 
-  it("adds a new item and refetches when a push is not enough to build one", () => {
-    const full: LivePush = {
-      ...env,
-      type: "item.changed",
-      id: "n",
-      isNew: true,
-      fields: { title: "N", stage: "asked", flags: [] },
-    };
-    expect(ids(applyPush(view([item("a")]), full)!, "in_progress")).toEqual(["a", "n"]);
-    const partial: LivePush = {
-      ...env,
-      type: "item.changed",
-      id: "n",
-      isNew: true,
-      fields: { stage: "asked" },
-    };
-    expect(applyPush(view([item("a")]), partial)).toBeNull();
+  it("does not add, move or remove rows for items outside the page, new or not", () => {
+    const start = view([row("a")]);
     const unseen: LivePush = {
       ...env,
       type: "item.changed",
@@ -71,16 +47,58 @@ describe("applyPush", () => {
       isNew: false,
       fields: { stage: "built" },
     };
-    expect(applyPush(view([item("a")]), unseen)).toBeNull();
+    const fresh: LivePush = {
+      ...env,
+      type: "item.changed",
+      id: "n",
+      isNew: true,
+      fields: { title: "N", stage: "asked", flags: [] },
+    };
+    for (const push of [unseen, fresh]) {
+      const { view: next, refresh } = applyPush(start, push);
+      expect(ids(next)).toEqual(["a"]);
+      expect(next.page).toEqual(start.page);
+      expect(refresh).toBe("facets");
+    }
+  });
+
+  it("does not regroup a visible row whose flag changed", () => {
+    const start: TrackView = {
+      ...view([]),
+      groups: [group("needs_you", "Needs you", [row("a")]), group("in_progress", "In progress", [row("b")])],
+    };
+    const push: LivePush = { ...env, type: "item.changed", id: "b", isNew: false, fields: { flags: [] } };
+    const { view: next } = applyPush(start, push);
+    expect(next.groups.map((g) => g.items.map((i) => i.id))).toEqual([["a"], ["b"]]);
   });
 
   it("refetches on resync, replaces sources, and clears stale from the pass time", () => {
-    expect(applyPush(view([]), { ...env, type: "resync" })).toBeNull();
+    expect(applyPush(view([]), { ...env, type: "resync" }).refresh).toBe("full");
     const src = [{ source: "git", state: "ok" as const, events: 1, lastEventAt: null }];
-    const stale = { ...view([]), stale: true };
-    const next = applyPush(stale, { ...env, type: "source.health", sources: src });
-    expect(next?.sources).toEqual(src);
-    expect(next?.stale).toBe(false);
+    const { view: next, refresh } = applyPush(
+      { ...view([]), stale: true },
+      { ...env, type: "source.health", sources: src },
+    );
+    expect(next.sources).toEqual(src);
+    expect(next.stale).toBe(false);
+    expect(refresh).toBe("none");
+  });
+});
+
+describe("mergeCounts", () => {
+  it("takes facets and totals from a fresh response and keeps the rows shown", () => {
+    const shown = view([row("a")]);
+    const fresh: TrackView = {
+      ...view([row("z")]),
+      page: { page: 1, pageSize: 25, total: 40, pages: 2 },
+      groups: [group("in_progress", "In progress", [row("z")], 40)],
+      facets: { ...track([]).facets, repo: { r: 9 } },
+    };
+    const next = mergeCounts(shown, fresh);
+    expect(ids(next)).toEqual(["a"]);
+    expect(next.page).toMatchObject({ page: 1, total: 40, pages: 2 });
+    expect(next.groups[0]?.total).toBe(40);
+    expect(next.facets.repo).toEqual({ r: 9 });
   });
 });
 

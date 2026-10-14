@@ -14,8 +14,9 @@ How agents talk to people in any project that uses A2V. Readers are busy: they s
 8. **End with the next step**, when there is one: what the reader should decide or do. One line.
 
 9. **Symbols for state.** Mark status, results and next steps with the symbols below, so a reader can scan a result without reading it.
+10. **Compact by default.** Say each thing once, in the fewest words that keep the meaning. One idea per line. Show cause and effect with an arrow (`A → B`) and definitions with `=`. Cut anything the reader can infer: "this means", "as you can see", restating the question, explaining a number the table already shows. A reply is about 12 lines or fewer unless the reader asked for detail; offer the rest ("Want the details?").
 
-**Precedence:** if another style instruction asks for fragments, dropped words or shorthand, keep full, clear sentences. Shorter means fewer ideas, not broken grammar. Symbols replace status words, not sentences. The one exception is action lines (below).
+**Precedence:** if another style instruction asks for dropped words or shorthand, keep every word that carries meaning. Short means fewer ideas and fewer words per idea, not broken grammar. Arrow lines (→), symbols and action lines (below) are the allowed short forms.
 
 ## Symbols
 
@@ -56,6 +57,22 @@ Write:
 > ⬜ `pnpm check`: not run, `node_modules` is missing in this worktree
 >
 > 👉 Open the PR?
+
+## Compact example
+
+Instead of:
+
+> Isso significa que o escopo @ymatrix1 é seu e dá para publicar @ymatrix1/vantage sem criar organização nova.
+
+Write:
+
+> Escopo @ymatrix1 é seu → dá para publicar @ymatrix1/vantage.
+
+Instead of a paragraph explaining three causes, write one line each:
+
+> `vantage` no npm = nome tomado → usar `@ymatrix1/vantage`
+> 2FA ligado → publish pede código
+> Pacote ainda não existe → primeiro publish é manual
 
 ## Action lines
 

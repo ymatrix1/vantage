@@ -1,4 +1,4 @@
-// Assembles the one installable Vantage npm package (D91). Does not publish.
+// Assembles the one installable Vantage npm package (D93). Does not publish.
 // Usage: node tools/assemble-main-package.mjs <version> <outDir> [--commit <sha>]
 //
 // The workspace packages are not published on their own. Their built output is staged under the package's own
@@ -11,7 +11,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { optionalDependencies } from "./assemble-native-packages.mjs";
 
-/** npm name of the product package. `vantage` is taken on npm (1.7.0 by an unrelated project), see D91. */
+/** npm name of the product package. `vantage` is taken on npm (1.7.0 by an unrelated project), see D93. */
 export const PACKAGE_NAME = "vantage-a2v";
 export const REPOSITORY = "https://github.com/ymatrix1/vantage";
 /** Workspace packages staged inside the tarball, in `packages/` order. */

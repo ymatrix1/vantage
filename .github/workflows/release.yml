@@ -1,6 +1,6 @@
 name: release
 
-# Release delivery (D91, docs/specs/ci.md "Releasing", RELEASING.md).
+# Release delivery (D93, docs/specs/ci.md "Releasing", RELEASING.md).
 #
 #   push to main  -> if package.json holds a version with no tag (the release PR was merged): build, test,
 #                    native build, assemble, GitHub Release with artifacts and attestation, then the GATED npm publish.

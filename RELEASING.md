@@ -1,6 +1,6 @@
 # Releasing Vantage
 
-For the maintainer. A release is one merge you choose to make. Nothing publishes by itself: the npm publish waits for your approval and for configuration only you can do. Design and reasons: [CI/CD spec](docs/specs/ci.md#releasing) and D91 in [decisions](docs/DECISIONS.md).
+For the maintainer. A release is one merge you choose to make. Nothing publishes by itself: the npm publish waits for your approval and for configuration only you can do. Design and reasons: [CI/CD spec](docs/specs/ci.md#releasing) and D93 in [decisions](docs/DECISIONS.md).
 
 ## How a release happens
 
@@ -23,7 +23,7 @@ Pull requests that touch the release files, and manual dispatches, run the same 
 
 None of this is done. The workflows do not create any of it, and they do not work around it.
 
-- [ ] **Package names.** `vantage` is taken on npm (an unrelated project), so the product package is `vantage-a2v` (D91, change `PACKAGE_NAME` in `tools/assemble-main-package.mjs` if you prefer another name). The native packages use the `@vantage` scope (D72): create the npm organisation `vantage`, or pick a scope you own and change `SCOPE` in `tools/assemble-native-packages.mjs` and the lookup in `packages/cli/src/install.ts`. Check with `npm view vantage-a2v` and `npm access list packages @vantage`.
+- [ ] **Package names.** `vantage` is taken on npm (an unrelated project), so the product package is `vantage-a2v` (D93, change `PACKAGE_NAME` in `tools/assemble-main-package.mjs` if you prefer another name). The native packages use the `@vantage` scope (D72): create the npm organisation `vantage`, or pick a scope you own and change `SCOPE` in `tools/assemble-native-packages.mjs` and the lookup in `packages/cli/src/install.ts`. Check with `npm view vantage-a2v` and `npm access list packages @vantage`.
 - [ ] **Licence.** The packages say `UNLICENSED` because the repo has no licence file. Choose one before the first publish: it is part of the tarball.
 - [ ] **Create the environment.** Repository Settings → Environments → New environment, named exactly `npm-publish`. Add yourself under Required reviewers. Under Deployment branches choose "Selected branches" and allow only `main`. Do not tick "Prevent self-review" while you are the only maintainer: it would block every release.
 - [ ] **Add the token.** In that environment, Environment secrets → `NPM_TOKEN`: an npm granular access token with read and write access to the packages above (a classic Automation token also works). Set it as an environment secret, never a repository secret, and never paste it into a file, issue or chat.

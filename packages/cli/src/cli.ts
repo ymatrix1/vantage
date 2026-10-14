@@ -1,4 +1,4 @@
-// `vantage start`, `open`, `add`, `remove`, `uninstall` and `doctor` (docs/specs/operations.md).
+// `vantage start`, `open`, `add`, `remove`, `uninstall`, `doctor` and `stats` (docs/specs/operations.md).
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
@@ -14,6 +14,7 @@ import {
 import { runDoctor } from "./doctor.ts";
 import { runAdd, runRemove } from "./install.ts";
 import { formatVersion, readVersionInfo } from "./version.ts";
+import { runStats } from "./stats.ts";
 
 export interface CliIo {
   out(line: string): void;
@@ -114,8 +115,9 @@ export async function runCli(argv: string[], io: CliIo): Promise<number> {
     io.out(formatVersion(readVersionInfo(io.env)));
     return 0;
   }
+  if (cmd === "stats") return runStats(rest, io);
   io.err(
-    "Usage: vantage start [--port N] | open [--print] | add [path] [--dry-run] [--yes] [--git-hooks] | remove [path] | uninstall | doctor | --version",
+    "Usage: vantage start [--port N] | open [--print] | add [path] [--dry-run] [--yes] [--git-hooks] | remove [path] | uninstall | doctor | --version | stats [--json] [--since 7d] [--repo NAME] [--days N]",
   );
   return cmd === undefined || cmd === "--help" || cmd === "help" ? 0 : 2;
 }

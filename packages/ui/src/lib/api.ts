@@ -1,6 +1,7 @@
 // Daemon API client (docs/specs/web-ui.md#api-daemon-to-ui). The token arrives in the URL fragment on
 // launch (D32), moves to sessionStorage and leaves the address bar; it is only ever sent as a header.
-import type { TraceResponse, TrackResponse } from "@vantage/core/track";
+import type { TraceResponse } from "@vantage/core/track";
+import type { TrackView } from "./contract";
 
 const KEY = "vantage.token";
 
@@ -47,13 +48,15 @@ async function get(path: string, signal?: AbortSignal): Promise<Record<string, u
   return Object.fromEntries(Object.entries(body));
 }
 
-const isTrack = (b: Record<string, unknown>): b is Record<string, unknown> & TrackResponse =>
-  Array.isArray(b["groups"]);
+const isObject = (v: unknown): boolean => typeof v === "object" && v !== null && !Array.isArray(v);
+const isTrack = (b: Record<string, unknown>): b is Record<string, unknown> & TrackView =>
+  Array.isArray(b["groups"]) && isObject(b["page"]) && isObject(b["facets"]);
 const isTrace = (b: Record<string, unknown>): b is Record<string, unknown> & TraceResponse =>
   Array.isArray(b["events"]);
 
-export async function fetchTrack(signal?: AbortSignal): Promise<TrackResponse> {
-  const b = await get("/api/track", signal);
+/** `query` is the view state as a query string without `?`: filters only, never the token. */
+export async function fetchTrack(query = "", signal?: AbortSignal): Promise<TrackView> {
+  const b = await get(query ? `/api/track?${query}` : "/api/track", signal);
   if (!isTrack(b)) throw new ApiError(502, "bad response");
   return b;
 }

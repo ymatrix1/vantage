@@ -1,5 +1,5 @@
 // Synthetic package tree: proves the published tarball holds exactly the expected files and nothing else
-// (no sources, no tests, no maps, no .env, no fixtures). vantage-a6hi, D91.
+// (no sources, no tests, no maps, no .env, no fixtures). vantage-a6hi, D93.
 import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";

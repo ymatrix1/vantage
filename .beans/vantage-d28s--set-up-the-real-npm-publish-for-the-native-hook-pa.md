@@ -21,7 +21,7 @@ Never slow an agent down.
 
 ## Acceptance Criteria
 
-Follow the checklist in RELEASING.md ("One-time setup"); the release workflow (vantage-a6hi, D91) is built and waits for it.
+Follow the checklist in RELEASING.md ("One-time setup"); the release workflow (vantage-a6hi, D93) is built and waits for it.
 
 - [ ] npm package names and the `@vantage` scope confirmed, or renamed (`vantage` is taken on npm; the product package is `vantage-a2v`)
 - [ ] Licence chosen (the packages say `UNLICENSED`)
