@@ -8,7 +8,8 @@ Runs on every push to `main` and every PR.
 
 | Check | Tool | Fails when |
 |---|---|---|
-| Broken relative links | `tools/check_docs.py` | A Markdown link points to a missing file |
+| Broken relative links | `tools/check_docs.py` | A Markdown link points to a missing file or a missing `#section` |
+| Broken tables | `tools/check_docs.py` | A blank line splits a table, so rows render as text |
 | Decision format (D30) | `tools/check_docs.py` | A decision or proposal lacks Context, Decision, Why, Alternatives or Impact |
 | Privacy scan | `tools/check_docs.py` | Tokens, API keys or email addresses appear in tracked files |
 | Secret scan | gitleaks | Secrets anywhere in history |
