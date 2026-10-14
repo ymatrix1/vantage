@@ -27,17 +27,45 @@ Every page and panel handles all five states.
 |---|---|
 | `Ctrl+K` | Command palette (every action is listed there) |
 | `g f` / `g t` / `g j` / `g i` / `g s` | Go to Focus, Track, Journal, Inbox, Sources |
-| `j` / `k` | Next / previous row |
+| `j` / `k` | Next / previous row (rows of collapsed groups are skipped) |
 | `Enter` | Open item |
 | `Esc` | Close panel or palette |
-| `/` | Search |
+| `/` | Focus search (`Esc` leaves the box) |
+| `[` / `]` | Previous / next page of the list |
 | `p` | Pin or unpin item |
 | `z` | Park item |
 | `r` | Resume with context |
 | `a` | Ask for proof |
 | `e` | Explain the selected item, project or week |
-| `1` / `2` / `3` | Group Track by attention / project / stage |
+| `1` / `2` / `3` / `4` | Group Track by attention / repo / stage / no grouping (proposed D85; no `g` chords, since `g s` is Sources) |
 | `?` | Show this map |
+
+## Track controls
+
+Built in `packages/ui` (`vantage-4ty4`, proposed D85). The request mirrors the `GET /api/track` query contract; the response adds `page`, `facets` and `groups` with `id`, `label`, `total` and the current page's rows.
+
+| Control | Behaviour |
+|---|---|
+| Search | Title, repo and branch, at most 80 characters, sent after a 250 ms pause or on `Enter`; typing replaces the history entry instead of adding one |
+| Filters | Chips with live counts from `facets`: since (24 h, 7 d, 30 d, all), has code edits, repo, branch, stage, proof, flag. Each count is computed without its own filter, so a chip shows what choosing it would give. Active filters show as removable chips; "Clear all filters" keeps sort, group and page size |
+| Sort and group | Sort by activity, stage, title, repo or flags, with direction (title and repo start A to Z, the rest newest or highest first). Group by attention, repo, stage or none |
+| Groups | Real headings with the group total; "(N on this page)" when paging splits a group. Each collapses; "Conversations without code" (`no_edits`) and "Older" (`older`) start collapsed |
+| Pagination | First, previous, next, last, "26 to 50 of 312", and 25, 50 or 100 per page. Any filter, sort or group change returns to page 1; a page past the end lands on the last page |
+| Flags | Each flag shows its `reason` text on the row |
+
+Default view: group by attention, since 7 days, sorted by recent activity, 25 per page.
+
+**View state.** Everything above lives in the URL query string (only what differs from the default), so a view is shareable and the back button works. The last view's query string is also kept in `localStorage` (`vantage.view`) and used when the page opens with no query. The token never enters the query string, history or `localStorage` (D75).
+
+**Screen states for Track.**
+
+| State | What the user sees |
+|---|---|
+| Loading, first load | Skeleton rows |
+| Loading, a control changed | The previous rows stay, dimmed and marked busy, until the new response lands; a stale request is cancelled |
+| Empty, no work at all | "No work yet. Run `vantage init` in a repo to start." |
+| Empty, filters removed everything | "Nothing matches these filters." plus one line per filter that, removed on its own, would bring items back ("The repo filter hides 10 items. Remove it"), and Clear all filters. With only the default 7 days: "Nothing active in the last 7 days." with a way to widen it |
+| Live push | Rows on the page update in place; rows never appear, vanish or move. Counts refresh at most once a second. Reconnect and `resync` refetch the current page |
 
 ## API (daemon to UI)
 

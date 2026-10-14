@@ -1060,4 +1060,16 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 
 ## Proposed (pending confirmation)
 
-None right now.
+### D85. Track page controls: view state in the URL, `1` to `4` for group-by, pushes never rearrange the page
+
+- **Status:** proposed
+- **Context:** The first real run showed 300 rows under one flag with no way to filter, sort, group or page (`vantage-4ty4`). The Track page needs controls, and the specs leave open where their state lives, which keys switch grouping, and what a live push may change while the user reads a page. The spec's keyboard map already maps `g s` to Sources, so the requested `g` then `r`/`s`/`a` chords for group-by would clash on `s`.
+- **Decision:**
+  1. **View state** (search, filters, since, sort, order, group, page, page size) lives in the URL query string, written only where it differs from the default, with `pushState` for each control change and `replaceState` while typing a search. The last view's query string is also kept in `localStorage` (`vantage.view`) and applied when the page opens with no query. Nothing else is stored there. Unknown or invalid values fall back to the default; search text is capped at 80 characters.
+  2. **Token:** never in the query string, history or `localStorage`: it stays in the URL fragment on launch, then `sessionStorage`, and is sent only as `Authorization: Bearer` (D75). The page writes `pathname` and query only, never a fragment.
+  3. **Keys:** `/` focuses search, `[` and `]` turn pages, `1`, `2`, `3`, `4` group by attention, repo, stage, none (the web-ui spec already reserves `1`/`2`/`3`). No `g` chords for grouping.
+  4. **Live pushes:** a push updates rows already on the page in place; it never adds, removes or moves rows, and never changes the page number. Pushes about other items only mark the counts stale, and one throttled refetch (at most once a second) replaces facets, totals and group totals while keeping the rows shown. A `resync` or reconnect refetches the current page.
+  5. **Collapsed by default:** groups whose id is `no_edits` ("Conversations without code") or `older`; the daemon names the groups, the page decides what starts closed.
+- **Why:** A URL is the one place that makes a view shareable, survives refresh and works with the back button, and storing only the query string keeps the token out of every persistent store. Number keys avoid the `g s` clash and match the spec. Leaving rows alone on a push stops a list from shifting under a reader's cursor, which is the failure the Track page exists to prevent.
+- **Alternatives:** `g` then letter chords (clash with `g s`; two keystrokes for a frequent action). View state only in `localStorage` (not shareable, no back button). Re-sorting visible rows on every push (rows jump; totals can disagree with the page). Collapsing by a flag on the group from the API (cleaner but needs a contract field the API session did not define).
+- **Impact:** Adds `packages/ui` view state, toolbar and pagination; updates the web-ui spec's screen states and keyboard map. Depends on the `GET /api/track` contract and on the daemon emitting `no_edits` and `older` group ids; a different id would simply start expanded. Revisit if a second page needs the same URL conventions or if the API gains a `collapsed` hint.

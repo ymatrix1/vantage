@@ -1,15 +1,8 @@
 // Live updates (docs/specs/web-ui.md#api-daemon-to-ui, D81). The daemon pushes what changed; the page
 // applies it to the data it already has, and falls back to polling while the socket is down.
-import {
-  ATTENTION_LABEL,
-  ATTENTION_ORDER,
-  STALE_PASS_MS,
-  attentionOf,
-  type SourceHealth,
-  type TrackItem,
-  type TrackResponse,
-} from "@vantage/core/track";
+import { STALE_PASS_MS, type SourceHealth, type TrackItem } from "@vantage/core/track";
 import { takeToken } from "./api";
+import type { TrackRow, TrackView } from "./contract";
 
 export const LIVE_PROTOCOL = "vantage.v1";
 export const BACKOFF_START_MS = 1000;
@@ -66,52 +59,41 @@ export function parsePush(text: string): LivePush | null {
   }
 }
 
-function regroup(items: TrackItem[]): TrackResponse["groups"] {
-  return ATTENTION_ORDER.map((attention) => ({
-    attention,
-    label: ATTENTION_LABEL[attention],
-    items: items.filter((i) => attentionOf(i) === attention),
-  }));
-}
+/** What the page must do after a push: nothing more, refresh only the counts, or refetch the page. */
+export type Refresh = "none" | "facets" | "full";
 
 /**
- * Returns the next view, or null when the page should refetch (a `resync`, or a change to an item it
- * has never seen without its full fields). `flag.raised` only announces; the flag arrives in `item.changed`.
+ * Applies a push to the page the user is looking at. Rows already on the page are updated in place and
+ * never move, appear or disappear (the page does not change under the reader); anything else only marks
+ * the counts stale so the page can refresh facets, totals and group totals. A `resync` refetches.
  */
-export function applyPush(data: TrackResponse, push: LivePush): TrackResponse | null {
-  if (push.type === "resync") return null;
+export function applyPush(data: TrackView, push: LivePush): { view: TrackView; refresh: Refresh } {
+  if (push.type === "resync") return { view: data, refresh: "full" };
   const lastPassAt = push.lastPassAt ?? data.lastPassAt;
-  const base = {
+  const base: TrackView = {
     ...data,
     generatedAt: push.at,
     lastPassAt,
     stale: lastPassAt !== null && Date.parse(push.at) - Date.parse(lastPassAt) > STALE_PASS_MS,
   };
-  if (push.type === "flag.raised") return base;
-  if (push.type === "source.health") return { ...base, sources: push.sources };
-  const items = data.groups.flatMap((g) => g.items);
-  const at = items.findIndex((i) => i.id === push.id);
-  if (at < 0) {
-    if (!push.isNew) return null;
-    const f = push.fields;
-    if (f.title === undefined || f.stage === undefined || f.flags === undefined) return null;
-    const item: TrackItem = {
-      id: push.id,
-      title: f.title,
-      repo: f.repo ?? null,
-      stage: f.stage,
-      proofStatus: f.proofStatus ?? "none",
-      proofLevel: f.proofLevel ?? 0,
-      docsOnly: f.docsOnly ?? false,
-      flags: f.flags,
-      lastActivity: f.lastActivity ?? push.at,
-    };
-    return { ...base, groups: regroup([...items, item]) };
-  }
-  const prev = items[at];
-  if (!prev) return null;
-  items[at] = { ...prev, ...push.fields, id: prev.id };
-  return { ...base, groups: regroup(items) };
+  if (push.type === "source.health") return { view: { ...base, sources: push.sources }, refresh: "none" };
+  if (push.type === "flag.raised") return { view: base, refresh: "facets" };
+  const groups = data.groups.map((g) => ({
+    ...g,
+    items: g.items.map((i): TrackRow => (i.id === push.id ? { ...i, ...push.fields, id: i.id } : i)),
+  }));
+  return { view: { ...base, groups }, refresh: "facets" };
+}
+
+/** Takes only the counts (facets, totals) from a refetch and keeps the rows the reader is looking at. */
+export function mergeCounts(shown: TrackView, fresh: TrackView): TrackView {
+  const totals = new Map(fresh.groups.map((g) => [g.id, g.total]));
+  return {
+    ...shown,
+    facets: fresh.facets,
+    page: { ...shown.page, total: fresh.page.total, pages: fresh.page.pages },
+    groups: shown.groups.map((g) => ({ ...g, total: totals.get(g.id) ?? g.total })),
+  };
 }
 
 export interface LiveHandlers {
