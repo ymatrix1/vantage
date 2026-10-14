@@ -2,13 +2,14 @@
 import { flushSync, mount, unmount } from "svelte";
 import type { Component } from "svelte";
 import { vi } from "vitest";
-import type { TraceResponse, TrackItem, TrackResponse } from "@vantage/core/track";
+import type { TraceResponse } from "@vantage/core/track";
+import type { Facets, TrackGroup, TrackRow, TrackView } from "../src/lib/contract";
 import App from "../src/App.svelte";
 
 // Built, not written out, so secret scanners do not mistake the fake token for a key.
 export const TOKEN = "ab".repeat(16);
 
-export function item(over: Partial<TrackItem> = {}): TrackItem {
+export function item(over: Partial<TrackRow> = {}): TrackRow {
   return {
     id: "wi-1",
     title: "Add retry to sync",
@@ -18,21 +19,39 @@ export function item(over: Partial<TrackItem> = {}): TrackItem {
     proofLevel: 0,
     docsOnly: false,
     flags: [],
+    hasEdits: true,
     lastActivity: new Date().toISOString(),
     ...over,
   };
 }
 
-export function track(items: TrackItem[], over: Partial<TrackResponse> = {}): TrackResponse {
+export const emptyFacets = (): Facets => ({
+  repo: {},
+  branch: {},
+  stage: {},
+  proof: {},
+  flag: {},
+  age: { today: 0, week: 0, older: 0 },
+  hasEdits: { true: 0, false: 0 },
+});
+
+export function group(id: string, label: string, items: TrackRow[], total = items.length): TrackGroup {
+  return { id, label, total, items };
+}
+
+/** One "In progress" group by default; pass `groups` to build others and `page` to set paging. */
+export function track(items: TrackRow[], over: Partial<TrackView> = {}): TrackView {
   return {
     generatedAt: new Date().toISOString(),
     lastPassAt: new Date().toISOString(),
     stale: false,
-    groups: [{ attention: "in_progress", label: "In progress", items }],
+    groups: [group("in_progress", "In progress", items)],
     sources: [
       { source: "agent", state: "ok", events: 3, lastEventAt: null },
       { source: "git", state: "ok", events: 2, lastEventAt: null },
     ],
+    page: { page: 1, pageSize: 25, total: items.length, pages: items.length === 0 ? 0 : 1 },
+    facets: emptyFacets(),
     ...over,
   };
 }
@@ -71,13 +90,13 @@ export function traceOf(id: string, over: Partial<TraceResponse> = {}): TraceRes
 type Reply = { status?: number; body?: unknown } | "network-error";
 
 /** Routes /api/track and /api/items/<id>/trace; the reply for each can change between calls. */
-export function fakeApi(routes: { track: () => Reply; trace?: (id: string) => Reply }) {
+export function fakeApi(routes: { track: (url: string) => Reply; trace?: (id: string) => Reply }) {
   const fn = vi.fn<(input: string, init?: RequestInit) => Promise<Response>>(async (input) => {
     const url = input;
     const m = /^\/api\/items\/(.+)\/trace$/.exec(url);
     const reply = m?.[1]
       ? (routes.trace ?? ((): Reply => ({ status: 404 })))(decodeURIComponent(m[1]))
-      : routes.track();
+      : routes.track(url);
     if (reply === "network-error") throw new TypeError("fetch failed");
     return new Response(JSON.stringify(reply.body ?? {}), {
       status: reply.status ?? 200,
@@ -122,7 +141,11 @@ export function render<P extends Record<string, unknown>>(component: Component<P
   return target;
 }
 
-export function renderApp() {
+/** `search` is the page's query string (with `?`); `stored` is a remembered view (without it). */
+export function renderApp(search = "", stored = "") {
+  window.history.replaceState(null, "", `/${search}`);
+  localStorage.clear();
+  if (stored) localStorage.setItem("vantage.view", stored);
   FakeSocket.all = [];
   vi.stubGlobal("WebSocket", FakeSocket);
   sessionStorage.setItem("vantage.token", TOKEN);
@@ -134,6 +157,7 @@ export function cleanup(): void {
   mounted = null;
   document.body.innerHTML = "";
   sessionStorage.clear();
+  localStorage.clear();
   vi.unstubAllGlobals();
 }
 

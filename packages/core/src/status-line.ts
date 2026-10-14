@@ -57,7 +57,7 @@ const DONE: Glyph = { text: "●", color: "green" };
 const ACTIVE: Glyph = { text: "◉", color: "blue" };
 const NO_PROOF: Glyph = { text: "◐", color: "yellow" };
 const NEEDS_YOU: Glyph = { text: "◍!", color: "red" };
-const SKIPPED: Glyph = { text: "◌", color: "gray" };
+const SKIPPED: Glyph = { text: "–", color: "gray" };
 const NOT_YET: Glyph = { text: "○", color: "gray" };
 
 /** Six steps: Asked, Built, Proven, Reviewed, Shipped, Verified. Phase 1 knows the first three. */

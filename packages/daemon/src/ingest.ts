@@ -42,10 +42,57 @@ function commit(
 ): number {
   return store.transaction(() => {
     let inserted = 0;
-    for (const e of events) if (store.insertEvent(e, now)) inserted++;
+    for (const e of events) {
+      if (store.insertEvent(e, now)) inserted++;
+      noteBranch(store, e);
+    }
     store.setCursor(cursorKey, offset, now);
     return inserted;
   });
+}
+
+const TOOL_KINDS: ReadonlySet<string> = new Set(["file.edited", "command.ran"]);
+
+/** Keeps the transcript's branch for a tool call even when a hook stored the call first (D92). */
+function noteBranch(store: Store, e: VantageEvent): void {
+  const branch = e.payload["branch"];
+  if (e.source === "claude_code" && TOOL_KINDS.has(e.kind) && typeof branch === "string" && branch !== "") {
+    store.setEventBranch(e.source, e.sourceId, branch);
+  }
+}
+
+const BRANCH_BACKFILL = "backfill:event-branches:v1";
+
+/**
+ * One pass over the transcripts inside the window that records the branch for tool calls stored before
+ * the branch was read (D92). Events are not rewritten; the branch goes beside them and the linker sees
+ * it through `loadEvents`. Idempotent: the first value for an event wins, and a marker skips later runs.
+ */
+export function backfillEventBranches(
+  store: Store,
+  projectsDir: string,
+  now: Date = new Date(),
+  days: number = BACKFILL_DAYS,
+): { files: number; branches: number } {
+  const done = { files: 0, branches: 0 };
+  if (store.getCursorText(BRANCH_BACKFILL) !== null) return done;
+  const cutoff = now.getTime() - days * 86_400_000;
+  const before = store.countEventBranches();
+  for (const path of jsonlFiles(projectsDir)) {
+    if (statSync(path).mtimeMs < cutoff) continue;
+    const parsed: TranscriptLine[] = [];
+    for (const l of tailLines(path, 0).lines) {
+      const p = parseTranscriptLine(l);
+      if (p) parsed.push(p);
+    }
+    done.files++;
+    store.transaction(() => {
+      for (const e of transcriptEvents(parsed)) noteBranch(store, e);
+    });
+  }
+  store.setCursorText(BRANCH_BACKFILL, now.toISOString(), now.toISOString());
+  done.branches = store.countEventBranches() - before;
+  return done;
 }
 
 function* jsonlFiles(dir: string): Generator<string> {
@@ -97,6 +144,7 @@ export function backfillTranscripts(
   const cutoff = now.getTime() - days * 86_400_000;
   const result: IngestResult = { files: 0, inserted: 0 };
   const ctx: IngestContext = { repoRoots: knownRepoRoots(store) };
+  backfillEventBranches(store, projectsDir, now, days);
   for (const path of jsonlFiles(projectsDir)) {
     if (statSync(path).mtimeMs < cutoff) continue;
     const key = `transcript:${relative(projectsDir, path)}`;

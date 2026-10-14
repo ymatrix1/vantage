@@ -225,14 +225,10 @@ describe("request titles", () => {
     ]);
     ingest();
     runStagePass(store, {}, NOW);
-    // The branch-less edit also feeds a provisional session item, which is the one a request may title.
+    // Tool events now carry the branch (D92), so no session item exists; a request never titles an anchored item.
     const byId = Object.fromEntries(items().map((i) => [i.id, i]));
     expect(byId["issue:FTK-3"]).toEqual({ id: "issue:FTK-3", title: "FTK-3", source: "anchor" });
-    expect(
-      Object.values(byId)
-        .filter((i) => i.source === "request")
-        .map((i) => i.id),
-    ).toEqual([`session:${SID}`]);
+    expect(Object.values(byId).filter((i) => i.source === "request")).toEqual([]);
   });
 });
 
@@ -298,8 +294,8 @@ describe("where the title appears", () => {
   });
 });
 
-describe("migration 6", () => {
-  it("adds title_source and session_titles to a version 5 database and keeps its rows", () => {
+describe("migration 7", () => {
+  it("adds title_source and session_titles to a version 6 database and keeps its rows", () => {
     const path = join(dir, "old.db");
     const first = new Store(path);
     first.db.exec(
@@ -307,12 +303,12 @@ describe("migration 6", () => {
        VALUES ('issue:OLD-1', 'Old', 'built', 'none', 'x', 'x', 'x', 'x');
        DROP TABLE session_titles;
        ALTER TABLE work_items DROP COLUMN title_source;
-       UPDATE schema_meta SET version = 5;`,
+       UPDATE schema_meta SET version = 6;`,
     );
     first.close();
     const upgraded = new Store(path);
     try {
-      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(6);
+      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(7);
       expect(upgraded.db.prepare("SELECT title, title_source FROM work_items").get()).toMatchObject({
         title: "Old",
         title_source: "fallback",

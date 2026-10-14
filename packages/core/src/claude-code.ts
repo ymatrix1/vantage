@@ -24,6 +24,8 @@ export interface ToolCall {
   sessionId?: string | undefined;
   /** Set when a sub-agent made the call (transcript `agentId`, hook `agent_id`). */
   agentId?: string | undefined;
+  /** Branch checked out when the call ran, from the transcript line's `gitBranch` (D92). */
+  branch?: string | undefined;
   timestamp: string;
   /** undefined when the outcome is unknown (transcript call with no result yet). */
   ok?: boolean | undefined;
@@ -64,6 +66,7 @@ export function toolCallEvents(call: ToolCall): VantageEvent[] {
   if (call.ok !== undefined) common["ok"] = call.ok;
   if (call.cwd) common["cwd"] = call.cwd;
   if (call.agentId) common["agentId"] = call.agentId;
+  if (call.branch) common["branch"] = call.branch;
   const events: VantageEvent[] = [];
 
   if (EDIT_TOOLS.has(call.name)) {
@@ -248,6 +251,17 @@ export function parseTranscriptLine(line: string): TranscriptLine | null {
 }
 
 /**
+ * The branch in force at a transcript line (D92): the line's own `gitBranch`, else the nearest earlier
+ * line of the same session in the batch. A detached HEAD (`HEAD`) means no branch, and a later line
+ * without the field keeps meaning that. `undefined` when nothing in the batch says.
+ */
+function branchOf(l: TranscriptLine, now: Map<string, string | null>): string | undefined {
+  const sid = l.sessionId ?? "";
+  if (l.gitBranch !== undefined) now.set(sid, l.gitBranch === "HEAD" ? null : l.gitBranch);
+  return now.get(sid) ?? undefined;
+}
+
+/**
  * The title candidate for session `own`: its first real user request, run through `requestTitle`.
  * Returns `found: false` when the lines hold no user request yet (try again later) and `title: null`
  * when the first request leaves nothing usable (do not look at later ones). Only that one message is
@@ -277,10 +291,12 @@ export function firstRequestTitle(
 export function transcriptEvents(lines: TranscriptLine[], ctx?: IngestContext): VantageEvent[] {
   const calls = new Map<string, ToolCall>();
   const prompts: VantageEvent[] = [];
+  const branchNow = new Map<string, string | null>(); // session -> branch in force; null = detached
 
   for (const l of lines) {
     const ts = l.timestamp;
     if (!ts || Number.isNaN(Date.parse(ts))) continue;
+    const branch = branchOf(l, branchNow);
     if (l.type === "assistant") {
       for (const b of l.content) {
         const id = str(b["id"]);
@@ -293,6 +309,7 @@ export function transcriptEvents(lines: TranscriptLine[], ctx?: IngestContext): 
           timestamp: ts,
           sessionId: l.sessionId,
           agentId: l.agentId,
+          branch,
           cwd: l.cwd,
           repoRoot: rootFor(l.cwd, ctx),
         });
@@ -319,7 +336,7 @@ export function transcriptEvents(lines: TranscriptLine[], ctx?: IngestContext): 
         payload: {
           chars: l.text?.length ?? null,
           ...(l.cwd ? { cwd: l.cwd } : {}),
-          ...(l.gitBranch ? { branch: l.gitBranch } : {}),
+          ...(branch ? { branch } : {}),
         },
       });
     }

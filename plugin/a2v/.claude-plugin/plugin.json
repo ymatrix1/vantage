@@ -1,6 +1,6 @@
 {
   "name": "a2v",
   "description": "A2V (Asked to Verified) working method for AI agents: top-down communication (always on via a SessionStart hook), plus skills for explaining, proof, decisions, handoffs, landing the day, answering reviews, closing loops with people and planning tasks.",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "author": { "name": "ymatrix1" }
 }
