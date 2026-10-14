@@ -865,4 +865,11 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 
 ## Proposed (pending confirmation)
 
-None right now.
+### D70. Shell writes count as edits only inside the repo
+
+- **Status:** proposed
+- **Context:** About half of flagged shell `writes` only named log, output or data files, and some `sed -i` runs hit helper scripts outside the repo ([research](research/shell-edit-precision.md)). Counted as `file.edited`, they would move work items (Built, expired proof) on scratch output, against "cards move only on evidence".
+- **Decision:** At ingest, classify each named write target against the session `cwd` (or `repoRoot` when known). Only targets inside the repo reach `file.edited`; outside targets are recorded on `command.ran.outsidePaths`. Opaque writes keep counting unless a known `repoRoot` shows the `cwd` is outside it (`opaqueOutsideRepo`). Matching is lexical, no symlink resolution. Unresolvable targets, a missing `cwd` and commands with `cd` count as before.
+- **Why:** The `cwd` is known at ingest and later layers can't recover it. A payload field keeps every write on record and adds no event kind, so the stage machine and linker need no change to ignore scratch output.
+- **Alternatives:** A new `file.written_outside` event kind (clearer, but changes the 38-kind catalog and every consumer); a flag on `file.edited` (consumers that count edits would have to remember to filter); a path-suffix deny list (`.log`, `.txt`; misses real scratch scripts and wrongly drops real `.txt` docs); resolving symlinks (needs filesystem access in a pure function).
+- **Impact:** `file.edited` shrinks to in-repo work. New `outsidePaths` and `opaqueOutsideRepo` fields on `command.ran`. The daemon should pass the git root as `repoRoot` (follow-up bean), else a subdirectory session misclassifies `../sibling` writes as outside. Revisit if lexical matching misses symlinked repos in practice.

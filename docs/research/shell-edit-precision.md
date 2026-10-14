@@ -56,6 +56,6 @@ Still missed: `cp`, `mv`, `touch` (179 unflagged commands, 0.8%) and `git checko
 
 ## Implications
 
-- ⚠️ About half of the flagged `writes` (2,173 of 4,236) only name log, output or data files (`.log`, `.txt`, `.json`, `.bmp`, `/dev/...`). Those are real writes but are not source edits. A work item that treats them as edits will move on scratch output. Follow-up: classify targets by repo membership at ingest, where the working directory is known.
+- ⚠️ About half of the flagged `writes` (2,173 of 4,236) only name log, output or data files (`.log`, `.txt`, `.json`, `.bmp`, `/dev/...`). Those are real writes but are not source edits. A work item that treats them as edits will move on scratch output. Follow-up: classify targets by repo membership at ingest, where the working directory is known (done in `vantage-7ouh`, D70).
 - Likewise, some `sed -i` runs target helper scripts outside the repo (5 of 25 sampled). The detector cannot tell, because the target is opaque.
 - ❓ The labeled sample is small. A larger one would tighten the bounds, but real command text must stay local.
