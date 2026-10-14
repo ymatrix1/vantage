@@ -98,6 +98,7 @@ Rules:
 | [D69](#d69-decisions-have-a-status-an-owner-and-are-frozen-once-accepted) | 2026-10-14 | Decisions have a status and an owner, and are frozen once accepted |
 | [D70](#d70-shell-writes-count-as-edits-only-inside-the-repo) | 2026-10-14 | Shell writes count as edits only inside the repo |
 | [D71](#d71-phase-1-stage-machine-rules-the-specs-left-open) | 2026-10-14 | Phase 1 stage machine rules the specs left open |
+| [D72](#d72-ship-the-spool-hook-as-a-rust-binary-in-per-os-npm-packages-with-a-node-fallback) | 2026-10-14 | Ship the spool hook as a Rust binary in per-OS npm packages, with a Node fallback |
 
 ---
 
@@ -890,6 +891,17 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Why:** Every rule can be computed from events already captured, so a card never moves on an agent's say-so (D3), and each transition names its evidence (D45).
 - **Alternatives:** Treat any exit 0 as proof (accepts `echo`); expire proof on docs edits (punishes README fixes after a test run); capture output now (bigger hook, deferred to a follow-up bean).
 - **Impact:** Updates the [proof spec](specs/proof.md#freshness) and the [data schema](specs/data-schema.md). The Stop hook must emit `session.stopped` for `unproven_claim` to fire. Revisit once hooks record output summaries, and when R1 data shows how many real checks the allowlist misses.
+
+### D72. Ship the spool hook as a Rust binary in per-OS npm packages, with a Node fallback
+
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
+
+- **Context:** D67 left the spool hook at a median 95 to 99 ms and p95 130 ms on built JS, over the 100 ms budget (D21) at p95, with Node's own start-up (82 ms) as the floor. Q28 asked whether a native binary is worth a toolchain and per-OS builds against the npm install of D63. Bean `vantage-xex6` measured Go and Rust next to the control ([research](research/native-hook-binary.md)).
+- **Decision:** Build the hook in Rust and publish one npm package per OS and CPU (`optionalDependencies` with `os` and `cpu` fields), so `npx vantage add` (D63) still works. The installer (`vantage-p9x2`) registers the resolved binary path; when no native package resolves, it registers `node dist/src/bin.js` (D67). `vantage doctor` reports which one is registered. The daemon, CLI and everything else stay TypeScript on Node.
+- **Why:** It is the only lever that clears p95: four runs gave a median 26 to 33 ms and p95 44 to 52 ms against 91 to 119 ms and 118 to 147 ms for built JS. Rust and Go were within noise of each other, but Rust is 0.16 MB against 2.14 MB, has no runtime, and Rust is already in the toolchain through Oxc (D64). The optional-package pattern keeps D63 and needs no download or signing at first run.
+- **Alternatives:** Accept built JS (no new toolchain, but p95 stays 118 to 147 ms and the sync `Stop` gate has no headroom). Go (same speed, 13 times larger, a second toolchain beside Oxc). Download on first run (needs hosted releases, checksums, and a mark that makes SmartScreen apply). Build from source (needs a toolchain on every user's machine). A Bun-compiled binary (114 to 117 ms in D67, slower than built Node).
+- **Impact:** Adds a Rust crate (about 60 lines), release CI that builds 5 targets, and 5 small npm packages; `vantage-p9x2` gains path resolution and the fallback. A parity test must assert the same line as `collect.ts` and exit 0 with the daemon down. Windows antivirus behavior of an unsigned binary is untested and must be checked before release; revisit signing if it is flagged. Revisit the whole decision if hook latency never shows up as a real cost, since hooks are async (D59). Not implemented: needs the user's confirmation first.
 
 ---
 
