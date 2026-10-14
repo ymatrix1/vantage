@@ -11,5 +11,5 @@
     "skipLibCheck": true,
     "paths": { "$lib": ["./src/lib"], "$lib/*": ["./src/lib/*"] }
   },
-  "include": ["src/**/*.ts", "src/**/*.svelte", "vite.config.ts"]
+  "include": ["src/**/*.ts", "src/**/*.svelte", "test/**/*.ts", "vite.config.ts", "vitest.config.ts"]
 }

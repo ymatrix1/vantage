@@ -8,7 +8,7 @@ import {
   nextBackoff,
   parsePush,
   type LivePush,
-} from "../src/lib/live.ts";
+} from "../src/lib/live";
 
 const item = (id: string, over: Record<string, unknown> = {}) => ({
   id,

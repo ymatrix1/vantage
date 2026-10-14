@@ -14,10 +14,22 @@ export default defineConfig({
     },
   },
   test: {
-    include: ["packages/*/test/**/*.test.ts", "tools/test/**/*.test.ts"],
-    // Tests that open SQLite files and spawn processes ran past the 5 s default on shared Windows
-    // runners (stages.test.ts "migration 3" timed out once on windows-latest, then passed on rerun).
-    testTimeout: 20_000,
-    hookTimeout: 20_000,
+    // Two projects: the Node packages and tools, and the UI component tests (D82), which need the
+    // browser build of Svelte and a DOM that the Node packages must not get.
+    projects: [
+      "packages/ui",
+      {
+        extends: true,
+        test: {
+          name: "node",
+          include: ["packages/*/test/**/*.test.ts", "tools/test/**/*.test.ts"],
+          exclude: ["**/node_modules/**", "packages/ui/**"],
+          // Tests that open SQLite files and spawn processes ran past the 5 s default on shared Windows
+          // runners (stages.test.ts "migration 3" timed out once on windows-latest, then passed on rerun).
+          testTimeout: 20_000,
+          hookTimeout: 20_000,
+        },
+      },
+    ],
   },
 });
