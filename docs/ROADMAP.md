@@ -102,7 +102,7 @@ Draft epic `vantage-nqh6`. It starts after the Phase 1 exit (a week of daily use
 
 ## Phase 6: issue tracker and Slack
 
-- [ ] Tracker adapter with Jira and Linear implementations; build whichever is in use first.
+- [ ] Tracker adapter with Jira and Linear implementations; build whichever is in use first. Vantage only syncs issues, it does not manage them (D90); the read-only sync and the `issue_policy` setting are drafted as `vantage-nqh6` children and may move earlier with the user's OK.
 - [ ] Assigned issues as Asked items; priority and due date.
 - [ ] Unseen mentions; commitment detection.
 - [ ] Pings on Slack, Jira and Linear: owed replies, nudges and close-the-loop drafts.

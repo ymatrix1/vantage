@@ -110,6 +110,7 @@ Rules:
 | [D81](#d81-live-updates-get-apilive-with-the-token-in-the-subprotocol-and-a-dependency-free-send-only-socket) | 2026-10-14 | Live updates: `GET /api/live` with the token in the subprotocol and a dependency-free send-only socket |
 | [D82](#d82-ui-component-tests-vitest-project-with-happy-dom-and-sveltes-own-mount) | 2026-10-14 | UI component tests: Vitest project with happy-dom and Svelte's own `mount` |
 | [D83](#d83-plugin-commands-are-vantagecommand-add---yes-is-never-pre-approved) | 2026-10-14 | Plugin commands are `/vantage:<command>`; `add --yes` is never pre-approved |
+| [D90](#d90-issues-live-in-the-users-tracker-vantage-only-syncs-them) | 2026-10-14 | Issues live in the user's tracker; Vantage only syncs them |
 
 ---
 
@@ -1055,6 +1056,17 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Why:** The namespaced form is the documented one; a gate on `--yes` keeps the confirmation in the user's hands even if the agent misreads a reply; reading the status file adds no server feature.
 - **Alternatives:** A skill named `vantage` taking an argument (a bare `/vantage open` is undocumented for plugins, unverified); `/vantage:add` pre-approving `--yes` (one prompt less, no second gate); `status` calling the API with the token (needs the token in the agent's context).
 - **Impact:** First-run spec and README say `/vantage:add`. Commands live under `commands/`, which the docs call legacy next to `skills/`; revisit if `commands/` is removed. Live runs in a real session are still to do.
+
+### D90. Issues live in the user's tracker; Vantage only syncs them
+
+- **Status:** accepted 2026-10-14
+- **Decided by:** user (said in chat on 2026-10-14: every session should have an issue, and Vantage should only sync, not be an issue manager)
+
+- **Context:** After the first real run the Track page showed hundreds of `Session <id>` items because most sessions run on the default branch with no ticket in the branch name, so the linker (D25) falls to one provisional item per session. The user asked that every session be tied to an issue and considered either requiring an issue manager or building an internal one.
+- **Decision:** Vantage does not build an issue manager. The issue of record lives in the user's tracker (Jira, Linear or GitHub Issues, whichever the user chooses in configuration; the first one to build is a separate choice). Vantage syncs it: read first (title, link, status, assignee, priority), write-back only on an explicit user action (PRD non-goals). An issue key found in a branch name, a worktree or a session's first request anchors the session to that item (D25 rule 1) and the item takes its title and link from the tracker. A session with no issue stays a provisional item and is counted. A new setting `issue_policy` (`off`, `suggest` default, `require`) says what Vantage does about sessions with code edits and no issue: `suggest` shows how many there are and nudges at session start; `require` also warns from the Stop gate (warn only, never blocking in this phase), following D53 (sessions without code edits are exempt).
+- **Why:** The work item already plays the role of the issue (title, stages, proof, flags), so a second internal tracker would duplicate it and create one more list to keep. A synced tracker gives real titles and links, matches what the user's team already uses, and keeps the PRD scope. A soft policy fixes the root cause (sessions without an anchor) without creating friction for exploratory conversations.
+- **Alternatives:** A full internal issue manager with its own ids (a second source of truth and more to maintain; the item already covers it); requiring a tracker before anything works (blocks first use, and a personal repo may have none); a blocking gate (breaks flow, teaches workarounds such as placeholder titles); doing nothing (the page stays unreadable).
+- **Impact:** Adds work for a tracker adapter (Phase 6, `vantage-vncu` research) and credential storage (`vantage-5fek`), and for the `issue_policy` setting and the "sessions without an issue" count in the page and in `vantage stats`. No code changes in this record. Until a tracker is connected, the soft titles from the first request and the lineage grouping (parallel work) carry the load. Revisit if the chosen tracker cannot be read with a user-scoped token, or if the week of use shows few sessions without an issue.
 
 ---
 
