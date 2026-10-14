@@ -53,6 +53,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@vantage/core':
+        specifier: workspace:*
+        version: link:../core
       bits-ui:
         specifier: 2.19.5
         version: 2.19.5(@internationalized/date@3.12.4)(svelte@5.57.2)
