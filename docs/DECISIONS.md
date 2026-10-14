@@ -495,4 +495,27 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 ## Proposed (pending confirmation)
 
-None right now.
+### P1. The proof gate skips docs-only sessions
+
+- **Context:** R1 ([baseline](research/baseline.md#unproven-edits-p2-q3)) found 16 edit sessions in 90 days whose edits were only documentation; 50% of them ended with no qualifying check, because no test or data check applies to prose.
+- **Decision:** The `Stop` gate and `unproven_claim` ignore a session whose linked edits are all documentation files (`.md`, `.mdx`, `.txt`, `.rst`). Docs checks such as a link checker may still record proof when they run.
+- **Why:** Warning where no qualifying check exists teaches the user to ignore the gate.
+- **Alternatives:** Treat docs like code (noisy warnings); exempt by folder such as `docs/` (misses READMEs and misfires on generated code under docs).
+- **Impact:** Small change to the gate in the [proof spec](specs/proof.md#the-gate). Revisit if docs gain executable checks (doctests, notebooks).
+
+### P2. Events take the branch at event time
+
+- **Context:** R1 ([baseline](research/baseline.md#mapping-to-an-anchor-q1-d25)) found 130 of 255 edit sessions saw more than one non-default branch. Sessions start in a worktree on one branch and create or switch to another.
+- **Decision:** Under D25 rule 2, each event is linked by the branch recorded on that event, not by the session's first branch. A session that changes branch splits into the items of each branch; rule 6 still re-anchors renames.
+- **Why:** Session-level branch assignment would merge unrelated work or attach work to a scratch branch.
+- **Alternatives:** Use the session's last branch (wrong for early events); use the first branch (wrong for most switches); ask the user (too many prompts).
+- **Impact:** The linker needs a per-event branch field (Claude Code lines carry `gitBranch`). Updates the [work item model](specs/work-item-model.md#boundary-rules). Revisit if switches turn out to be mostly renames.
+
+### P3. Thrashing counts only failures not cleared by a passing check
+
+- **Context:** R1 ([baseline](research/baseline.md#thrash-loops-p5)) found 0 sessions with 3+ cycles when any successful command resets the count, and 5 (2.0% of edit sessions) when only a passing qualifying check resets it.
+- **Decision:** The `thrashing` flag keeps its threshold of 3 consecutive cycles on the same file. A cycle is edits to the file, then the commands until the next edit, with at least one failing command. Only a passing qualifying check (per the proof spec) resets the count.
+- **Why:** Agents run harmless successful commands (`ls`, `git status`) between failures; letting those reset hides every loop.
+- **Alternatives:** Reset on any success (never fires); a lower threshold of 2 (would flag 33 sessions in 90 days, mostly normal fix-and-retry).
+- **Impact:** Sharpens the definition in [flags](specs/flags.md) and [behaviors and detectors](specs/behaviors-and-detectors.md). Revisit with labeled precision once hooks capture real exit codes.
+
