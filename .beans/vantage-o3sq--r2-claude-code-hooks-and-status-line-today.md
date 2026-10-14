@@ -26,6 +26,7 @@ Design the event spine and proof gate on verified hook behaviour.
 - [ ] Stop hook exit-code semantics for warn vs block
 - [ ] Status line command API and refresh behaviour
 - [ ] Whether hooks run for Claude desktop app (Code tab) sessions
+- [ ] Prompt-type hooks: whether a small model can make cheap yes/no judgments inside hooks on the user's plan
 - [ ] Claude Code OpenTelemetry export to a local OTLP receiver: which metrics and events, and whether it is useful as a source
 - [ ] Findings in docs/research/claude-code-hooks.md with version and date
 

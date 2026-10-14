@@ -9,13 +9,38 @@ Explain is a quick action that turns Vantage's evidence into a short, top-down, 
 ## Triggers
 
 - Key `e` or an "Explain" button on any dot, item, project, PR or week.
-- `vantage explain <target>` from the terminal.
+- `vantage explain <target>` from the terminal (layer 1, or layer 4 if enabled).
+- `/vantage-explain <target>` inside a Claude Code or Codex session (layer 3).
 - Always user-initiated; never automatic.
 
-## Engine
+## Engine: four layers
 
-- Runs the user's connected agent headless, for example `claude -p` with JSON output and a schema (Codex as an alternative). No new API keys; it uses the user's existing subscription.
-- Uses a small, fast model by default; deep dives may use a larger one.
+Explain works without any separate AI call by default. Richer output comes from sessions the user already runs; a headless call is an opt-in fallback.
+
+| Layer | How | Extra AI call | Default |
+|---|---|---|---|
+| **1. Evidence-only** | Status tree, MECE grouping by A2V step, what's missing, and a templated headline and SCR ("Dedupe: built, 1 of 3 proven, review waiting on you"), all built from Vantage data | None | On |
+| **2. Byproduct capture** | While agents work normally, a skill and Vantage's MCP tools let them record decisions, a one-line why and short summaries. A `SessionStart` hook adds a brief reminder to the session context. | None (small extra tokens in a running session) | On, with the plugin |
+| **3. In-session Explain** | A slash command such as `/vantage-explain <target>` in an open Claude Code or Codex session. The agent reads facts through MCP and returns the typed blocks through MCP. | None beyond normal interactive use | On, with the plugin |
+| **4. Headless fallback** | `claude -p` or `codex exec` with a JSON schema, for one-click Explain from the web UI when no session is open | Yes | **Off**; opt in |
+
+**What each layer can produce**
+
+| Block | Layer 1 | Layers 2–4 |
+|---|---|---|
+| Headline, SCR | Templated | Written narrative |
+| Status tree, what's missing | Yes | Yes, with better labels |
+| Why tree | Only what the user and ticket stated | Drafted from the session, confirmed by the user |
+| Diagram, example | No | Yes |
+
+The web UI's Explain button always shows layer 1 immediately. With an open session it offers "Explain in session" (layer 3); with layer 4 enabled it can run headless.
+
+**Rules for layers 3 and 4 (using existing subscriptions)**
+
+- **Official CLIs only** (`claude`, `codex`). Never reuse their tokens to call private APIs.
+- **User-chosen order:** for example Claude first, Codex as fallback, or per task. If one hits its limit, fall back to the other, then to layer 1.
+- **Daily budget** for layer 4 (default: 10 runs a day), small fast models by default, results cached until the evidence changes. The Diagnostics tab shows Vantage's own usage.
+- **Policy check:** vendors may bill headless use separately (a planned separate billing for `claude -p` was reported and then paused). Research R13 tracks the current state.
 - Gated by the data policy setting (decision bean `vantage-h8fv`): Slack and tracker content are off by default.
 
 ## Input
@@ -85,7 +110,8 @@ The same pattern works at every level: item, project, week (an executive summary
 
 | Failure | Behavior |
 |---|---|
-| Agent not available | Show the plain status tree built from evidence, without narrative |
+| No session open and layer 4 off | Show layer 1 and offer "Explain in session" |
+| Agent not available or over budget | Fall back in the user's order, then to layer 1 |
 | Invalid JSON or schema | Retry once, then show the plain tree |
 | MECE check fails twice | Show the status tree grouped by A2V step (always MECE by construction) |
 | Unsupported claims | Dropped and marked |

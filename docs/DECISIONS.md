@@ -59,6 +59,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 | [D43](#d43-guard-the-scope) | 2026-10-14 | Guard the scope |
 | [D44](#d44-a-daemon-plus-one-claude-code-plugin) | 2026-10-14 | A daemon plus one Claude Code plugin |
 | [D45](#d45-local-only-telemetry) | 2026-10-14 | Local-only telemetry |
+| [D46](#d46-explain-runs-in-layers-headless-is-opt-in) | 2026-10-14 | Explain runs in layers; headless is opt-in |
 
 ---
 
@@ -354,7 +355,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 ### D37. Explain through the connected agent
 
 - **Context:** People with little time need status explained top-down, McKinsey-style (answer first, SCR, MECE), with the option to drill into detail.
-- **Decision:** An Explain quick action runs the user's connected agent headless (for example `claude -p`) on Vantage's structured facts. The model returns typed blocks (headline, SCR, tree, missing, diagram, example, follow-ups) that Vantage renders. Every claim cites evidence or is dropped. Issue trees start collapsed and expand on click; MECE is checked silently by Vantage. Two trees: *why we built it* (frozen intent) and *where it stands* (live).
+- **Decision:** An Explain quick action runs the user's connected agent headless (for example `claude -p`) on Vantage's structured facts. The model returns typed blocks (headline, SCR, tree, missing, diagram, example, follow-ups) that Vantage renders. Every claim cites evidence or is dropped. Issue trees start collapsed and expand on click; MECE is checked silently by Vantage. Two trees: *why we built it* (frozen intent) and *where it stands* (live). The engine part is refined by D46.
 - **Why:** Uses tools the user already pays for; keeps the model from deciding status; progressive disclosure serves both the 30-second reader and the deep dive.
 - **Alternatives:** Free-form LLM summaries (unverifiable, can invent status); a separate API key and model (more cost and setup).
 - **Impact:** A JSON schema, renderer components and caching; gated by the data policy decision; [Explain spec](specs/explain.md).
@@ -410,7 +411,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 ### D44. A daemon plus one Claude Code plugin
 
 - **Context:** The user asked whether Vantage should be built as MCP, skills, or something else.
-- **Decision:** The core is a local daemon with a web UI. Claude Code integration ships as one plugin: hooks for capture and the proof gate, a status line, skills that teach the A2V method, and MCP config for agents to cooperate. Explain uses headless `claude -p`.
+- **Decision:** The core is a local daemon with a web UI. Claude Code integration ships as one plugin: hooks for capture and the proof gate, a status line, skills that teach the A2V method, and MCP config for agents to cooperate. Explain runs in layers, with headless `claude -p` only as an opt-in fallback (D46).
 - **Why:** Skills and MCP are passive; they act only when an agent chooses to, and agents forget. Hooks and a daemon are deterministic, which is what evidence over claims needs.
 - **Alternatives:** Skills only (advisory, easy to ignore); an MCP server only (no always-on capture); a desktop app with no Claude Code integration (misses live events).
 - **Impact:** Two deliverables to install (plugin and daemon) via `vantage init`; MCP stays proposal V2 until Phase 3b.
@@ -422,6 +423,14 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Why:** Debugging and trust both need to see what happened; sending data out would break local-first (D11).
 - **Alternatives:** No telemetry (blind debugging); remote telemetry (company data leaves the machine).
 - **Impact:** Logs, metrics and trace storage; Diagnostics tab; `vantage doctor` and `vantage debug-bundle`; an optional local OTLP receiver for Claude Code's own telemetry (R2).
+
+### D46. Explain runs in layers; headless is opt-in
+
+- **Context:** D37 had Explain call the agent headless (`claude -p`) on every use. The user asked whether hooks and existing sessions could avoid that, and headless use may be billed separately in future.
+- **Decision:** Four layers: (1) evidence-only Explain built from Vantage data, on by default; (2) byproduct capture, where agents record decisions and summaries through a skill and MCP during normal work; (3) in-session Explain through a slash command; (4) headless `claude -p` or `codex exec` only as an opt-in fallback, with official CLIs only, a user-chosen order, a daily budget and caching.
+- **Why:** Most daily needs (status, what's missing, what needs you) come straight from evidence; narrative can come from sessions already running. No separate AI calls by default protects the user's limits and avoids billing risk.
+- **Alternatives:** Headless on every Explain (D37 as written; costs and limits); no AI at all (loses diagrams, examples and the why tree draft).
+- **Impact:** Explain spec rewritten around layers; the web UI shows layer 1 instantly and hands off to a session; R2 checks prompt-type hooks, R13 checks the in-session flow and vendor policy.
 ---
 
 ## Proposed (pending confirmation)

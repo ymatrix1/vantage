@@ -56,7 +56,7 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 
 ## Phase 3b: understanding
 
-- Explain: brief, status tree and why tree, via the connected agent.
+- Explain layer 1 (evidence-only), then layers 2 and 3 (byproduct capture and `/vantage-explain` in session); layer 4 headless as opt-in.
 - Decision log from agent transcripts and Vantage actions; approve or change proposed AI decisions.
 - Inbox page and digest batching with "safe to ignore".
 - **Exit:** Explain is used at least once a day, and every AI decision in the week was reviewed.

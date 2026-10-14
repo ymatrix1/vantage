@@ -23,7 +23,9 @@ Know Explain can work on tools the user already pays for before designing around
 
 - [ ] Run claude -p with a JSON schema on a synthetic item: latency and output validity over 20 runs
 - [ ] Usage against subscription limits; behavior when limits are hit
-- [ ] Codex equivalent checked
+- [ ] Codex equivalent checked (`codex exec`)
+- [ ] In-session flow: a slash command that reads facts and returns blocks through MCP, in Claude Code and Codex
+- [ ] Current vendor policy on billing for headless use
 - [ ] Fallback confirmed (plain status tree when the agent fails)
 - [ ] Findings in docs/research/explain-engine.md
 
