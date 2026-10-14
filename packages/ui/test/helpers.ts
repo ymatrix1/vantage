@@ -88,6 +88,30 @@ export function fakeApi(routes: { track: () => Reply; trace?: (id: string) => Re
   return fn;
 }
 
+/** Stands in for the browser WebSocket: the test decides when it opens, pushes and drops. */
+export class FakeSocket extends EventTarget {
+  static all: FakeSocket[] = [];
+  readonly protocols: string[];
+  constructor(
+    readonly url: string,
+    protocols: string[] = [],
+  ) {
+    super();
+    this.protocols = protocols;
+    FakeSocket.all.push(this);
+  }
+  close(): void {}
+  open(): void {
+    this.dispatchEvent(new Event("open"));
+  }
+  push(frame: unknown): void {
+    this.dispatchEvent(new MessageEvent("message", { data: JSON.stringify(frame) }));
+  }
+  drop(): void {
+    this.dispatchEvent(new Event("close"));
+  }
+}
+
 let mounted: ReturnType<typeof mount> | null = null;
 
 export function render<P extends Record<string, unknown>>(component: Component<P>, props: P) {
@@ -99,6 +123,8 @@ export function render<P extends Record<string, unknown>>(component: Component<P
 }
 
 export function renderApp() {
+  FakeSocket.all = [];
+  vi.stubGlobal("WebSocket", FakeSocket);
   sessionStorage.setItem("vantage.token", TOKEN);
   return render(App as Component<Record<string, never>>, {});
 }
