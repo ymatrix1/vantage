@@ -13,3 +13,5 @@ export {
   runRemove,
   stripSettings,
 } from "./install.ts";
+export { formatVersion, readVersionInfo } from "./version.ts";
+export type { VersionInfo } from "./version.ts";

@@ -19,7 +19,7 @@ A card moves only on evidence: a git diff, a test or data check that ran after t
 
 ## Status
 
-**Phase 1 (the first usable slice) is built** for Claude Code and git: hook capture into a local spool, a SQLite store, the git scanner, the linker, the stage machine (Asked, Built, Proven), a `Stop` hook gate in warn mode, a terminal status line, a secured local Track page, a one-process daemon, and the installer. It has not been used day to day for a week yet (the Phase 1 exit, see the [roadmap](docs/ROADMAP.md)), and it is not published to npm. Reviewed, Shipped and Verified need sources from later phases.
+**Phase 1 (the first usable slice) is built** for Claude Code and git: hook capture into a local spool, a SQLite store, the git scanner, the linker, the stage machine (Asked, Built, Proven), a `Stop` hook gate in warn mode, a terminal status line, a secured local Track page, a one-process daemon, and the installer. It has not been used day to day for a week yet (the Phase 1 exit, see the [roadmap](docs/ROADMAP.md)), and there is no published release yet (the release pipeline is built, see [RELEASING.md](RELEASING.md)). Reviewed, Shipped and Verified need sources from later phases.
 
 Tested in CI on Windows and Ubuntu. Developed and run by hand on Windows first.
 
@@ -28,7 +28,7 @@ Tested in CI on Windows and Ubuntu. Developed and run by hand on Windows first.
 **Recommended: let Claude Code do it.** Open Claude Code in the repo you want to track and paste this:
 
 ```text
-Install Vantage for this repo. Follow https://github.com/ymatrix1/vantage/blob/main/docs/install-for-agents.md exactly: check the prerequisites, get and build Vantage if it is not already on this machine, show me the dry run first and wait for my OK, then install, start it, verify with vantage doctor, and tell me what changed and how to undo it.
+Install Vantage for this repo. Follow https://github.com/ymatrix1/vantage/blob/main/docs/install-for-agents.md exactly: check the prerequisites, get Vantage if it is not already on this machine (from a release, or a checkout build), show me the dry run first and wait for my OK, then install, start it, verify with vantage doctor, and tell me what changed and how to undo it.
 ```
 
 The agent follows [the install guide](docs/install-for-agents.md) and stops at anything that fails. You stay in control at two points:
@@ -38,7 +38,9 @@ The agent follows [the install guide](docs/install-for-agents.md) and stops at a
 
 It never adds tokens or credentials, never commits anything, and never edits your settings by hand: only `vantage add` writes, and every entry it writes can be removed exactly (see [Undo](#undo)).
 
-**You need:** Node.js 22.5 or newer (Vantage uses the built-in `node:sqlite`), [pnpm](https://pnpm.io), git and Claude Code. The agent checks these first and tells you what to install.
+**You need:** Node.js 22.5 or newer (Vantage uses the built-in `node:sqlite`), git and Claude Code, plus [pnpm](https://pnpm.io) if the agent has to build from a checkout. The agent checks these first and tells you what to install.
+
+**Releases.** Once the first release is out, Vantage installs without a clone or a build: `npm install -g vantage-a2v` gives you the `vantage` command (`vantage --version` prints the version), and each [GitHub Release](https://github.com/ymatrix1/vantage/releases) carries the tarballs and a `SHA256SUMS` file. The agent tries the release first and falls back to a checkout. Until a release exists, the checkout path is the only one.
 
 Then use Claude Code as usual. Open the Track page with `vantage open` (it opens `http://127.0.0.1:<port>` in your browser; `--print` only prints the URL). Items appear after the daemon's next pass, about 30 seconds.
 

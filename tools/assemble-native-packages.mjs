@@ -31,6 +31,12 @@ export function manifest(target, version) {
     bin: { "vantage-hook": `bin/vantage-hook${t.exe}` },
     files: ["bin"],
     license: "UNLICENSED",
+    // npm provenance checks that this matches the repository the build ran in.
+    repository: {
+      type: "git",
+      url: "git+https://github.com/ymatrix1/vantage.git",
+      directory: "packages/hooks-native",
+    },
     publishConfig: { access: "public" },
   };
 }
