@@ -46,11 +46,19 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 
 ## Phase 2: work items and board
 
-- [ ] Linker with deterministic anchors (branch or worktree, issue key in branch, todos).
-- [ ] Stage machine for Asked, Built and Proven.
+- [x] Linker with deterministic anchors (branch or worktree, issue key in branch). Delivered in Phase 1 (`vantage-9xbi`); todo anchors are not built.
+- [x] Stage machine for Asked, Built and Proven. Delivered in Phase 1 (`vantage-lxud`, D71).
 - [ ] Local web UI: Track (attention and project grouping), Item and Journal; "since yesterday" filter.
 - [ ] Ghost proposals from sessions with no edits.
 - [ ] **Exit:** the morning catch-up uses the board instead of terminals.
+
+Draft epic `vantage-nqh6`. It starts after the Phase 1 exit (a week of daily use) and the user's scope check.
+
+| Lane | Beans | Blocked by |
+|---|---|---|
+| Item | Item page: stage track, proof rows, history, unlink | none |
+| Journal | Journal page with "since yesterday" | none |
+| Ghosts | Ghost proposals from sessions with no edits | none (the Item page hosts confirm and dismiss, so it merges after it or alongside) |
 
 ## Phase 3a: the landscape
 
