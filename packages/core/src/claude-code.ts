@@ -130,6 +130,9 @@ export function hookEvents(record: SpoolRecord): VantageEvent[] {
       });
     case "SessionEnd":
       return make("session.ended", { reason: str(h["reason"]) ?? null });
+    case "Stop":
+      // The agent stopped and is about to hand the turn back. `unproven_claim` reads this (D71).
+      return make("session.stopped", { stopHookActive: h["stop_hook_active"] === true });
     case "PreCompact":
       return make("session.compacted", { trigger: str(h["trigger"]) ?? null });
     case "PermissionRequest":

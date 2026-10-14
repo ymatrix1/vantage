@@ -78,6 +78,7 @@ On the Claude Code `Stop` hook, when the session edited linked files:
 - If there's no fresh proof at L1 or more: **warn mode** exits 0 with JSON `{"systemMessage": "..."}`, which the user sees and Claude doesn't, and raises `unproven_claim`. **Block mode** exits 2 with the message on stderr, which Claude receives as its next instruction.
 - Block only when the input's `stop_hook_active` is false, so the gate never loops; Claude Code also caps Stop-hook continuations at 8 in a row.
 - Never exit 1: Claude Code treats it as a hook error, not a decision. Semantics from research [R2](../research/claude-code-hooks.md) (decision D60).
+- **Phase 1 implementation (D73):** one command appends `session.stopped` to the spool and then runs the gate, which reads the daemon's derived tables read-only. It warns when the session has a code edit and a linked item (past Asked) with proof status `none`, `expired`, `failed` or `weak`. It is silent for docs-only sessions (D53), when `stop_hook_active` is true, when the daemon store is missing or unreadable, and when mode is `off`. State can lag the last edits by one daemon pass (30 seconds). `block` is parsed but not wired: it renders as warn until Q11 is answered.
 - The message is specific: "You changed `billing.ts`. Behaviors 2 and 3 have no proof after this edit. Run a test or data check that covers them."
 
 ## UX

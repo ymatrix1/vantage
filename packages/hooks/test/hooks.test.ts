@@ -84,11 +84,13 @@ describe("collector", () => {
 });
 
 describe("settings", () => {
-  it("registers every spool event as async", () => {
+  it("registers every spool event as async and Stop as the only synchronous hook", () => {
     const s = hooksSettings("node bin.ts");
-    expect(Object.keys(s)).toEqual([...SPOOL_HOOK_EVENTS]);
-    for (const entries of Object.values(s)) {
-      expect(entries[0]?.hooks[0]).toMatchObject({ async: true });
-    }
+    expect(Object.keys(s)).toEqual([...SPOOL_HOOK_EVENTS, "Stop"]);
+    const asyncOf = Object.fromEntries(Object.entries(s).map(([e, v]) => [e, v[0]?.hooks[0]?.async]));
+    expect(asyncOf).toEqual({
+      ...Object.fromEntries(SPOOL_HOOK_EVENTS.map((e) => [e, true])),
+      Stop: undefined,
+    });
   });
 });

@@ -36,7 +36,7 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 - [x] git scanner for registered repos and worktrees: discovery, events, repo identity, cadence helper (`vantage-in31`), scheduling loop and cursor persistence (`vantage-0k45`).
 - [x] Linker with branch or worktree and issue-key anchors only (`vantage-9xbi`). Delivered: pure linker in core, `links` table, undo. The scheduled link pass arrived with the stage machine (`vantage-lxud`). Remaining: the item-view undo control (Track page).
 - [x] Stage machine for Asked, Built, Proven, with proof at L1 and proof expiry (`vantage-lxud`, D71). Delivered: pure machine in core, scheduled pass, `work_items`, `proofs`, `flags` and `stage_changes` tables, read functions. Output capture for zero-test detection is a follow-up bean.
-- [ ] `Stop` hook proof gate in warn mode.
+- [x] `Stop` hook proof gate in warn mode (`vantage-8nb2`, `vantage-cji5`, D73). Delivered: `session.stopped` capture, the gate command with modes off and warn, silence when the daemon is down, docs-only sessions skipped. Block mode is parsed but not wired (Q11). Registering the hook command in Claude Code settings arrives with the install bean (`vantage-p9x2`).
 - [ ] Status line: edits vs. proof, sessions waiting.
 - [ ] A minimal Track page (attention grouping, six-dot rows) on a secured localhost server.
 - [ ] Install with a prompt: `docs/install-for-agents.md` works end to end in Claude Code and Codex on a fresh machine.
