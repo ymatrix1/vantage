@@ -1,7 +1,7 @@
 // Normalizes Claude Code hook payloads and transcript lines into events.
 // Source of truth: docs/specs/ingestion.md (event catalog) and docs/research/claude-code-hooks.md.
 import { createHash } from "node:crypto";
-import { detectShellEffects } from "./shell.ts";
+import { classifyWrites, detectShellEffects } from "./shell.ts";
 import type { VantageEvent } from "./events.ts";
 
 export const SOURCE = "claude_code";
@@ -23,6 +23,8 @@ export interface ToolCall {
   /** undefined when the outcome is unknown (transcript call with no result yet). */
   ok?: boolean | undefined;
   cwd?: string | undefined;
+  /** The session's repo or worktree root, when known. Defaults to cwd for shell-write classification. */
+  repoRoot?: string | undefined;
 }
 
 /**
@@ -50,6 +52,8 @@ export function toolCallEvents(call: ToolCall): VantageEvent[] {
   } else if (SHELL_TOOLS.has(call.name)) {
     const command = str(call.input["command"]) ?? "";
     const fx = detectShellEffects(command);
+    const scope = classifyWrites(fx, command, call.cwd, call.repoRoot);
+    const writesInRepo = scope.inRepo.length > 0 || (fx.opaqueWrite && !scope.opaqueOutside);
     events.push({
       ...base,
       ...sid,
@@ -59,9 +63,11 @@ export function toolCallEvents(call: ToolCall): VantageEvent[] {
         ...common,
         command: command.slice(0, MAX_COMMAND_CHARS),
         ...(fx.commit ? { commit: true } : {}),
+        ...(scope.outside.length > 0 ? { outsidePaths: scope.outside } : {}),
+        ...(scope.opaqueOutside ? { opaqueOutsideRepo: true } : {}),
       },
     });
-    if (fx.writes.length > 0 || fx.opaqueWrite || fx.commit) {
+    if (writesInRepo || fx.commit) {
       events.push({
         ...base,
         ...sid,
@@ -69,8 +75,8 @@ export function toolCallEvents(call: ToolCall): VantageEvent[] {
         kind: "file.edited",
         payload: {
           ...common,
-          via: fx.commit && fx.writes.length === 0 && !fx.opaqueWrite ? "shell-commit" : "shell",
-          ...(fx.writes.length > 0 ? { paths: fx.writes } : {}),
+          via: fx.commit && !writesInRepo ? "shell-commit" : "shell",
+          ...(scope.inRepo.length > 0 ? { paths: scope.inRepo } : {}),
         },
       });
     }

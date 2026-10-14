@@ -4,6 +4,7 @@ import {
   hookEvents,
   parseSpoolRecord,
   parseTranscriptLine,
+  toolCallEvents,
   transcriptEvents,
 } from "../src/index.ts";
 
@@ -158,5 +159,125 @@ describe("spool and transcript parsing", () => {
     ].flatMap((l) => parseTranscriptLine(l) ?? []);
     const [e] = transcriptEvents(lines);
     expect(e).toMatchObject({ sourceId: "cc:tool:t1:command", payload: { ok: false } });
+  });
+});
+
+const call = (command: string, cwd?: string) =>
+  transcriptEvents([
+    {
+      type: "assistant",
+      isSidechain: false,
+      isMeta: false,
+      sessionId: "s-1",
+      timestamp: "2026-10-10T10:00:00Z",
+      ...(cwd ? { cwd } : {}),
+      content: [{ type: "tool_use", id: "t1", name: "Bash", input: { command } }],
+    },
+  ]);
+
+const edit = (events: ReturnType<typeof call>) => events.find((e) => e.kind === "file.edited");
+const cmd = (events: ReturnType<typeof call>) => events.find((e) => e.kind === "command.ran");
+
+describe("repo membership of shell writes", () => {
+  it("counts a relative target as inside the cwd", () => {
+    const ev = call("echo a > src/a.ts", "/work/repo");
+    expect(edit(ev)?.payload).toMatchObject({ paths: ["src/a.ts"] });
+  });
+
+  it("counts an absolute target under the cwd", () => {
+    expect(edit(call("echo a > /work/repo/src/a.ts", "/work/repo"))).toBeDefined();
+  });
+
+  it("does not count an absolute target outside the cwd, and keeps it on command.ran", () => {
+    const ev = call("echo a > /tmp/out.log", "/work/repo");
+    expect(edit(ev)).toBeUndefined();
+    expect(cmd(ev)?.payload).toMatchObject({ outsidePaths: ["/tmp/out.log"] });
+  });
+
+  it("does not count a `..` escape out of the cwd", () => {
+    const ev = call("echo a > ../other/a.ts", "/work/repo");
+    expect(edit(ev)).toBeUndefined();
+    expect(cmd(ev)?.payload).toMatchObject({ outsidePaths: ["../other/a.ts"] });
+  });
+
+  it("counts a `..` that stays inside the cwd", () => {
+    expect(edit(call("echo a > src/../lib/a.ts", "/work/repo"))).toBeDefined();
+  });
+
+  it("does not count a sibling directory that shares the cwd prefix", () => {
+    expect(edit(call("echo a > /work/repo-old/a.ts", "/work/repo"))).toBeUndefined();
+  });
+
+  it("is case sensitive on POSIX paths", () => {
+    expect(edit(call("echo a > /work/Repo/a.ts", "/work/repo"))).toBeUndefined();
+  });
+
+  it("reads Windows paths with either separator, ignoring case", () => {
+    expect(edit(call("echo a > C:\\Work\\Repo\\src\\a.ts", "c:\\work\\repo"))).toBeDefined();
+    expect(edit(call("echo a > c:/work/repo/src/a.ts", "C:\\Work\\Repo"))).toBeDefined();
+    expect(edit(call("echo a > D:\\scratch\\a.log", "C:\\Work\\Repo"))).toBeUndefined();
+  });
+
+  it("reads Git Bash drive paths next to a Windows cwd", () => {
+    expect(edit(call("echo a > /c/work/repo/a.ts", "C:\\work\\repo"))).toBeDefined();
+    expect(edit(call("echo a > /c/temp/a.log", "C:\\work\\repo"))).toBeUndefined();
+  });
+
+  it("resolves a quoted target", () => {
+    expect(edit(call('echo a > "/tmp/my out.log"', "/work/repo"))).toBeUndefined();
+    expect(edit(call("echo a > 'src/a b.ts'", "/work/repo"))).toBeDefined();
+  });
+
+  it("counts targets it cannot resolve (variables, home)", () => {
+    expect(edit(call("echo a > $OUT/a.ts", "/work/repo"))).toBeDefined();
+    expect(edit(call("echo a > ~/a.ts", "/work/repo"))).toBeDefined();
+  });
+
+  it("counts every write when the cwd is unknown", () => {
+    expect(edit(call("echo a > /tmp/out.log"))).toBeDefined();
+  });
+
+  it("counts every write after a cd, since the cwd no longer applies", () => {
+    expect(edit(call("cd /elsewhere && echo a > /tmp/out.log", "/work/repo"))).toBeDefined();
+  });
+
+  it("counts a command with one inside and one outside target, listing only the inside one", () => {
+    const ev = call("echo a > src/a.ts; echo b > /tmp/c.log", "/work/repo");
+    expect(edit(ev)?.payload).toMatchObject({ paths: ["src/a.ts"] });
+    expect(cmd(ev)?.payload).toMatchObject({ outsidePaths: ["/tmp/c.log"] });
+  });
+
+  it("keeps an opaque write (sed -i) counted when cwd is the repo", () => {
+    expect(edit(call("sed -i s/a/b/ f.ts", "/work/repo"))).toBeDefined();
+  });
+
+  it("drops an opaque write when the cwd is outside the known repo root", () => {
+    const ev = toolCallEvents({
+      toolUseId: "t2",
+      name: "Bash",
+      input: { command: "sed -i s/a/b/ h.sh" },
+      timestamp: "2026-10-10T10:00:00Z",
+      cwd: "/tmp/scratch",
+      repoRoot: "/work/repo",
+    });
+    expect(ev.some((e) => e.kind === "file.edited")).toBe(false);
+    expect(ev[0]?.payload).toMatchObject({ opaqueOutsideRepo: true });
+  });
+
+  it("uses repoRoot so a subdirectory cwd can still edit its siblings", () => {
+    const ev = toolCallEvents({
+      toolUseId: "t3",
+      name: "Bash",
+      input: { command: "echo a > ../ui/a.ts" },
+      timestamp: "2026-10-10T10:00:00Z",
+      cwd: "/work/repo/packages/core",
+      repoRoot: "/work/repo",
+    });
+    expect(ev.some((e) => e.kind === "file.edited")).toBe(true);
+  });
+
+  it("still counts a commit when its only writes are outside", () => {
+    const ev = call("echo a > /tmp/x.log && git commit -m x", "/work/repo");
+    expect(edit(ev)?.payload).toMatchObject({ via: "shell-commit" });
   });
 });

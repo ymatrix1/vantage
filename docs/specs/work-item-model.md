@@ -20,7 +20,7 @@ Where one work item ends and another begins:
 1. **Issue key wins.** One item per Jira or Linear key. A key that spans several branches or PRs is still one item with several anchors.
 2. **No key: one item per non-default branch or worktree.**
 3. **Several keys on one branch:** one item per key. Each event goes to the key named nearest to it (commit message, PR title, prompt); otherwise to the branch's first key.
-4. **Work on the default branch with no key:** each session with edits becomes a provisional item. Vantage suggests merging provisional items that share files within the same day.
+4. **Work on the default branch with no key:** each session with edits (a `file.edited` event; shell writes to files outside the repo don't count, see [ingestion](ingestion.md#shell-writes-and-repo-membership)) becomes a provisional item. Vantage suggests merging provisional items that share files within the same day.
 5. **Users can Split and Merge items.** These actions are recorded and always win over the rules.
 6. **Renames:** a branch rename or a key added later re-anchors the item instead of creating a new one.
 

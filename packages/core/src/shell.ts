@@ -1,3 +1,5 @@
+import { pathMembership } from "./paths.ts";
+
 // Detects file writes and commits made through a shell command (R1: counting edit tools alone
 // misses real work). Pattern based and deliberately conservative: it names what it is sure of.
 
@@ -79,4 +81,36 @@ export function detectShellEffects(command: string): ShellEffects {
   }
   const commit = /\bgit\s+(?:-[^\s]+\s+(?:\S+\s+)?)*commit\b/.test(text);
   return { writes: [...writes], opaqueWrite, commit };
+}
+
+export interface WriteScope {
+  /** Targets that count as edits: inside the repo, or not decidable from the text. */
+  inRepo: string[];
+  /** Targets that resolve outside the repo (scratch output, helper files elsewhere). */
+  outside: string[];
+  /** True when the only writes are opaque and the session's cwd is outside the repo. */
+  opaqueOutside: boolean;
+}
+
+// A `cd` changes the directory the targets are read against, and the session cwd no longer applies.
+const CHANGES_DIR = /(?:^|[\s;&|(])(?:cd|pushd|Set-Location|sl)\s/;
+
+/**
+ * Splits written targets by repo membership. Relative targets are read against `cwd`; the repo is
+ * `repoRoot`, or `cwd` when that is unknown. Lexical only: symlinks aren't followed. Without a cwd,
+ * or after a `cd` in the command, nothing can be ruled out, so every write counts (today's behaviour).
+ */
+export function classifyWrites(
+  fx: ShellEffects,
+  command: string,
+  cwd: string | undefined,
+  repoRoot?: string,
+): WriteScope {
+  if (!cwd || CHANGES_DIR.test(command)) return { inRepo: fx.writes, outside: [], opaqueOutside: false };
+  const root = repoRoot ?? cwd;
+  const inRepo: string[] = [];
+  const outside: string[] = [];
+  for (const w of fx.writes) (pathMembership(w, cwd, root) === "outside" ? outside : inRepo).push(w);
+  const opaqueOutside = fx.opaqueWrite && inRepo.length === 0 && pathMembership(cwd, cwd, root) === "outside";
+  return { inRepo, outside, opaqueOutside };
 }

@@ -73,6 +73,22 @@ Normalized `kind` values. The payload keeps the raw source fields.
 | Tracker | `issue.assigned`, `issue.updated`, `issue.commented`, `issue.transitioned` |
 | People | `mention.received`, `message.sent_by_user`, `reply.received`, `reaction.added` |
 
+### Shell writes and repo membership
+
+`file.edited` from a shell command counts as work on the item, so scratch output must not produce one (D70). At ingest, each write target the detector names is read against the session `cwd` and classified:
+
+| Target | Result |
+|---|---|
+| Resolves under the repo root (`repoRoot`, else `cwd`) | Listed in `file.edited.paths` |
+| Resolves outside it (`/tmp/x.log`, `../other/x`, another drive) | Not an edit. Listed in `command.ran.outsidePaths` |
+| Can't be read from the text (`~/x`, `$VAR/x`), no `cwd`, or the command runs `cd` first | Counted as an edit, as before (nothing ruled out) |
+| Opaque write (`sed -i`, `apply_patch`, scripted write) with no named target | Counted, unless a known `repoRoot` shows the `cwd` is outside it; then `command.ran.opaqueOutsideRepo: true` and no `file.edited` |
+
+- A command with an inside and an outside target emits one `file.edited` with only the inside paths; the outside ones stay on `command.ran`. A commit still emits `file.edited` with `via: shell-commit`.
+- Both payload fields are additive. No event kind was added, so consumers that read `file.edited` only see in-repo work, and nothing is lost: the outside paths stay on the command event.
+- Matching is lexical: separators, `.` and `..` are normalized, Windows paths (drive letter, either separator, Git Bash `/c/...`) compare case-insensitively, POSIX paths case-sensitively. Symlinks and junctions are not followed.
+- ⚠️ The daemon does not yet pass `repoRoot`, so the root is the `cwd`. A session started in a subdirectory sees `../sibling/x` as outside. Tracked in a follow-up bean.
+
 ## Polling budget
 
 | Source | Default interval | Why |
