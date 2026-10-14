@@ -5,16 +5,16 @@ description: Explain a complex topic, status, decision or design top-down for a 
 
 # Explain top-down
 
-Build the explanation in this order. Stop early when the reader has enough; offer the rest.
+Build the explanation in this order. **Always include** the headline and the next step. Include the other parts when they add something; for a short question, the headline plus one table or example is enough. Offer what you left out.
 
-1. **Headline:** one sentence, at most about 15 words, that answers the question or states the conclusion.
+1. **Headline:** one sentence, at most 20 words (aim for 15), that answers the question or states the conclusion.
 2. **SCR**, one or two lines each:
    - **Situation:** the relevant facts, nothing else.
    - **Complication:** what makes it hard, risky or undecided.
    - **Resolution:** what to do or believe, and why.
 3. **Breakdown (MECE):** split the topic into 2-5 groups that don't overlap and together cover everything. One line per group. Go one level deeper only for the group that matters most.
 4. **One example:** a concrete case with real-looking values that makes the idea click.
-5. **Visual:** the single format that's fastest to read:
+5. **One main visual:** the format that's fastest to read (the SCR lines and breakdown don't count as the visual):
    - a comparison table for options,
    - a numbered flow or a small diagram (Mermaid or ASCII) for processes,
    - a tree for breakdowns.
