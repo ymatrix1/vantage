@@ -106,6 +106,10 @@ Rules:
 | [D77](#d77-capture-accuracy-repo-root-from-scanned-worktrees-test-counts-from-runner-summaries) | 2026-10-14 | Capture accuracy: repo root from scanned worktrees, test counts from runner summaries |
 | [D78](#d78-phase-1-daemon-runtime-one-process-lock-and-health-files-vantage-start-and-vantage-open) | 2026-10-14 | Phase 1 daemon runtime: one process, lock and health files, `vantage start` and `vantage open` |
 | [D79](#d79-how-vantage-add-edits-machine-settings-marker-manifest-backup-opt-in-git-hooks) | 2026-10-14 | How `vantage add` edits machine settings: marker, manifest, backup, opt-in git hooks |
+| [D80](#d80-the-installer-picks-the-native-hook-by-lookup-in-a-fixed-order-and-doctor-nudges-when-it-is-unused) | 2026-10-14 | The installer picks the native hook by lookup, in a fixed order, and doctor nudges when it is unused |
+| [D81](#d81-live-updates-get-apilive-with-the-token-in-the-subprotocol-and-a-dependency-free-send-only-socket) | 2026-10-14 | Live updates: `GET /api/live` with the token in the subprotocol and a dependency-free send-only socket |
+| [D82](#d82-ui-component-tests-vitest-project-with-happy-dom-and-sveltes-own-mount) | 2026-10-14 | UI component tests: Vitest project with happy-dom and Svelte's own `mount` |
+| [D83](#d83-plugin-commands-are-vantagecommand-add---yes-is-never-pre-approved) | 2026-10-14 | Plugin commands are `/vantage:<command>`; `add --yes` is never pre-approved |
 
 ---
 
@@ -1006,13 +1010,10 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** The gate in Rust (a second copy of the D73 logic and a SQLite dependency in a 0.25 MB binary). Spool natively, then start Node only for the gate (needs a flag so Node doesn't spool again, and two processes for the same event). Run the gate in the background (breaks the synchronous answer D73 needs).
 - **Impact:** `Stop` costs about 20 ms more than Node alone, and the binary spawns `node`, so a machine without Node on `PATH` loses the gate but keeps the spool. The install bean (`vantage-p9x2`) registers the two-argument command and `vantage doctor` reports it. Revisit if the gate moves out of Node or if `Stop` latency shows up as a real cost.
 
----
-
-## Proposed (pending confirmation)
-
 ### D80. The installer picks the native hook by lookup, in a fixed order, and doctor nudges when it is unused
 
-- **Status:** proposed
+- **Status:** accepted 2026-10-14
+- **Decided by:** user (delegated to the parent session on 2026-10-14; checked against measured data and the standards: consistent with earlier decisions, alternatives recorded, reversible, nothing leaves the machine)
 - **Context:** D72 and D76 ship a native spool hook as per-OS npm packages, but nothing registers it. The packages are not published yet, and developers build the crate locally. `vantage add` must choose a hook without a network call or a build step, and must not leave a slower Node hook in place once the native one exists.
 - **Decision:** `resolveHookCommands` (the single place that decides) picks, in order: (1) the `@vantage/hook-<os>-<cpu>` package binary when it resolves, (2) a binary built in this checkout at `packages/hooks-native/target/release/vantage-hook` (`.exe` on Windows), (3) `node <packages/hooks/dist/src/bin.js>`. A native choice registers `"<binary>" "<node entry>" --vantage-managed` (D76), the status line stays on Node. `vantage add --dry-run` prints the choice and why. `vantage doctor` reports native or node, fails when the binary or the Node entry is missing, and warns (never fails) when the Node hook is registered while a native binary is available, with the fix `vantage add --yes`. Re-running `add` updates the managed entries in place.
 - **Why:** A plain lookup keeps `add` offline and fast, and works before the packages are published. Putting the local build second lets a developer get the 29 ms hook today. A warning, not a failure, because the Node hook still works, only slower (p95 about 130 ms against the 100 ms budget).
@@ -1021,7 +1022,8 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 
 ### D81. Live updates: `GET /api/live` with the token in the subprotocol and a dependency-free send-only socket
 
-- **Status:** proposed
+- **Status:** accepted 2026-10-14
+- **Decided by:** user (delegated to the parent session on 2026-10-14; checked against measured data and the standards: consistent with earlier decisions, alternatives recorded, reversible, nothing leaves the machine)
 - **Context:** D75 has the Track page poll every 5 s; the web-ui spec wants `GET /api/live` to push `item.changed`, `flag.raised` and `source.health` within 2 s. A browser `WebSocket` cannot set an `Authorization` header, D75 forbids the token in a query string, and the socket is a new way into agent work on localhost, so every D32 check must apply to it too. The repo's supply-chain rules (D66) favour few dependencies.
 - **Decision:**
   1. **Checks before the 101, in the order of every other route:** method `GET` (405), `Host` exact match (403), `Origin` when present (403), token (401), then path (404), handshake shape (400) and a cap of 8 connections (503). A failed check gets a plain HTTP status and no upgrade.
@@ -1036,7 +1038,8 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 
 ### D82. UI component tests: Vitest project with happy-dom and Svelte's own `mount`
 
-- **Status:** proposed
+- **Status:** accepted 2026-10-14
+- **Decided by:** user (delegated to the parent session on 2026-10-14; checked against measured data and the standards: consistent with earlier decisions, alternatives recorded, reversible, nothing leaves the machine)
 - **Context:** The Track page (Svelte 5, D62) was verified only by `svelte-check` and a manual browser run, which breaks the evidence-over-claims rule. The specs name Vitest (testing rules) but leave open how components are rendered and in which DOM.
 - **Decision:** Component tests live in `packages/ui/test/` as a second Vitest project (`packages/ui/vitest.config.ts`, listed in the root config's `projects`), run by `pnpm test`. They use `happy-dom` (exact-pinned 21.0.1, published more than a day before install per D66) and Svelte's own `mount`, `flushSync` and `unmount`, with a faked `fetch` and synthetic data. The project resolves Svelte's `browser` condition; the Node project keeps its settings and excludes `packages/ui`.
 - **Why:** It adds one dev dependency and no wrapper library, runs on ubuntu and windows with no extra step, and keeps the Node packages off the browser build of Svelte.
@@ -1045,9 +1048,16 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 
 ### D83. Plugin commands are `/vantage:<command>`; `add --yes` is never pre-approved
 
-- **Status:** proposed
+- **Status:** accepted 2026-10-14
+- **Decided by:** user (delegated to the parent session on 2026-10-14; checked against measured data and the standards: consistent with earlier decisions, alternatives recorded, reversible, nothing leaves the machine)
 - **Context:** The first-run spec planned `/vantage add`. Claude Code documents plugin commands as `/<plugin>:<command>` and describes no plugin form that takes `open` as an argument. The plugin must wrap the CLI without widening what `add` may do (D79).
 - **Decision:** The `vantage` plugin ships `commands/{open,start,doctor,status,add}.md`, invoked as `/vantage:open` and so on. Each has `disable-model-invocation: true` and an `allowed-tools` list naming only the read-only lookups and its own CLI call; unrestricted Bash, `uninstall` and `remove` never appear (`tools/plugin_check.py`, run by `tools/check_docs.py`). `add` pre-approves only `--dry-run`; `--yes` runs after an explicit yes in chat and stays behind Claude Code's own permission prompt. `status` reads `status.json` and makes no server call. The CLI is found through `PATH`, then `VANTAGE_CLI`, then the checkout named by `install.json`.
 - **Why:** The namespaced form is the documented one; a gate on `--yes` keeps the confirmation in the user's hands even if the agent misreads a reply; reading the status file adds no server feature.
 - **Alternatives:** A skill named `vantage` taking an argument (a bare `/vantage open` is undocumented for plugins, unverified); `/vantage:add` pre-approving `--yes` (one prompt less, no second gate); `status` calling the API with the token (needs the token in the agent's context).
 - **Impact:** First-run spec and README say `/vantage:add`. Commands live under `commands/`, which the docs call legacy next to `skills/`; revisit if `commands/` is removed. Live runs in a real session are still to do.
+
+---
+
+## Proposed (pending confirmation)
+
+None right now.
