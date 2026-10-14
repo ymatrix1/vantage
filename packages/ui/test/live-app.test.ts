@@ -16,7 +16,7 @@ async function ready() {
   const api = fakeApi({ track: () => ({ body: track([item({ id: "a", title: "Before" })]) }) });
   const root = renderApp();
   await vi.waitFor(() => expect(rows(root)).toHaveLength(1));
-  return { api, root, sock: FakeSocket.all[0] as FakeSocket };
+  return { api, root, sock: FakeSocket.all[0] };
 }
 
 const changed = (fields: Record<string, unknown>) => ({
