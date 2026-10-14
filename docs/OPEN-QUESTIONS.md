@@ -22,3 +22,6 @@
 | Q17 | **UI framework.** React, Svelte, Solid, or plain web components? | Needs: fast, keyboard-first, theme tokens. Decide at Phase 1 start. |
 | Q18 | **Install method.** npm global package or a single binary? | npm is simplest for a personal tool; a binary helps if it becomes a product. |
 | Q19 | **Behavior extraction.** Should agents propose behaviors from prompts automatically, or only from tickets and the user? | See [behaviors spec](specs/behaviors-and-detectors.md). |
+| Q20 | **Landscape at scale.** Does the landscape stay readable with 25+ items? | Build a stress-test mockup before Phase 3; caps and "+N" counts are the first answer. |
+| Q21 | **Why tree without a ticket.** How to draft "why we built it" from chat without inventing reasons? | Only from the user's own words and decisions, each node citing them; the user confirms before it's frozen. |
+| Q22 | **Companion character.** Still needed now that every item is a character? | Keep optional; decide after testing the landscape. |

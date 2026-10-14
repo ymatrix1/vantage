@@ -8,7 +8,8 @@
 4. **Fixed color meaning everywhere:** gray = not started, blue = in progress, amber = unproven or at risk, red = needs you, green = done.
 5. **Calm by default.** Top 3, not top 30. Interrupt only for red. Batch the rest. Say "safe to ignore" out loud.
 6. **Honest dots.** A skipped or unconfigured stage is hollow, never green.
-7. **Attention first, project second.** Default grouping is by what needs you, across all projects. Grouping by project is one click away.
+7. **Visual first.** Shape, color, size and position carry state; 2–4 word titles carry identity; about 30 words per screen. Defined in the [visual language spec](specs/visual-language.md).
+8. **Attention first, project second.** Default grouping is by what needs you, across all projects. Grouping by project is one click away.
 
 ## Organization: context, project, work item
 
@@ -35,6 +36,9 @@
 Ambient surfaces (status line, toasts, badge) are always present.
 
 ### Focus (home)
+
+Focus is drawn as the **landscape**: work items as dot characters, with needs-you in the foreground, moving work in the middle, waiting work on the horizon and verified work as stars in the sky (see [visual language](specs/visual-language.md#the-landscape-home)). The elements below appear inside it or on click.
+
 
 - Header: "Today, 3 things matter" and "N other changes batched for HH:MM".
 - Three focus cards, from any project. Each shows title, project tag, one-line context, priority chip with reason ("P1 · blocks Ana"), difficulty (S/M/L) and the spread bar.
@@ -64,7 +68,8 @@ The main "all work" view. A table, not a board, because it stays readable with m
 - **After ship:** deploy, post-deploy checks, monitoring window, any regression and its follow-up item.
 - **History:** a horizontal strip of events by day, agent and session ("Mon · Claude · discussed → Tue · Codex · built 3 files → Wed · Claude · 1 of 3 proven").
 - **Links:** a small relationship graph (item ↔ sessions ↔ PRs ↔ tickets ↔ Slack threads ↔ follow-ups). This is the only place a graph is used; graphs are hard to scan as a main view.
-- **Actions:** Resume with context, Ask for proof, Mark verified by hand, Park, Split, Merge, Unlink.
+- **Actions:** Explain, Resume with context, Ask for proof, Mark verified by hand, Park, Split, Merge, Unlink.
+- **Explain** (`e`) opens a top-down brief (answer first, Situation, Complication, Resolution) and expandable issue trees for *why we built it* and *where it stands*. See the [Explain spec](specs/explain.md).
 
 ### Journal
 
@@ -116,4 +121,4 @@ The main "all work" view. A table, not a board, because it stays readable with m
 
 ## Mockups
 
-Mockups were made in the planning conversation: lifecycle track, board, item detail, Focus, Track (attention grouping), Track (project grouping). They're recreated as static HTML with synthetic data in [docs/mockups/index.html](mockups/index.html).
+Mockups were made in the planning conversation: lifecycle track, board, item detail, Focus, Track (attention grouping), Track (project grouping). They're recreated as static HTML with synthetic data in [docs/mockups/index.html](mockups/index.html) (pages) and [docs/mockups/visual.html](mockups/visual.html) (vocabulary, landscape, Explain).

@@ -47,7 +47,9 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 ## Phase 3: Focus, calm and alerts
 
 - Priority, difficulty, spread, staleness.
-- Focus page, Inbox page, digest batching, "safe to ignore".
+- Focus page drawn as the landscape (dot characters, bands, shelf, sky), Inbox page, digest batching, "safe to ignore".
+- Evening landing and morning wake-up moments.
+- Explain: brief and status tree from evidence, via the connected agent; why tree drafted at Asked.
 - Contexts (Work, Personal) and project settings on the Sources page.
 - Toasts for red items; `waiting_on_you` and `forgotten` flags.
 

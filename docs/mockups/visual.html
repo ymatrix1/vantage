@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vantage visual language</title>
+<!-- Static mockups of the visual language, landscape home and Explain. All data is synthetic. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+:root{--page:#F7F7F5;--panel:#FFFFFF;--card:#F1F0EC;--text:#1F2933;--text-2:#5F6670;--border:#E3E1DA;
+--red:#C8443B;--red-bg:#FBE6E3;--amber:#A86F12;--amber-bg:#FBF0DA;--blue:#2F6CB8;--blue-bg:#E3EEFA;--font:system-ui,-apple-system,"Segoe UI",sans-serif}
+@media (prefers-color-scheme:dark){:root{--page:#15181C;--panel:#1C2026;--card:#232830;--text:#E6E8EB;--text-2:#A3A9B2;--border:#2E343D;--red-bg:#3D1F1C;--amber-bg:#3A2E14;--blue-bg:#1B2B40;--red:#F09595;--amber:#EF9F27;--blue:#85B7EB}}
+@media (prefers-reduced-motion:no-preference){.rise{animation:rise 3s ease-in-out infinite}.blink{animation:bl 4s infinite}}
+@keyframes rise{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes bl{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--text);font:14px/1.5 var(--font);padding:24px 16px}
+main{max-width:760px;margin:0 auto}
+h1{font-size:20px;font-weight:500;margin:0}
+h2{font-size:16px;font-weight:500;margin:40px 0 4px}
+.note{color:var(--text-2);font-size:13px;margin:0 0 12px}
+.sec{font-size:12px;color:var(--text-2);margin:14px 0 8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
+.tile{background:var(--card);border-radius:8px;padding:10px 6px;text-align:center;font-size:12px;color:var(--text-2)}
+.tile svg{width:30px;height:30px;display:block;margin:0 auto 6px}
+.ic{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:18px}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px}
+.pill{font-size:12px;padding:2px 9px;border-radius:8px}
+.scr{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:10px}
+.c{background:var(--card);border-radius:8px;padding:10px 12px;font-size:13px}
+.c b{font-weight:500;display:block;font-size:12px;color:var(--text-2);margin-bottom:4px}
+.ev{font-size:11px;color:var(--blue)}
+button{font:inherit;font-size:12px;padding:3px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer}
+button.on{background:var(--card)}
+.tb{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:12px 0}
+.lg{display:flex;gap:12px;font-size:11px;color:var(--text-2);margin-top:8px;flex-wrap:wrap}
+.lg i.d{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+.wrap{position:relative}
+.bd{position:absolute;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;transform:translate(-50%,-50%)}
+#tree g.n{cursor:pointer}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="done" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="#639922"/></symbol>
+<symbol id="cur" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="none" stroke="#378ADD" stroke-width="3"/></symbol>
+<symbol id="half" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="none" stroke="#BA7517" stroke-width="2"/><path d="M10 3 A7 7 0 0 0 10 17 Z" fill="#EF9F27"/></symbol>
+<symbol id="you" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="#F7C1C1" stroke="#E24B4A" stroke-width="3"/><circle cx="16.5" cy="3.5" r="3" fill="#E24B4A"/></symbol>
+<symbol id="skip" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="none" stroke="#888780" stroke-width="1.5" stroke-dasharray="3 2.5"/></symbol>
+<symbol id="fut" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="none" stroke="#B4B2A9" stroke-width="1.5"/></symbol>
+<symbol id="l1" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="#639922"/></symbol>
+<symbol id="l2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="#639922"/><circle cx="9" cy="9" r="2.5" fill="#fff" opacity=".7"/></symbol>
+<symbol id="l3" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="#639922"/><circle cx="9" cy="9" r="2.5" fill="#fff" opacity=".7"/><circle cx="12" cy="12" r="10.5" fill="none" stroke="#639922" stroke-width="1"/></symbol>
+<symbol id="l4" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="#639922"/><circle cx="9" cy="9" r="2.5" fill="#fff" opacity=".7"/><circle cx="12" cy="12" r="10.5" fill="none" stroke="#639922" stroke-width="1"/><path d="M12 0.5 L13 3 L12 2.4 L11 3 Z M23.5 12 L21 13 L21.6 12 L21 11 Z" fill="#639922"/></symbol>
+</defs></svg>
+<main>
+<h1>Vantage visual language</h1>
+<p class="note">Specs: <a href="../specs/visual-language.md">visual language</a>, <a href="../specs/explain.md">Explain</a>. Synthetic data. Other mockups: <a href="index.html">pages</a>.</p>
+
+<h2 id="vocabulary">1. Vocabulary</h2>
+<p class="note">Shape carries meaning, color confirms it.</p>
+<div class="sec">Dot states</div>
+<div class="grid">
+<div class="tile"><svg><use href="#done"/></svg>done</div><div class="tile"><svg><use href="#cur"/></svg>in progress</div><div class="tile"><svg><use href="#half"/></svg>no proof</div>
+<div class="tile"><svg><use href="#you"/></svg>needs you</div><div class="tile"><svg><use href="#skip"/></svg>skipped</div><div class="tile"><svg><use href="#fut"/></svg>not yet</div>
+</div>
+<div class="sec">Proof shine</div>
+<div class="grid">
+<div class="tile"><svg><use href="#l1"/></svg>L1 ran</div><div class="tile"><svg><use href="#l2"/></svg>L2 linked</div><div class="tile"><svg><use href="#l3"/></svg>L3 behavior</div><div class="tile"><svg><use href="#l4"/></svg>L4 live</div>
+</div>
+<div class="sec">Flag icons</div>
+<div class="grid">
+<div class="tile"><div class="ic" style="background:var(--red-bg);color:var(--red)"><i class="ti ti-hand-stop"></i></div>needs you</div>
+<div class="tile"><div class="ic" style="background:var(--amber-bg);color:var(--amber)"><i class="ti ti-flask"></i></div>no proof</div>
+<div class="tile"><div class="ic" style="background:var(--red-bg);color:var(--red)"><i class="ti ti-scale"></i></div>AI decided</div>
+<div class="tile"><div class="ic" style="background:var(--amber-bg);color:var(--amber)"><i class="ti ti-refresh"></i></div>looping</div>
+<div class="tile"><div class="ic" style="background:var(--card);color:var(--text-2)"><i class="ti ti-moon"></i></div>forgotten</div>
+<div class="tile"><div class="ic" style="background:var(--blue-bg);color:var(--blue)"><i class="ti ti-at"></i></div>mention</div>
+</div>
+<div class="sec">Companion moods (optional)</div>
+<div class="grid">
+<div class="tile"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#9FE1CB"/><circle cx="14" cy="17" r="2.5" fill="#04342C"/><circle cx="26" cy="17" r="2.5" fill="#04342C"/><path d="M13 25 Q20 31 27 25" fill="none" stroke="#04342C" stroke-width="2" stroke-linecap="round"/></svg>calm</div>
+<div class="tile"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#B5D4F4"/><circle cx="14" cy="17" r="2.5" fill="#042C53"/><circle cx="26" cy="17" r="2.5" fill="#042C53"/><path d="M14 26 L26 26" stroke="#042C53" stroke-width="2" stroke-linecap="round"/></svg>focused</div>
+<div class="tile"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#F7C1C1"/><circle cx="14" cy="16" r="3.5" fill="#501313"/><circle cx="26" cy="16" r="3.5" fill="#501313"/><circle cx="20" cy="27" r="3" fill="none" stroke="#501313" stroke-width="2"/></svg>needs you</div>
+<div class="tile"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#CECBF6"/><path d="M11 18 Q14 21 17 18 M23 18 Q26 21 29 18" fill="none" stroke="#26215C" stroke-width="2" stroke-linecap="round"/><path d="M16 26 Q20 28 24 26" fill="none" stroke="#26215C" stroke-width="2" stroke-linecap="round"/></svg>resting</div>
+</div>
+
+<h2 id="landscape">2. Landscape home</h2>
+<p class="note">Foreground needs you, middle is moving, horizon waits on others, sky is verified. Ring = A2V track, body = project, face = attention.</p>
+<div class="wrap">
+<svg width="100%" viewBox="0 0 680 430" role="img" aria-label="Landscape home">
+<rect x="0" y="0" width="680" height="120" fill="#3C3489"/><rect x="0" y="120" width="680" height="70" fill="#C0DD97"/><rect x="0" y="190" width="680" height="100" fill="#97C459"/><rect x="0" y="290" width="680" height="140" fill="#639922"/>
+<g fill="#FAC775"><circle cx="70" cy="40" r="3"/><circle cx="130" cy="75" r="4"/><circle cx="210" cy="35" r="3"/><circle cx="300" cy="60" r="5"/><circle cx="380" cy="30" r="3"/><circle cx="455" cy="70" r="4"/><circle cx="560" cy="45" r="3"/><circle cx="630" cy="80" r="4"/></g>
+<g class="rise"><circle cx="505" cy="100" r="6" fill="#FAC775"/><path d="M505 108 L505 128" stroke="#FAC775" stroke-width="1.5" stroke-dasharray="2 3" opacity=".7"/></g>
+<text x="16" y="110" font-size="11" fill="#CECBF6">8 verified this week</text>
+<g opacity=".9"><circle cx="250" cy="160" r="7" fill="#B5D4F4"/><circle cx="285" cy="168" r="7" fill="#F4C0D1"/><circle cx="560" cy="158" r="7" fill="#B5D4F4"/><circle cx="595" cy="166" r="7" fill="#9FE1CB"/></g>
+<text x="610" y="185" font-size="11" fill="#27500A" text-anchor="end">4 waiting on others</text>
+<circle cx="150" cy="232" r="15" fill="#B5D4F4"/><circle cx="150" cy="232" r="20" fill="none" stroke="#F1EFE8" stroke-width="3" pathLength="60" stroke-dasharray="8.5 1.5" transform="rotate(-90 150 232)"/><circle cx="150" cy="232" r="20" fill="none" stroke="#3B6D11" stroke-width="3" pathLength="60" stroke-dasharray="8.5 61.5" transform="rotate(-90 150 232)"/><circle cx="150" cy="232" r="20" fill="none" stroke="#185FA5" stroke-width="3" pathLength="60" stroke-dasharray="8.5 51.5" stroke-dashoffset="-10" transform="rotate(-90 150 232)"/><circle cx="145" cy="230" r="1.8" fill="#042C53"/><circle cx="155" cy="230" r="1.8" fill="#042C53"/><text x="150" y="268" font-size="11" text-anchor="middle" fill="#173404">Auth review</text>
+<circle cx="340" cy="225" r="15" fill="#9FE1CB"/><circle cx="340" cy="225" r="20" fill="none" stroke="#F1EFE8" stroke-width="3" pathLength="60" stroke-dasharray="8.5 1.5" transform="rotate(-90 340 225)"/><circle cx="340" cy="225" r="20" fill="none" stroke="#3B6D11" stroke-width="3" pathLength="60" stroke-dasharray="8.5 1.5 8.5 1.5 8.5 41.5" transform="rotate(-90 340 225)"/><circle cx="340" cy="225" r="20" fill="none" stroke="#185FA5" stroke-width="3" pathLength="60" stroke-dasharray="8.5 51.5" stroke-dashoffset="-30" transform="rotate(-90 340 225)"/><circle cx="335" cy="223" r="1.8" fill="#04342C"/><circle cx="345" cy="223" r="1.8" fill="#04342C"/><text x="340" y="261" font-size="11" text-anchor="middle" fill="#173404">Infra alerts</text>
+<g opacity=".75"><circle cx="560" cy="238" r="13" fill="#F1EFE8" stroke="#888780" stroke-width="1.5" stroke-dasharray="3 3"/><path d="M553 238 Q556 241 559 238 M562 238 Q565 241 568 238" fill="none" stroke="#444441" stroke-width="1.5" stroke-linecap="round"/><text x="578" y="226" font-size="11" fill="#444441">z</text><text x="560" y="268" font-size="11" text-anchor="middle" fill="#173404">Webhook retry</text></g>
+<circle cx="220" cy="345" r="32" fill="#B5D4F4"/><circle cx="220" cy="345" r="40" fill="none" stroke="#F1EFE8" stroke-width="5" pathLength="60" stroke-dasharray="8.5 1.5" transform="rotate(-90 220 345)"/><circle cx="220" cy="345" r="40" fill="none" stroke="#3B6D11" stroke-width="5" pathLength="60" stroke-dasharray="8.5 1.5 8.5 1.5 8.5 41.5" transform="rotate(-90 220 345)"/><circle cx="220" cy="345" r="40" fill="none" stroke="#E24B4A" stroke-width="5" pathLength="60" stroke-dasharray="8.5 51.5" stroke-dashoffset="-30" transform="rotate(-90 220 345)"/>
+<g class="blink" style="transform-origin:220px 338px"><circle cx="210" cy="338" r="4.5" fill="#042C53"/><circle cx="230" cy="338" r="4.5" fill="#042C53"/></g><circle cx="220" cy="356" r="4" fill="none" stroke="#042C53" stroke-width="2"/><text x="220" y="408" font-size="13" text-anchor="middle" fill="#fff" font-weight="500">Checkout fixes</text>
+<circle cx="440" cy="345" r="32" fill="#F4C0D1"/><circle cx="440" cy="345" r="40" fill="none" stroke="#F1EFE8" stroke-width="5" pathLength="60" stroke-dasharray="8.5 1.5" transform="rotate(-90 440 345)"/><circle cx="440" cy="345" r="40" fill="none" stroke="#3B6D11" stroke-width="5" pathLength="60" stroke-dasharray="8.5 61.5" transform="rotate(-90 440 345)"/><circle cx="440" cy="345" r="40" fill="none" stroke="#EF9F27" stroke-width="5" pathLength="60" stroke-dasharray="8.5 51.5" stroke-dashoffset="-10" transform="rotate(-90 440 345)"/>
+<g class="blink" style="transform-origin:440px 338px"><circle cx="430" cy="338" r="4.5" fill="#4B1528"/><circle cx="450" cy="338" r="4.5" fill="#4B1528"/></g><path d="M432 357 L448 357" stroke="#4B1528" stroke-width="2" stroke-linecap="round"/><text x="440" y="408" font-size="13" text-anchor="middle" fill="#fff" font-weight="500">Event dedupe</text>
+<rect x="580" y="380" width="84" height="34" rx="8" fill="#27500A" opacity=".55"/><circle cx="600" cy="397" r="5" fill="#D3D1C7"/><circle cx="616" cy="397" r="5" fill="#D3D1C7"/><circle cx="632" cy="397" r="5" fill="#D3D1C7"/><text x="652" y="401" font-size="11" fill="#EAF3DE">3</text>
+</svg>
+<div class="bd" style="left:calc(258/680*100%);top:calc(312/430*100%);background:#E24B4A;color:#fff"><i class="ti ti-hand-stop"></i></div>
+<div class="bd" style="left:calc(478/680*100%);top:calc(312/430*100%);background:#EF9F27;color:#412402"><i class="ti ti-flask"></i></div>
+</div>
+
+<h2 id="explain">3. Explain: the brief</h2>
+<p class="note">Answer first, then Situation, Complication, Resolution. Every claim links to evidence.</p>
+<div class="panel">
+<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="pill" style="background:var(--amber-bg);color:var(--amber)">at risk</span><span style="font-size:12px;color:var(--text-2)">Data platform · as of 09:12</span></div>
+<p style="font-size:17px;font-weight:500;margin:8px 0 0">Dedupe ships Thursday only if two behaviors get proof today.</p>
+<div class="tb"><button>30 sec</button><button class="on">2 min</button><button>Deep dive</button><span style="flex:1"></span><button>Me</button><button class="on">Manager</button><button>Standup</button></div>
+<div class="scr">
+<div class="c"><b>Situation</b>4 of 6 items built; 1 shipped and verified this week.<div class="ev">3 commits · 1 deploy</div></div>
+<div class="c"><b>Complication</b>Dedupe has no fresh proof after Tuesday's edit, and a review is waiting on you.<div class="ev">proof expired · PR #212</div></div>
+<div class="c"><b>Resolution</b>Run the dedupe data check, then answer Sam's review. About 40 min.<div class="ev">2 actions</div></div>
+</div>
+<div class="tb"><button>Show tree</button><button>Show diagram</button><button>Give an example</button><button>Copy for Slack</button></div>
+</div>
+
+<h2 id="tree-section">4. Explain: the expandable issue tree</h2>
+<p class="note">Starts collapsed. Click a node to expand; status stripes roll up from children.</p>
+<div class="panel">
+<div class="tb" style="margin-top:0"><button id="bWhy" class="on">Why we built it</button><button id="bSt">Where it stands</button><span style="flex:1"></span><button id="bAll">Expand all</button><button id="bNone">Collapse</button></div>
+<svg id="tree" width="100%" viewBox="0 0 680 200" role="img" aria-label="Issue tree"></svg>
+<div class="lg"><span><i class="d" style="background:#639922"></i>done or proven</span><span><i class="d" style="background:#EF9F27"></i>no proof</span><span><i class="d" style="background:#E24B4A"></i>needs you</span><span><i class="d" style="background:#B4B2A9"></i>not yet</span><span><i class="d" style="background:#85B7EB"></i>context</span></div>
+</div>
+</main>
+<script>
+const C={d:'#639922',w:'#EF9F27',r:'#E24B4A',f:'#B4B2A9',i:'#85B7EB'};
+const WHY={t:'Why build event dedupe?',s:'i',c:[
+ {t:'Problem: metrics are inflated',s:'i',c:[{t:'Trackers retry and send twice',s:'i'},{t:'Replays after outages',s:'i'},{t:'No idempotency key',s:'i'}]},
+ {t:'Impact if we do nothing',s:'i',c:[{t:'Wrong dashboards',s:'i'},{t:'Higher warehouse cost',s:'i'},{t:'Lost trust in data',s:'i'}]},
+ {t:'Goal',s:'i',c:[{t:'Under 0.1% duplicates',s:'i'},{t:'No late events lost',s:'i'}]},
+ {t:'Options considered',s:'i',c:[{t:'Dedupe at ingest (chosen)',s:'d'},{t:'Dedupe in warehouse',s:'f'},{t:'Fix trackers only',s:'f'}]}]};
+const ST={t:'Is dedupe on track?',s:'w',c:[
+ {t:'Built',s:'d',c:[{t:'Ingest filter, 3 files',s:'d'},{t:'Idempotency key',s:'d'}]},
+ {t:'Proven: 1 of 3',s:'w',c:[{t:'Drops exact duplicates (L2)',s:'d'},{t:'Keeps late events',s:'w'},{t:'Retry limit 3: AI decided',s:'r'}]},
+ {t:'Reviewed',s:'f',c:[{t:'PR not opened yet',s:'f'}]},
+ {t:'Shipped and verified',s:'f',c:[{t:'Deploy planned Thursday',s:'f'},{t:'Duplicate-rate monitor',s:'f'}]}]};
+let data=WHY;
+function init(n,d){n.open=d<1;(n.c||[]).forEach(k=>init(k,d+1));}
+init(WHY,0);init(ST,0);
+const NW=138,COL=150,ROW=40,svg=document.getElementById('tree'),NS='http://www.w3.org/2000/svg';
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function wrap(s){if(s.length<=19)return[s];const w=s.split(' ');let a='',b='';for(const x of w){if((a+' '+x).trim().length<=19&&!b)a=(a+' '+x).trim();else b=(b+' '+x).trim();}if(b.length>20)b=b.slice(0,18)+'…';return[a,b];}
+function lay(n,d,st){n.x=d*COL+6;if(n.open&&n.c){n.c.forEach(k=>lay(k,d+1,st));n.y=(n.c[0].y+n.c[n.c.length-1].y)/2;}else{n.y=st.y;st.y+=ROW;}}
+function draw(){svg.innerHTML='';const st={y:28};lay(data,0,st);svg.setAttribute('viewBox','0 0 680 '+st.y);
+ (function walk(n){if(n.open&&n.c){const mx=n.x+NW+(COL-NW)/2;n.c.forEach(k=>{svg.appendChild(el('path',{d:`M${n.x+NW} ${n.y} L${mx} ${n.y} L${mx} ${k.y} L${k.x} ${k.y}`,fill:'none',stroke:'#888780','stroke-width':0.7}));walk(k);});}})(data);
+ (function walk(n,d){const g=el('g',{class:'n'});const root=d===0;
+  g.appendChild(el('rect',{x:n.x,y:n.y-16,width:NW,height:32,rx:6,fill:root?'#04342C':'#0F6E56'}));
+  g.appendChild(el('rect',{x:n.x,y:n.y-16,width:5,height:32,rx:2,fill:C[n.s]}));
+  const L=wrap(n.t);L.forEach((s,i)=>{const t=el('text',{x:n.x+12,y:n.y+(L.length===1?4:(i?10:-3)),'font-size':11,fill:'#fff','font-weight':root?500:400});t.textContent=s;g.appendChild(t);});
+  if(n.c&&!n.open){g.appendChild(el('circle',{cx:n.x+NW,cy:n.y,r:9,fill:'#E1F5EE',stroke:'#0F6E56','stroke-width':1}));const t=el('text',{x:n.x+NW,y:n.y+4,'font-size':10,'text-anchor':'middle',fill:'#04342C'});t.textContent='+'+n.c.length;g.appendChild(t);}
+  g.addEventListener('click',()=>{if(n.c){n.open=!n.open;draw();}});
+  svg.appendChild(g);if(n.open&&n.c)n.c.forEach(k=>walk(k,d+1));})(data,0);}
+function setAll(n,v,d){n.open=v||d===0;(n.c||[]).forEach(k=>setAll(k,v,d+1));}
+const bWhy=document.getElementById('bWhy'),bSt=document.getElementById('bSt');
+bWhy.onclick=()=>{data=WHY;bWhy.classList.add('on');bSt.classList.remove('on');draw();};
+bSt.onclick=()=>{data=ST;bSt.classList.add('on');bWhy.classList.remove('on');draw();};
+document.getElementById('bAll').onclick=()=>{setAll(data,true,0);draw();};
+document.getElementById('bNone').onclick=()=>{setAll(data,false,0);draw();};
+draw();
+</script>
+</body>
+</html>

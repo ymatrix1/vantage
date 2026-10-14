@@ -35,6 +35,7 @@ Every page and panel handles all five states.
 | `z` | Park item |
 | `r` | Resume with context |
 | `a` | Ask for proof |
+| `e` | Explain the selected item, project or week |
 | `1` / `2` / `3` | Group Track by attention / project / stage |
 | `?` | Show this map |
 

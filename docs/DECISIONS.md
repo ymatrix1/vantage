@@ -47,6 +47,10 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 | [D31](#d31-phase-1-is-a-thin-usable-slice) | 2026-10-14 | Phase 1 is a thin usable slice |
 | [D32](#d32-local-server-is-locked-down) | 2026-10-14 | Local server is locked down |
 | [D33](#d33-events-are-the-source-of-truth) | 2026-10-14 | Events are the source of truth |
+| [D34](#d34-visual-first-with-a-dot-alphabet) | 2026-10-14 | Visual first with a dot alphabet |
+| [D35](#d35-landscape-home-with-dot-characters) | 2026-10-14 | Landscape home with dot characters |
+| [D36](#d36-calm-gamification-rules) | 2026-10-14 | Calm gamification rules |
+| [D37](#d37-explain-through-the-connected-agent) | 2026-10-14 | Explain through the connected agent |
 
 ---
 
@@ -314,6 +318,38 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Why:** Safe recovery and testable logic; squash merges and rebases change commit ids.
 - **Alternatives:** Mutable state only (no recovery); commit-id linking (breaks on squash).
 - **Impact:** Replay command and fixtures; schema in `docs/specs/data-schema.md`.
+
+### D34. Visual first with a dot alphabet
+
+- **Context:** The user wants to read less: colors, drawings and visuals instead of text. A first attempt removed titles and used emoji, which made items unidentifiable and rendered inconsistently.
+- **Decision:** Shape, color, size and position carry state; 2–4 word titles carry identity; about 30 words per screen. Six dot states differ by shape first, then color. Proof level shows as dot shine. Flags use one line-icon set, never emoji.
+- **Why:** Glanceable without losing identity; works for colorblind users and any theme; ties the reward (shine) to the A2V method.
+- **Alternatives:** No text at all (items can't be told apart); text-heavy cards (the original pain).
+- **Impact:** A shared component set used by every page and the status line; [visual language spec](specs/visual-language.md).
+
+### D35. Landscape home with dot characters
+
+- **Context:** A visual list was still a list, and the product name (a view from a high point) was unused. OpenAI's dots showed characters as the things themselves.
+- **Decision:** Each work item is a dot character (body = project, ring = A2V track, face = attention, badge = reason). Focus is a landscape: needs-you in the foreground, moving in the middle, waiting on the horizon, verified as stars, parked on a shelf. Track rows remain the fallback.
+- **Why:** Spatial memory and depth show urgency at a glance; the metaphor matches the name; it makes progress feel tangible.
+- **Alternatives:** Styled list (still a list); free-floating graph (unstable, hard to scan).
+- **Impact:** Caps per band, stable placement, scene palettes per time of day and theme. Must pass a scale test (Q20) before Phase 3.
+
+### D36. Calm gamification rules
+
+- **Context:** The user wants a more gamified, less stressful app.
+- **Decision:** Reward good practice, never volume or speed: proof shine, stars for verified work, gentle streaks that pause instead of breaking, rare badges for A2V practices, an evening landing that closes open loops. No leaderboards, points for commits or lines, breaking streaks or random rewards. Quiet mode turns it off.
+- **Why:** Visible small wins and closure lower stress; loss mechanics and comparison raise it.
+- **Alternatives:** Classic points and leaderboards (stressful, rewards the wrong thing).
+- **Impact:** Moments (verified, regression, landing, morning) become UI features in Phase 3.
+
+### D37. Explain through the connected agent
+
+- **Context:** People with little time need status explained top-down, McKinsey-style (answer first, SCR, MECE), with the option to drill into detail.
+- **Decision:** An Explain quick action runs the user's connected agent headless (for example `claude -p`) on Vantage's structured facts. The model returns typed blocks (headline, SCR, tree, missing, diagram, example, follow-ups) that Vantage renders. Every claim cites evidence or is dropped. Issue trees start collapsed and expand on click; MECE is checked silently by Vantage. Two trees: *why we built it* (frozen intent) and *where it stands* (live).
+- **Why:** Uses tools the user already pays for; keeps the model from deciding status; progressive disclosure serves both the 30-second reader and the deep dive.
+- **Alternatives:** Free-form LLM summaries (unverifiable, can invent status); a separate API key and model (more cost and setup).
+- **Impact:** A JSON schema, renderer components and caching; gated by the data policy decision; [Explain spec](specs/explain.md).
 ---
 
 ## Proposed (pending confirmation)
