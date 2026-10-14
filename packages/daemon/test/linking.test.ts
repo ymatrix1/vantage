@@ -87,7 +87,7 @@ describe("migration 2", () => {
     const upgraded = new Store(path);
     try {
       expect(upgraded.countEvents()).toBe(1);
-      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(3);
+      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(4);
       linkStoredEvents(upgraded);
       expect(linksForItem(upgraded, "issue:FTK-9")).toHaveLength(1);
     } finally {

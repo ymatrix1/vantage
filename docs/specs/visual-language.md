@@ -24,7 +24,7 @@ The dot is the atom of the UI. Meaning is carried by **shape first**, then color
 | Skipped or not set up | Short dash, no ring (a ring, even dashed, read as "not yet" at 16 px) | Gray |
 | Not yet | Thin ring | Light gray |
 
-The Track page explains these in a legend ("What the dots mean") and writes the current stage beside each row's dots, for example "Built · no proof yet" ([web UI spec](web-ui.md#track-controls), proposed D86).
+The Track page explains these in a legend ("What the dots mean") and writes the current stage beside each row's dots, for example "Built · no proof yet" ([web UI spec](web-ui.md#track-controls), proposed D91).
 
 ## Proof level ring
 

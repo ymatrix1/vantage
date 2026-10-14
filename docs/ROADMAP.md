@@ -53,6 +53,7 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 
 - [x] Linker with deterministic anchors (branch or worktree, issue key in branch). Delivered in Phase 1 (`vantage-9xbi`); todo anchors are not built.
 - [x] Stage machine for Asked, Built and Proven. Delivered in Phase 1 (`vantage-lxud`, D71).
+- [x] Derived sessions grouped under their parent's item (`vantage-o3s3`, D86 proposed): `session.derived` from copied transcript history, linker rule, `item_sessions` counts, [measurements](research/session-lineage.md). Remaining: show `sessionCount`, `derivedCount` and `subagentCount` in the Track view (follow-up bean); heuristic grouping waits on D87.
 - [ ] Local web UI: Track (attention and project grouping), Item and Journal; "since yesterday" filter.
 - [ ] Ghost proposals from sessions with no edits.
 - [ ] **Exit:** the morning catch-up uses the board instead of terminals.
@@ -102,7 +103,7 @@ Draft epic `vantage-nqh6`. It starts after the Phase 1 exit (a week of daily use
 
 ## Phase 6: issue tracker and Slack
 
-- [ ] Tracker adapter with Jira and Linear implementations; build whichever is in use first.
+- [ ] Tracker adapter (read-only) for the tracker the user has in use: Jira, Linear or GitHub Issues; build whichever is in use first, and the others after. Vantage only syncs issues, it does not manage them (D90); the read-only sync and the `issue_policy` setting are drafted as `vantage-nqh6` children and may move earlier with the user's OK.
 - [ ] Assigned issues as Asked items; priority and due date.
 - [ ] Unseen mentions; commitment detection.
 - [ ] Pings on Slack, Jira and Linear: owed replies, nudges and close-the-loop drafts.
