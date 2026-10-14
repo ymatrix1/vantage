@@ -7,10 +7,10 @@ const fixture = readFileSync(new URL("./fixtures/session-basic.jsonl", import.me
   .filter(Boolean);
 
 describe("event catalog", () => {
-  it("has 38 unique kinds across six groups", () => {
+  it("has 39 unique kinds across six groups", () => {
     const all = Object.values(EVENT_KINDS).flat();
     expect(Object.keys(EVENT_KINDS)).toHaveLength(6);
-    expect(all).toHaveLength(38);
+    expect(all).toHaveLength(39);
     expect(new Set(all).size).toBe(all.length);
   });
 

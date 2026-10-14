@@ -110,6 +110,7 @@ Rules:
 | [D81](#d81-live-updates-get-apilive-with-the-token-in-the-subprotocol-and-a-dependency-free-send-only-socket) | 2026-10-14 | Live updates: `GET /api/live` with the token in the subprotocol and a dependency-free send-only socket |
 | [D82](#d82-ui-component-tests-vitest-project-with-happy-dom-and-sveltes-own-mount) | 2026-10-14 | UI component tests: Vitest project with happy-dom and Svelte's own `mount` |
 | [D83](#d83-plugin-commands-are-vantagecommand-add---yes-is-never-pre-approved) | 2026-10-14 | Plugin commands are `/vantage:<command>`; `add --yes` is never pre-approved |
+| [D90](#d90-issues-live-in-the-users-tracker-vantage-only-syncs-them) | 2026-10-14 | Issues live in the user's tracker; Vantage only syncs them |
 
 ---
 
@@ -1056,11 +1057,40 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** A skill named `vantage` taking an argument (a bare `/vantage open` is undocumented for plugins, unverified); `/vantage:add` pre-approving `--yes` (one prompt less, no second gate); `status` calling the API with the token (needs the token in the agent's context).
 - **Impact:** First-run spec and README say `/vantage:add`. Commands live under `commands/`, which the docs call legacy next to `skills/`; revisit if `commands/` is removed. Live runs in a real session are still to do.
 
+### D90. Issues live in the user's tracker; Vantage only syncs them
+
+- **Status:** accepted 2026-10-14
+- **Decided by:** user (said in chat on 2026-10-14: every session should have an issue, and Vantage should only sync, not be an issue manager)
+
+- **Context:** After the first real run the Track page showed hundreds of `Session <id>` items because most sessions run on the default branch with no ticket in the branch name, so the linker (D25) falls to one provisional item per session. The user asked that every session be tied to an issue and considered either requiring an issue manager or building an internal one.
+- **Decision:** Vantage does not build an issue manager. The issue of record lives in the user's tracker (Jira, Linear or GitHub Issues, whichever the user chooses in configuration; the first one to build is a separate choice). Vantage syncs it: read first (title, link, status, assignee, priority), write-back only on an explicit user action (PRD non-goals). An issue key found in a branch name, a worktree or a session's first request anchors the session to that item (D25 rule 1) and the item takes its title and link from the tracker. A session with no issue stays a provisional item and is counted. A new setting `issue_policy` (`off`, `suggest` default, `require`) says what Vantage does about sessions with code edits and no issue: `suggest` shows how many there are and nudges at session start; `require` also warns from the Stop gate (warn only, never blocking in this phase), following D53 (sessions without code edits are exempt).
+- **Why:** The work item already plays the role of the issue (title, stages, proof, flags), so a second internal tracker would duplicate it and create one more list to keep. A synced tracker gives real titles and links, matches what the user's team already uses, and keeps the PRD scope. A soft policy fixes the root cause (sessions without an anchor) without creating friction for exploratory conversations.
+- **Alternatives:** A full internal issue manager with its own ids (a second source of truth and more to maintain; the item already covers it); requiring a tracker before anything works (blocks first use, and a personal repo may have none); a blocking gate (breaks flow, teaches workarounds such as placeholder titles); doing nothing (the page stays unreadable).
+- **Impact:** Adds work for a tracker adapter (Phase 6, `vantage-vncu` research) and credential storage (`vantage-5fek`), and for the `issue_policy` setting and the "sessions without an issue" count in the page and in `vantage stats`. No code changes in this record. Until a tracker is connected, the soft titles from the first request and the lineage grouping (parallel work) carry the load. Revisit if the chosen tracker cannot be read with a user-scoped token, or if the week of use shows few sessions without an issue.
+
 ---
 
 ## Proposed (pending confirmation)
 
-### D87. `vantage stats`: aggregates only, read-only, goals as starting points (proposed)
+### D86. Derived sessions join their parent's item, from explicit signals only
+
+- **Status:** proposed
+- **Context:** On the first real run the Track page listed hundreds of untitled `Session <id>` rows, because D25 rule 4 makes one provisional item per session with edits. Measured over 14 days ([session lineage](research/session-lineage.md)): 79 of 519 sessions (15%) copy their parent's history into a new session file, and sub-agent runs carry the parent's session id. No hook payload or transcript field names a parent directly.
+- **Decision:** The transcript backfill emits a `session.derived` event (`parentSessionId`, `lineage`) when a session file starts with another session's lines. The linker keeps anchors first (D25, D54). An event with no anchor of its own joins the anchored item its family (the root session and everything derived from it) mostly landed on, else `session:<root>`. Sub-agent runs stay inside the parent's session; `agentId` is kept on events. Compaction is not a lineage (the session id never changed in 129 of 129 boundaries). The kind is `resume` or `fork` when `SessionStart` says so, else `continuation`. Per-item `session_count`, `derived_count` and `subagent_count` come from the `item_sessions` view (migration 4).
+- **Why:** The only signals used are ones the data carries, so a card still moves on evidence and not on a guess. Each link stays on its event, so the existing undo works unchanged.
+- **Alternatives:** One item per session (status quo; it fragments work, and D25 lists it as a loser). Grouping by cwd and branch within a gap (D87). Reading the parent from a hook (no hook carries one).
+- **Impact:** New event kind `session.derived` (catalog 38 to 39), linker rule `derived-session`, migration 4, specs [work item model](specs/work-item-model.md) and [ingestion](specs/ingestion.md). Revisit when a hook or transcript field names the parent, or when a labelled set shows the copied-history signal groups unrelated sessions.
+
+### D87. Heuristic grouping by cwd, branch and time gap is not a rule
+
+- **Status:** proposed
+- **Context:** After the explicit signals (D86), some sessions may still be one piece of work: same cwd and branch, starting soon after another ended.
+- **Decision:** Do not build it yet. Measured over 14 days: of 519 sessions, 87 (16.8%) start within 5 or 30 minutes of the previous session on the same cwd and branch (89 at 120 minutes). 68 of them are already derived by a signal; 19 (3.7%) would be grouped by the heuristic alone, and 80 of the 87 sit on non-default branches where the branch anchor already groups them. Revisit if the user confirms a labelled sample of the 19.
+- **Why:** The gain is small (3.7% of sessions) and its precision is unmeasured, while a wrong merge hides work. D25 makes merging a user action when no anchor agrees.
+- **Alternatives:** Build it as an inferred link shown as "suggested" (the inferred-link path is in the spec but not built, Q25); build it as a deterministic rule (rejected: it is not one).
+- **Impact:** None until accepted. If accepted: an `inferred` link method with a visible suggestion, and a labelled set to track its precision.
+
+### D88. `vantage stats`: aggregates only, read-only, goals as starting points (proposed)
 
 - **Status:** proposed
 - **Context:** The first real run showed about 300 items in Needs you and hundreds of untitled Session rows, and the Phase 1 exit is a week of daily use. The user needs numbers, not impressions, that are safe to paste into an issue (privacy boundary). The specs list "usage metrics" but define no command, no metric definitions and no goals.
@@ -1073,4 +1103,3 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Why:** The kill rule needs a measurement that does not depend on impressions, and one that can leave the machine in a bug report must not carry content. Reusing the stored derived tables keeps the numbers identical to what the Track page shows.
 - **Alternatives:** Ask the daemon over HTTP (needs the token and a running daemon); recompute from events (can drift from what the page shows); print sample titles for context (leaks content); goals in `config.toml` now (no TOML parser, D78); a `Metrics` table sampled every minute (the specs' later design; this command covers the exit week without it).
 - **Impact:** New command in the CLI and its README and operations-spec text. The repo filter, the placeholder-title rule and the derived-session rule depend on today's schema and the lineage work; revisit them when `work_items.repo`, real request titles or lineage land.
-

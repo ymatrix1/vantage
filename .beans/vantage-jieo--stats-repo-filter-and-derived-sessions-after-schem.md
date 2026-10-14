@@ -12,7 +12,7 @@ blocked_by:
 
 ## Context
 
-D87 matches `--repo` on the event cwd and detects derived sessions by `parent_id` on `session:` items because `work_items.repo` is unset and session lineage has not landed. Blocked by: vantage-v1o3 and the session-lineage work.
+D88 matches `--repo` on the event cwd and detects derived sessions by `parent_id` on `session:` items because `work_items.repo` is unset and session lineage has not landed. Blocked by: vantage-v1o3 and the session-lineage work.
 
 ## Higher Goal
 

@@ -37,5 +37,5 @@ Writing to the store, a UI page for these numbers, remote telemetry, the lineage
 - `packages/cli/src/stats.ts`: `computeStats` (read-only queries over the derived tables), `renderStats` (table with meaning and goal symbol, per-day table) and `runStats` (`--json`, `--since`, `--repo`, `--days`).
 - `vantage stats` wired in `cli.ts` and `index.ts`.
 - `packages/cli/test/stats.test.ts`: synthetic store covering every metric, empty store, 50,000 items, byte-identical database after a run, and a no-leak check.
-- README "Measuring it", operations spec, ROADMAP, and D87 (proposed).
+- README "Measuring it", operations spec, ROADMAP, and D88 (proposed).
 - Goals stay constants; configurable goals are `vantage-36d3`.

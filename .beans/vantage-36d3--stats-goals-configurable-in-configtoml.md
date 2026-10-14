@@ -12,7 +12,7 @@ blocked_by:
 
 ## Context
 
-`vantage stats` (vantage-v1o3, D87) keeps its goals (Needs you under 10, readable titles at least 80%, ...) as constants. The user may want to change them. Blocked by: vantage-v1o3.
+`vantage stats` (vantage-v1o3, D88) keeps its goals (Needs you under 10, readable titles at least 80%, ...) as constants. The user may want to change them. Blocked by: vantage-v1o3.
 
 ## Higher Goal
 

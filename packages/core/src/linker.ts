@@ -2,6 +2,7 @@
 // Pure and replayable: the same events and options always give the same links. Inferred links are
 // out of scope (Q25); every link here has method "anchor" and records the rule that made it.
 import type { VantageEvent } from "./events.ts";
+import { rootSession, sessionLineage } from "./lineage.ts";
 
 export type LinkAnchorKind = "issue_key" | "branch" | "worktree" | "session";
 
@@ -11,7 +12,8 @@ export type LinkRule =
   | "issue-key-text" // key named in the event's own text, among several on the branch (rule 3)
   | "branch" // non-default branch with no key (rule 2)
   | "worktree" // linked worktree with no branch, e.g. detached HEAD (rule 2)
-  | "provisional-session"; // default branch, no key, session with edits (rule 4)
+  | "provisional-session" // default branch, no key, session with edits (rule 4)
+  | "derived-session"; // derived session with no anchor of its own: joins its parent's item (D86)
 
 export interface Link {
   /** `source` and `sourceId` of the linked event. */
@@ -154,30 +156,41 @@ export function linkEvents(events: readonly VantageEvent[], opts: LinkOptions = 
   const repo = opts.repo ?? "";
   const { placed, gitWorktrees } = place(events);
 
-  const editSessions = new Set<string>();
-  for (const e of events) if (e.kind === "file.edited" && e.sessionId) editSessions.add(e.sessionId);
+  const lineage = sessionLineage(events);
+  const rootOf = (sid: string): string => rootSession(sid, lineage);
+  // A derived session's edits count for its whole family: the root's item is provisional when any member edited.
+  const editRoots = new Set<string>();
+  for (const e of events) if (e.kind === "file.edited" && e.sessionId) editRoots.add(rootOf(e.sessionId));
 
-  const links: Link[] = [];
-  const unlinked: Unlinked[] = [];
-
-  const emit = (p: Placed, itemKey: string, kind: LinkAnchorKind, value: string, rule: LinkRule): void => {
+  const slots: Array<{ link?: Link; unlinked?: Unlinked }> = [];
+  const emit = (
+    i: number,
+    p: Placed,
+    itemKey: string,
+    kind: LinkAnchorKind,
+    value: string,
+    rule: LinkRule,
+  ): void => {
     const { source, sourceId } = p.event;
     if (undone.has(undoKey(source, sourceId, itemKey))) {
-      unlinked.push({ eventSource: source, eventSourceId: sourceId, reason: "undone" });
+      slots[i] = { unlinked: { eventSource: source, eventSourceId: sourceId, reason: "undone" } };
       return;
     }
-    links.push({
-      eventSource: source,
-      eventSourceId: sourceId,
-      itemKey,
-      method: "anchor",
-      anchor: { kind, value },
-      rule,
-      confidence: 1,
-    });
+    slots[i] = {
+      link: {
+        eventSource: source,
+        eventSourceId: sourceId,
+        itemKey,
+        method: "anchor",
+        anchor: { kind, value },
+        rule,
+        confidence: 1,
+      },
+    };
   };
 
-  for (const p of placed) {
+  const deferred: number[] = [];
+  placed.forEach((p, i) => {
     const { event, branch } = p;
     const onDefault = branch !== null && defaults.has(branch);
 
@@ -188,25 +201,91 @@ export function linkEvents(events: readonly VantageEvent[], opts: LinkOptions = 
       const named = branchKeys.length > 1 ? extractIssueKeys(eventText(event), opts.projectKeys) : [];
       const own = named.find((k) => branchKeys.includes(k));
       const key = own ?? first;
-      emit(p, `issue:${key}`, "issue_key", key, own ? "issue-key-text" : "issue-key-branch");
-      continue;
+      emit(i, p, `issue:${key}`, "issue_key", key, own ? "issue-key-text" : "issue-key-branch");
+      return;
     }
     // 2. No key: one item per non-default branch.
     if (branch && !onDefault) {
-      emit(p, `branch:${repo}:${branch}`, "branch", branch, "branch");
-      continue;
+      emit(i, p, `branch:${repo}:${branch}`, "branch", branch, "branch");
+      return;
     }
     // 2b. Linked worktree with no branch (detached HEAD) anchors on the worktree itself.
     if (!branch && p.known && p.path && !mains.has(norm(p.path)) && gitWorktrees.has(norm(p.path))) {
-      emit(p, `worktree:${p.path}`, "worktree", p.path, "worktree");
-      continue;
+      emit(i, p, `worktree:${p.path}`, "worktree", p.path, "worktree");
+      return;
     }
-    // 4. Default branch or unknown context: a session with edits becomes a provisional item.
-    if (event.sessionId && editSessions.has(event.sessionId)) {
-      emit(p, `session:${event.sessionId}`, "session", event.sessionId, "provisional-session");
-      continue;
+    deferred.push(i);
+  });
+
+  // The anchored item most of a family's events landed on (ties go to the earliest event).
+  const familyItem = new Map<string, { itemKey: string; anchor: Link["anchor"] }>();
+  {
+    const tally = new Map<string, Map<string, { n: number; anchor: Link["anchor"] }>>();
+    placed.forEach((p, i) => {
+      const link = slots[i]?.link;
+      const sid = p.event.sessionId;
+      if (!link || !sid) return;
+      const root = rootOf(sid);
+      const per = tally.get(root) ?? new Map();
+      const hit = per.get(link.itemKey) ?? { n: 0, anchor: link.anchor };
+      hit.n++;
+      per.set(link.itemKey, hit);
+      tally.set(root, per);
+    });
+    for (const [root, per] of tally) {
+      let best: { itemKey: string; n: number; anchor: Link["anchor"] } | undefined;
+      for (const [itemKey, v] of per) if (!best || v.n > best.n) best = { itemKey, ...v };
+      if (best) familyItem.set(root, { itemKey: best.itemKey, anchor: best.anchor });
     }
-    unlinked.push({ eventSource: event.source, eventSourceId: event.sourceId, reason: "no-anchor" });
+  }
+  const family = new Map<string, number>(); // root -> number of sessions seen
+  {
+    const seen = new Set<string>();
+    for (const p of placed) {
+      const sid = p.event.sessionId;
+      if (!sid || seen.has(sid)) continue;
+      seen.add(sid);
+      family.set(rootOf(sid), (family.get(rootOf(sid)) ?? 0) + 1);
+    }
+  }
+
+  // 4. Default branch or unknown context. A derived session joins the item its family already has
+  // (D86); otherwise a session, or family, with edits becomes one provisional item on the root session.
+  for (const i of deferred) {
+    const p = placed[i];
+    if (!p) continue;
+    const { event } = p;
+    const sid = event.sessionId;
+    if (sid) {
+      const root = rootOf(sid);
+      const derived = (family.get(root) ?? 1) > 1;
+      const fam = derived ? familyItem.get(root) : undefined;
+      if (fam) {
+        emit(i, p, fam.itemKey, fam.anchor.kind, fam.anchor.value, "derived-session");
+        continue;
+      }
+      if (editRoots.has(root)) {
+        emit(
+          i,
+          p,
+          `session:${root}`,
+          "session",
+          root,
+          root === sid ? "provisional-session" : "derived-session",
+        );
+        continue;
+      }
+    }
+    slots[i] = {
+      unlinked: { eventSource: event.source, eventSourceId: event.sourceId, reason: "no-anchor" },
+    };
+  }
+
+  const links: Link[] = [];
+  const unlinked: Unlinked[] = [];
+  for (const slot of slots) {
+    if (slot?.link) links.push(slot.link);
+    else if (slot?.unlinked) unlinked.push(slot.unlinked);
   }
   return { links, unlinked };
 }
