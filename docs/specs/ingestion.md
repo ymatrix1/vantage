@@ -10,6 +10,10 @@ How Vantage hears about things happening in each source.
 4. **Idempotent.** Each event has a stable source id; replays and overlaps between push and pull are deduplicated.
 5. **Honest freshness.** Each source shows "last synced" in the UI. A stale source is shown as stale, never as quiet.
 
+### Stop hook
+
+`Stop` is the only synchronous hook. The same command appends a `session.stopped` event (payload `stopHookActive`, `cwd`) to the spool, then runs the proof gate ([proof](proof.md#the-gate), D72). Local medians, 21 runs, built JS: spool-only hook 80 ms, Stop with no daemon store 84 ms, Stop reading a store 85 ms (max 106 ms).
+
 ### Hook latency
 
 The registered command is the built `packages/hooks/dist/src/bin.js` run by `node` (D67). Measured on the dev laptop (Windows 11, Node 24.6, 40 runs interleaved after 3 warm-ups, spool on local disk; numbers only):

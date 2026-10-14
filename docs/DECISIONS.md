@@ -907,4 +907,16 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 
 ## Proposed (pending confirmation)
 
-None right now.
+### D72. How the Phase 1 Stop gate reads state and takes its mode
+
+- **Status:** proposed
+- **Context:** Building the gate (`vantage-8nb2`) and `session.stopped` capture (`vantage-cji5`) hit choices D53, D59 and D60 leave open. The Stop hook is the only synchronous hook and has no latency headroom (D59, D67). The daemon derives item state on a 30 second pass, so the state a Stop hook reads can lag the last few edits. Config is `~/.vantage/config.toml` (*tentative*), and a TOML parser would add a dependency to the hot path.
+- **Decision:**
+  1. **One command for Stop.** It appends `session.stopped` to the spool like every hook, then runs the gate. `Stop` is registered without `async`; the other seven events stay async.
+  2. **The gate reads the derived tables read-only** (`work_items` joined to the session's linked events, plus the session's `file.edited` events for file names). It does not replay the spool or run the stage machine. Any failure, a missing store or an unknown session is silence with exit 0.
+  3. **It warns for a session** that has a code edit (not only `.md`, `.mdx`, `.txt`, `.rst`, D53) and a linked item past Asked whose proof status is `none`, `expired`, `failed` or `weak`. Unknown edit paths count as code, as in the stage machine.
+  4. **`stop_hook_active: true` is always silent**, in every mode, so a Stop that follows a Stop hook never gets a second message.
+  5. **Mode** is `VANTAGE_GATE_MODE`, else a `proof_gate = "off|warn|block"` line in `config.toml`, else `warn`. Unknown values mean `warn`. `block` is parsed and reaches the decision but renders as warn (exit 0): exit 2 is not wired until Q11 is answered.
+- **Why:** Reading tables keeps the hook near the Node start-up floor (about 85 ms median locally, ruled by D67), at the cost of up to one 30 second pass of lag (see Impact). A line match avoids a TOML dependency in the hot path. Silence on any doubt matches D3 and the rule that the gate must never teach users to ignore it (D53).
+- **Alternatives:** Replay the spool inside the hook (always fresh, but needs the stage machine and linker in a 100 ms budget); ask the daemon over HTTP (a second moving part, and a down daemon would need a timeout); a full TOML parser (no dependency headroom); wiring exit 2 now (policy is Q11).
+- **Impact:** Updates the [proof spec](specs/proof.md#the-gate), [ingestion](specs/ingestion.md) and [operations](specs/operations.md). A check run in the last 30 seconds before the Stop may not be seen yet, which produces a false warning; the Stop event also raises `unproven_claim` only after the daemon's next pass. Revisit if false warnings from that lag show up in use (a "run a pass now" call from the hook would fix it), or when block mode is wired.

@@ -1,10 +1,11 @@
 ---
 # vantage-cji5
 title: Emit session.stopped from the Stop hook so unproven_claim can fire
-status: todo
+status: completed
 type: task
+priority: normal
 created_at: 2026-10-14T18:36:53Z
-updated_at: 2026-10-14T18:36:53Z
+updated_at: 2026-10-14T19:09:40Z
 parent: vantage-fmfh
 ---
 
@@ -16,8 +17,8 @@ Blocked by: none.
 Flag the unproven claim of done (lifecycle and flags specs).
 
 ## Acceptance Criteria
-- [ ] Stop hook payload becomes a session.stopped event with a stable dedupe id
-- [ ] A test replays a Stop payload through ingest and the stage pass
+- [x] Stop hook payload becomes a session.stopped event with a stable dedupe id
+- [x] A test replays a Stop payload through ingest and the stage pass
 
 ## Out of Scope
 The gate's block mode.
