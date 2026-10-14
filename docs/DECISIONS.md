@@ -526,3 +526,19 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Why:** It keeps the cheap, free-when-idle trigger (304s) and removes the dependence on a field that can't carry the meaning we need. The reconcile polls cover the measured gaps.
 - **Alternatives:** Notifications only (misses CI, hides review state, drops Done threads); polling every PR on a timer (wasteful, more rate-limit risk); webhooks (public endpoint, company approval, out of scope for v1).
 - **Impact:** The GitHub adapter does a snapshot diff and stores per-PR snapshots; [ingestion](specs/ingestion.md#github-adapter-rules-from-r4), [lifecycle](specs/lifecycle.md#reviewed-sub-states) and [pings](specs/pings.md) are updated to match. Requires a classic token. Revisit if event-to-bump delay measured in Phase 1 is too long, or if a webhook relay (Q13) is approved.
+
+### P5. Vantage owns status and tree shape; the model writes text only
+
+- **Context:** Research R13 ran `claude -p --json-schema` 20 times on one synthetic item. The output was always schema-valid, but the model chose three different headline statuses for identical facts and built trees with 2 to 5 branches, never by A2V step. See [Explain engine research](research/explain-engine.md).
+- **Decision:** For layers 2–4, Vantage builds the status tree, the headline status and the `missing` list from evidence (layer 1) and sends them with node ids. The model returns only text keyed by those ids (headline text, SCR, node labels, follow-ups) plus the why tree, diagrams and examples. The output schema puts the input's evidence ids in an `enum`, and the flag and gate names in an `enum` for `missing`.
+- **Why:** Enforces the spec's rule that the model never decides status, makes output stable between runs, and stops non-evidence ids at the schema.
+- **Alternatives:** Keep model-built trees and check MECE afterwards (unstable, needs regroup retries); free-text evidence ids filtered after the fact (works, but wastes tokens on dropped claims).
+- **Impact:** Explain spec block table and schema; the MECE regroup retry only applies to why trees and project or week groupings. Revisit if a re-test shows labels-only output loses useful narrative.
+
+### P6. Headless Explain runs as an isolated background job
+
+- **Context:** R13 measured a 52.5 s median and 76.2 s p95 for `claude -p` with Haiku. The CLI accepted an invalid schema silently, and `--bare` can't use a subscription login.
+- **Decision:** Layer 4 runs as a background job with a 120 s timeout. It uses `claude -p --model haiku --output-format json --json-schema`, with `--tools ""`, `--strict-mcp-config`, `--setting-sources ""`, `--no-session-persistence` and an empty working folder; never `--bare`. Vantage validates its own schema at build time and every output itself. Any nonzero exit, `is_error: true`, timeout or failed validation is a failure: retry once only on validation failure, then follow the user's agent order, then layer 1.
+- **Why:** Waiting about a minute on a click is too slow. Isolation keeps the user's settings, hooks and MCP servers out of the run and sends only the facts. Vantage-side validation covers the silent schema case.
+- **Alternatives:** Synchronous click-and-wait (slow); `--bare` with an API key (separate billing, setup); trusting the CLI's schema check (it didn't catch an invalid schema).
+- **Impact:** Explain spec engine and failure-mode sections; a job queue and a "ready" notification in the web UI. Revisit if latency drops below about 10 s.
