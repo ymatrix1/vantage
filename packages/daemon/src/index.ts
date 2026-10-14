@@ -24,3 +24,13 @@ export { diagnosticsView, traceView, trackView } from "./api.ts";
 export { BIND_HOST, startHttp } from "./http.ts";
 export type { HttpHandle, HttpOptions } from "./http.ts";
 export { loadOrCreateToken, tokenMatches } from "./token.ts";
+export {
+  AlreadyRunningError,
+  DEFAULT_PORT,
+  HEALTH_FILE,
+  readHealth,
+  readRepos,
+  startDaemon,
+  vantageHomeDir,
+} from "./runtime.ts";
+export type { DaemonHandle, DaemonOptions, Health } from "./runtime.ts";

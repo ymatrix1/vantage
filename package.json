@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc -b && pnpm -F @vantage/ui check",
+    "build": "tsc -b && pnpm -F @vantage/ui build",
     "lint": "oxlint --type-aware --deny-warnings",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
