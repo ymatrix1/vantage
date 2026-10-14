@@ -1,0 +1,11 @@
+{
+  "name": "vantage",
+  "owner": { "name": "ymatrix1" },
+  "plugins": [
+    {
+      "name": "a2v",
+      "source": "./plugin/a2v",
+      "description": "A2V working method: top-down communication rule, output style and the explain-top-down skill."
+    }
+  ]
+}
