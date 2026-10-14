@@ -21,6 +21,12 @@ A card moves only on evidence: a git diff, a test or data check that ran after t
 
 **Planned install** (see [first run](docs/specs/first-run.md#adding-an-existing-repo)): from any existing repo, run `npx vantage add`, or `/plugin install vantage` then `/vantage add` inside Claude Code. Nothing in the repo changes unless you opt in with `--team`.
 
+**Or install with a prompt** (end goal): paste this into Claude Code or Codex in your repo:
+
+```text
+Install Vantage in this repo. Follow https://github.com/ymatrix1/vantage/blob/main/docs/install-for-agents.md exactly: show me the dry run first, wait for my OK, then install, verify with vantage doctor, and tell me what changed.
+```
+
 ## Documents
 
 | Doc | What it covers |

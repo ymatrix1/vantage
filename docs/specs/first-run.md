@@ -42,6 +42,10 @@ Guarantees:
 - `--team` (opt-in) writes a small `.vantage/project.toml` with shared settings (project name, deploy signal, proof commands, monitoring service names) that teammates can commit.
 - `vantage remove` unregisters the repo; `vantage uninstall` removes everything (see [operations](operations.md#upgrades-backup-and-uninstall)).
 
+## Installing with a prompt
+
+The end-goal install is a prompt the user pastes into their agent (Claude Code or Codex). The agent follows [install-for-agents.md](../install-for-agents.md): prerequisites, a dry run shown to the user, explicit OK, install, `vantage doctor`, and a short report with how to undo it. The agent never adds credentials and never commits.
+
 ## First view
 
 - **Backfill running:** the landscape fills in as items are found, with a quiet "reading the last 14 days" line.

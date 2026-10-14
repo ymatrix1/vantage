@@ -65,6 +65,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 | [D49](#d49-visual-proof-by-screenshot) | 2026-10-14 | Visual proof by screenshot |
 | [D50](#d50-one-command-to-add-an-existing-repo) | 2026-10-14 | One command to add an existing repo |
 | [D51](#d51-logo-and-wordmark) | 2026-10-14 | Logo and wordmark |
+| [D52](#d52-install-with-a-prompt) | 2026-10-14 | Install with a prompt |
 
 ---
 
@@ -482,6 +483,14 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Why:** The scene tells the product story (a calm view over your work) and reads at 16 px; Bree Serif is warm and calm, matching the goal of reducing stress.
 - **Alternatives:** A dot character, a V monogram, layered V bands, an earthy palette (the user preferred the dusk colors), and the fonts Inter, Geist, Manrope, Outfit, Plus Jakarta Sans, Sora, Quantico, Chakra Petch, Zen Dots and Odibee Sans.
 - **Impact:** `assets/` holds the icon and two wordmarks; a Brand section in the visual-language spec.
+
+### D52. Install with a prompt
+
+- **Context:** The end goal is that installing Vantage takes one prompt to the agent the user already uses.
+- **Decision:** Publish an agent-readable install guide (`docs/install-for-agents.md`) and a copy-paste prompt in the README. The agent checks prerequisites, shows a dry run, waits for the user's OK, installs, runs `vantage doctor` and reports what changed and how to undo it. It never adds credentials or commits.
+- **Why:** Users already work through agents; a prompt is easier than reading setup docs, and the dry-run and OK steps keep machine-level changes under the user's control.
+- **Alternatives:** Command-line install only (more friction); an agent installing silently (changes settings without consent).
+- **Impact:** The install guide must stay in sync with the `add` command; Phase 1 tests it end to end in Claude Code and Codex.
 ---
 
 ## Proposed (pending confirmation)

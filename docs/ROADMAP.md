@@ -29,6 +29,7 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 - [ ] `Stop` hook proof gate in warn mode.
 - [ ] Status line: edits vs. proof, sessions waiting.
 - [ ] A minimal Track page (attention grouping, six-dot rows) on a secured localhost server.
+- [ ] Install with a prompt: `docs/install-for-agents.md` works end to end in Claude Code and Codex on a fresh machine.
 - **Exit:** used every day for a week, and the morning catch-up happens on the Track page instead of in terminals.
 
 ## Phase 2: work items and board
