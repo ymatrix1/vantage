@@ -32,6 +32,13 @@ importers:
       '@vantage/core':
         specifier: workspace:*
         version: link:../core
+      '@vantage/daemon':
+        specifier: workspace:*
+        version: link:../daemon
+    devDependencies:
+      '@vantage/hooks':
+        specifier: workspace:*
+        version: link:../hooks
 
   packages/core: {}
 

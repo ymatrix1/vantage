@@ -51,6 +51,8 @@ A single file, `~/.vantage/config.toml` (*tentative*):
 - If the daemon is down, hooks still append to the spool; nothing is lost.
 - A single instance per machine. Multi-machine sync is out of scope.
 
+Phase 1 runtime ([D78](../DECISIONS.md#d78-phase-1-daemon-runtime-one-process-lock-and-health-files-vantage-start-and-vantage-open), proposed): `vantage start` runs ingest, the git loop, the stage loop (writing `$VANTAGE_HOME/status.json`) and the HTTP server in one process. `daemon.lock` enforces one instance; `health.json` reports pid, port, last ingest and last stage pass for `vantage open` and `vantage doctor`. `vantage open` prints and opens the fragment URL (`--print` only prints). Environment: `VANTAGE_HOME`, `VANTAGE_PORT` (default 4317), `VANTAGE_REPOS`, `VANTAGE_PROJECTS_DIR`, `VANTAGE_UI_DIR`.
+
 ## Hooks performance budget
 
 - Claude Code and git hooks must finish in under 100 ms and exit 0 in warn mode, whatever happens.

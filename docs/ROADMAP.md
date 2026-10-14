@@ -40,6 +40,7 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 - [x] Status line: edits vs. proof (`vantage-p9at`). Delivered: pure renderer in core, daemon summary writer on the stage loop, `statusline-bin.js` command and settings snippet. Remaining: the running daemon must start the stage loop with `statusFile` (follow-up bean), and "sessions waiting" needs the pings source.
 - [x] A minimal Track page (attention grouping, six-dot rows) on a secured localhost server (`vantage-olgf`, D75 proposed). Delivered: daemon server with token, Host and Origin checks, read-only `/api/track`, `/api/items/:id/trace`, `/api/diagnostics`, and the page with loading, empty, error, stale and partial states and `j`, `k`, `Enter`, `Esc`, `?`. Remaining, as follow-up beans: live updates over WebSocket, starting the server and `vantage open`, component tests.
 - [ ] Install with a prompt: `docs/install-for-agents.md` works end to end in Claude Code and Codex on a fresh machine.
+- [x] Daemon runtime: `vantage start` runs ingest, git loop, stage loop with the status file and the secured server in one process with a single-instance lock; `vantage open` opens the Track page (`vantage-6bni`, `vantage-v3sw`, D78 proposed). The token stays in a file (D75); keychain storage is `vantage-5fek`.
 - [ ] **Exit:** used every day for a week, and the morning catch-up happens on the Track page instead of in terminals.
 
 ## Phase 2: work items and board

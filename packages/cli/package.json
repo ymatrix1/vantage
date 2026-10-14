@@ -2,6 +2,9 @@
   "name": "@vantage/cli",
   "version": "0.0.0",
   "private": true,
+  "bin": {
+    "vantage": "./dist/src/main.js"
+  },
   "type": "module",
   "exports": {
     ".": {
@@ -10,6 +13,10 @@
     }
   },
   "dependencies": {
-    "@vantage/core": "workspace:*"
+    "@vantage/core": "workspace:*",
+    "@vantage/daemon": "workspace:*"
+  },
+  "devDependencies": {
+    "@vantage/hooks": "workspace:*"
   }
 }
