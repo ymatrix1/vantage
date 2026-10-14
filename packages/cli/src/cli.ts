@@ -1,5 +1,4 @@
-// `vantage start` and `vantage open` (docs/specs/operations.md#daemon-lifecycle). The installer
-// commands (`add`, `init`, `doctor`) arrive with their own beans.
+// `vantage start`, `open`, `add`, `remove`, `uninstall` and `doctor` (docs/specs/operations.md).
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
@@ -12,6 +11,8 @@ import {
   startDaemon,
   vantageHomeDir,
 } from "@vantage/daemon";
+import { runDoctor } from "./doctor.ts";
+import { runAdd, runRemove } from "./install.ts";
 
 export interface CliIo {
   out(line: string): void;
@@ -21,6 +22,10 @@ export interface CliIo {
   stopSignal?: Promise<void>;
   /** Test seam for the platform opener. */
   open?: (url: string) => void;
+  /** Working directory for `add` and `remove`; defaults to `process.cwd()`. */
+  cwd?: string;
+  /** Yes or no prompt; absent when there is no terminal, so a real change needs `--yes`. */
+  confirm?: (question: string) => Promise<boolean>;
 }
 
 /** The token travels in the URL fragment only, never in a query string (D32, D75). */
@@ -100,6 +105,12 @@ export async function runCli(argv: string[], io: CliIo): Promise<number> {
   const [cmd, ...rest] = argv;
   if (cmd === "start") return start(rest, io);
   if (cmd === "open") return open(rest, io);
-  io.err("Usage: vantage start [--port N] | vantage open [--print]");
+  if (cmd === "add") return runAdd(rest, io);
+  if (cmd === "remove") return runRemove(rest, io, false);
+  if (cmd === "uninstall") return runRemove(rest, io, true);
+  if (cmd === "doctor") return runDoctor(io);
+  io.err(
+    "Usage: vantage start [--port N] | open [--print] | add [path] [--dry-run] [--yes] [--git-hooks] | remove [path] | uninstall | doctor",
+  );
   return cmd === undefined || cmd === "--help" || cmd === "help" ? 0 : 2;
 }

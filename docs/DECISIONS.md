@@ -982,4 +982,17 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 
 ## Proposed (pending confirmation)
 
-None right now.
+### D79. How `vantage add` edits machine settings: marker, manifest, backup, opt-in git hooks
+
+- **Status:** proposed
+- **Context:** `vantage add` (D50, D52) edits files that are not Vantage's: the user's Claude Code `settings.json`, `config.toml` and, in D50, the global git config. The specs promise `--dry-run`, chaining, idempotency and an exact `remove`, but not how entries are recognised, what is backed up, or what happens when Husky sets a repo-local `core.hooksPath` (git then ignores a global one). The git scanner already reads every registered repo by polling (D78), and no consumer reads a hook-written git event yet.
+- **Decision:**
+  1. **Marker:** every command Vantage registers ends in `--vantage-managed` (hooks and status line). `remove`, `uninstall` and `doctor` act only on entries carrying it; the binary ignores the argument. `install.json` in the Vantage home records what `add` did.
+  2. **Safety:** `add` shows the plan, asks for confirmation (or `--yes`; with no terminal and no `--yes` it refuses), copies an existing `settings.json` to `<home>/backups/` before the first edit, makes no backup and no write when nothing changes, refuses unreadable JSON, and never replaces someone else's `statusLine` or `core.hooksPath`. Paths come from `HOME`, `USERPROFILE`, `VANTAGE_HOME`, `CLAUDE_CONFIG_DIR` and `GIT_CONFIG_GLOBAL`, so tests and trial runs never touch the real ones.
+  3. **Git hooks are opt-in** (`--git-hooks`), not default. They are wrapper scripts in `<home>/git-hooks` plus a global `core.hooksPath`; each wrapper runs the repo's own hook after Vantage's (`git rev-parse --git-path`), which covers plain `.git/hooks` and Lefthook's shims. A repo-local `core.hooksPath` (Husky) bypasses a global one, so Husky is detected and reported, not chained. `uninstall` unsets the path only if it is still Vantage's and deletes only marked wrappers.
+  4. **Uninstall strips, it does not restore a copy,** so edits made after `add` survive; the backup stays for manual restore. `<home>` data is never deleted.
+  5. **`vantage doctor`** fails only on what breaks capture (hooks missing or pointing at a missing file, spool not writable, database cannot open read-only, unreadable settings). A daemon not running, a stale health or status file, no repos and a missing status line are warnings, because hooks still write to the spool.
+  6. **One function resolves the hook command** (`resolveHookCommands`), so the native binary and its fallback (D72) change one place.
+- **Why:** A marker makes removal exact without a second source of truth that can drift, and works in any shell. Opt-in git hooks avoid a machine-wide change that has no reader today and that Husky repos bypass anyway. Warn-versus-fail follows what a user must fix now.
+- **Alternatives:** Match by command path instead of a marker (breaks when the install moves); a `_vantage` key inside hook objects (Claude Code may reject unknown keys); git hooks on by default (global change, no consumer); restore the backup on uninstall (drops later edits); wrap Husky by editing `.husky/` (changes the repo, against D50).
+- **Impact:** Updates [first-run](specs/first-run.md), [operations](specs/operations.md), [status line](specs/status-line.md) and the [install guide](install-for-agents.md). The `--vantage-managed` marker becomes part of the contract with every future hook command, including the native one. Revisit git hooks when a source reads hook-written git events, and the doctor policy after real installs.
