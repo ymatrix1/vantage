@@ -31,6 +31,9 @@ jobs:
         run: pnpm format:check
       - name: Tests (Vitest)
         run: pnpm test
+        env:
+          # GitHub runners ship Rust, so the native hook parity tests must run, not skip (D72).
+          VANTAGE_REQUIRE_NATIVE: "1"
       - name: Fixture scrub check
         run: pnpm check:fixtures
       - name: UI build
