@@ -61,6 +61,15 @@ Team features are out of scope for now. The design should not prevent them later
 - Cursor and web-chat (chatgpt.com, claude.ai) ingestion.
 - Being a monitoring system. Vantage links to existing monitoring and reads its signals.
 
+**Deliberately not in v1** (Phases 0–3), even though they're designed:
+
+- Slack, Jira and Linear sources (Phase 6), and the pings and decisions that depend on them.
+- Monitoring adapters and the Verified stage beyond GitHub deployments (Phase 5).
+- The companion character (decided after the landscape is in use, Q22).
+- A custom theme editor; only built-in themes and theme files.
+- Automatic behavior extraction from prompts (Q19), and the judgment model (rules first, R10).
+- A mobile view, sound, and the webhook relay.
+
 ## 6. Core concept
 
 See [lifecycle spec](specs/lifecycle.md). Summary:

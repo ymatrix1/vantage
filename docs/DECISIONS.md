@@ -56,6 +56,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 | [D40](#d40-measure-felt-load-not-just-usage) | 2026-10-14 | Measure felt load, not just usage |
 | [D41](#d41-status-line-uses-text-glyphs) | 2026-10-14 | Status line uses text glyphs |
 | [D42](#d42-a-decision-log-for-every-ai-and-person-decision) | 2026-10-14 | A decision log for every AI and person decision |
+| [D43](#d43-guard-the-scope) | 2026-10-14 | Guard the scope |
 
 ---
 
@@ -338,7 +339,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Decision:** Each work item is a dot character (body = project, ring = A2V track, face = attention, badge = reason). Focus is a landscape: needs-you in the foreground, moving in the middle, waiting on the horizon, verified as stars, parked on a shelf. Track rows remain the fallback.
 - **Why:** Spatial memory and depth show urgency at a glance; the metaphor matches the name; it makes progress feel tangible.
 - **Alternatives:** Styled list (still a list); free-floating graph (unstable, hard to scan).
-- **Impact:** Caps per band, stable placement, scene palettes per time of day and theme. Must pass a scale test (Q20) before Phase 3.
+- **Impact:** Caps per band, stable placement, scene palettes per time of day and theme. Must pass a scale test (Q20) before Phase 3a.
 
 ### D36. Calm gamification rules
 
@@ -346,7 +347,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Decision:** Reward good practice, never volume or speed: proof arcs, stars for verified work, gentle streaks that pause instead of breaking, rare badges for A2V practices, an evening landing that closes open loops. No leaderboards, points for commits or lines, breaking streaks or random rewards. Quiet mode turns it off.
 - **Why:** Visible small wins and closure lower stress; loss mechanics and comparison raise it.
 - **Alternatives:** Classic points and leaderboards (stressful, rewards the wrong thing).
-- **Impact:** Moments (verified, regression, landing, morning) become UI features in Phase 3.
+- **Impact:** Moments (verified, regression, landing, morning) become UI features in Phase 3c.
 
 ### D37. Explain through the connected agent
 
@@ -395,6 +396,14 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Why:** Silent AI decisions are a core pain; people's decisions get lost across tools. One log answers "who decided this and why?" and makes AI choices reviewable.
 - **Alternatives:** Only the diff-based detector (misses chat decisions); a free-text notes field (unstructured, unsearchable).
 - **Impact:** A `decisions` table, transcript and message detectors, Item page section, landscape badge, API routes; [decision log spec](specs/decision-log.md). Uses the same five fields as D30.
+
+### D43. Guard the scope
+
+- **Context:** Planning added many features (pings, Explain, decision log, gamification, landscape) without measuring anything yet. Phase 0 grew from 2 days to 14 research beans; Phase 3 held everything visual with no cut line.
+- **Decision:** Phase 0 is timeboxed to one week with four must-have beans (R1, R2, R4, R13); the rest wait for the phase that needs them. Phase 3 splits into 3a (landscape), 3b (understanding) and 3c (calm), each with its own exit criterion. The PRD lists what's deliberately not in v1. Flags live in one registry.
+- **Why:** The kill rule only works if there's an early, small version to judge. Most open questions need real data, not more design.
+- **Alternatives:** Keep planning until every question is answered (delays learning); build everything in one Phase 3 (no early stop point).
+- **Impact:** Roadmap and PRD updated; [flag registry](specs/flags.md) replaces the flag tables in other specs. Next step is Phase 0, not more planning.
 ---
 
 ## Proposed (pending confirmation)

@@ -33,6 +33,8 @@
 | **Inbox** | What do people need from me? | Mentions, review requests and commitments, grouped by person |
 | **Sources** | Can I trust this data? | Per-source last sync, errors, rate limits; settings |
 
+**Overlays** open on top of a page instead of being pages: the Explain panel, the evening landing, the first-run legend and the command palette. "Decisions made" for a project or week is a Journal filter, not a page.
+
 Ambient surfaces (status line, toasts, badge) are always present.
 
 ### Focus (home)

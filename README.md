@@ -22,6 +22,7 @@ A card moves only on evidence: a git diff, a test or data check that ran after t
 | [Architecture](docs/ARCHITECTURE.md) | Sources, event store, linker, scorers, surfaces, privacy |
 | [Spec: lifecycle](docs/specs/lifecycle.md) | Stage gates, backward moves, flags, proof rules |
 | [Spec: work item model](docs/specs/work-item-model.md) | Entities, anchors, linking rules |
+| [Spec: flag registry](docs/specs/flags.md) | Every flag: trigger, severity, icon, one action |
 | [Spec: proof](docs/specs/proof.md) | Proof types, strength levels, freshness, fake proof detection, the gate |
 | [Spec: behaviors and detectors](docs/specs/behaviors-and-detectors.md) | Behavior sources, AI-decided and commitment detectors, resume with context |
 | [Spec: data schema](docs/specs/data-schema.md) | Tables, immutability, migrations, merge linking |

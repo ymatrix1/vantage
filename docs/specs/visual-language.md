@@ -43,20 +43,7 @@ Rules:
 
 ## Flag icons
 
-One line-icon set (no emoji, which renders differently per machine), each on a tinted circle:
-
-| Flag | Icon |
-|---|---|
-| `waiting_on_you` | Raised hand |
-| `unproven_claim` | Flask |
-| `ai_decided` | Scale |
-| `thrashing` | Circular arrows |
-| `forgotten` | Moon |
-| `unseen_mention` | At sign |
-| `regression` | Falling star |
-| `owe_reply` | Speech bubble with a question mark |
-| `follow_up_due` | Clock |
-| `close_the_loop` | Speech bubble with a check |
+One line-icon set (no emoji, which renders differently per machine), each icon on a tinted circle in the flag's severity color. The icon for every flag is listed in the [flag registry](flags.md).
 
 ## Dot characters
 

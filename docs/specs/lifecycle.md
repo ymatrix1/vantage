@@ -62,23 +62,7 @@ A skipped stage shows as a hollow "skipped" dot, never green.
 
 ## Flags
 
-Flags sit on any card, whatever the stage.
-
-| Flag | Trigger | Severity |
-|---|---|---|
-| `waiting_on_you` | Session waiting on a permission prompt or question (`Notification` hook) | red |
-| `ai_decided` | Business rule in the diff not present in the request or approved behaviors | red |
-| `collision` | Two active sessions edit the same uncommitted file | red |
-| `regression` | Linked alert, error spike, failed prod check, incident or revert after ship | red |
-| `unproven_claim` | Session claimed completion with edits and no qualifying proof after the last edit | amber |
-| `thrashing` | 3+ consecutive edit → failing command cycles on the same files | amber |
-| `forgotten` | Asked or Built with no activity for N days (default 5), or a user commitment with no follow-up | amber |
-| `unseen_mention` | Slack, Jira or Linear mention, or GitHub review request, with no reply or reaction from the user | amber; red if the person is blocked |
-| `claimed_fixed` | A reply says fixed or done on a review thread, but no later commit touches the commented lines | amber |
-| `owe_reply` | Someone asked you a question or request and you haven't replied, even if you saw it (see [pings](pings.md)) | amber; red after 1 working day if they're blocked |
-| `follow_up_due` | You're waiting on someone (question, review, blocker) and nothing came back within the threshold | amber |
-| `close_the_loop` | The item shipped or was verified and the person who asked for it hasn't been told | amber |
-| `shipped_unverified` | Deployed, but no post-deploy check ran within N hours (default 24) | amber |
+Flags sit on any item, whatever its stage. The full list, triggers, severities, icons and actions live in the [flag registry](flags.md).
 
 ## What counts as proof
 

@@ -102,3 +102,21 @@ A single file, `~/.vantage/config.toml` (*tentative*):
 - Every action has a keyboard shortcut; a command palette lists them.
 - Meaning is never color-only: dots also differ by shape or fill (filled, ring, dashed, hollow).
 - Focus states are visible in every theme.
+
+## Resource budget
+
+Vantage runs all day on a work laptop, so it must stay invisible.
+
+| Resource | Budget |
+|---|---|
+| CPU, idle | Under 1% on average |
+| CPU, backfill or replay | Under 25% of one core, throttled, at low process priority |
+| Memory | Under 200 MB for the daemon |
+| Disk | Database under 500 MB in typical use; retention trims events older than 180 days |
+| Network | Only the polling budgets in [ingestion](ingestion.md#polling-budget); no telemetry |
+| Battery | Polling intervals double on battery saver |
+| Status line | Reads the summary file in under 10 ms |
+| Hooks | Under 100 ms (D21) |
+
+Budgets are checked in Phase 1 with a one-week measurement on the user's machine, and a CI test for the hooks and status line.
+
