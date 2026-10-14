@@ -64,6 +64,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 | [D48](#d48-a-vantage-mcp-server) | 2026-10-14 | A Vantage MCP server |
 | [D49](#d49-visual-proof-by-screenshot) | 2026-10-14 | Visual proof by screenshot |
 | [D50](#d50-one-command-to-add-an-existing-repo) | 2026-10-14 | One command to add an existing repo |
+| [D51](#d51-logo-and-wordmark) | 2026-10-14 | Logo and wordmark |
 
 ---
 
@@ -473,6 +474,14 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Why:** One command removes friction; machine-level hooks avoid touching every repo; chaining keeps existing hook managers working.
 - **Alternatives:** Per-repo hook files (pollutes repos, conflicts with Husky and Lefthook); manual setup (too much friction).
 - **Impact:** An `add` command, hook chaining logic with tests for Husky and Lefthook, a `--dry-run` mode and an optional team config file.
+
+### D51. Logo and wordmark
+
+- **Context:** The project needed a logo that is modern but calm and fits the vantage-point idea.
+- **Decision:** A rounded-square icon of rolling hills at dusk under a warm sun, and a wordmark in Bree Serif converted to outlines, with its x-height centered on the icon. Separate wordmark files for light and dark backgrounds.
+- **Why:** The scene tells the product story (a calm view over your work) and reads at 16 px; Bree Serif is warm and calm, matching the goal of reducing stress.
+- **Alternatives:** A dot character, a V monogram, layered V bands, an earthy palette (the user preferred the dusk colors), and the fonts Inter, Geist, Manrope, Outfit, Plus Jakarta Sans, Sora, Quantico, Chakra Petch, Zen Dots and Odibee Sans.
+- **Impact:** `assets/` holds the icon and two wordmarks; a Brand section in the visual-language spec.
 ---
 
 ## Proposed (pending confirmation)

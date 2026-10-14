@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="t">
+  <title id="t">Vantage</title>
+  <defs>
+    <clipPath id="sq"><rect width="128" height="128" rx="30"/></clipPath>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2F2B66"/><stop offset=".7" stop-color="#4A3F7D"/><stop offset="1" stop-color="#6B5A8E"/></linearGradient>
+    <radialGradient id="glow"><stop offset="0" stop-color="#FFD9A0" stop-opacity=".75"/><stop offset=".55" stop-color="#FFC27A" stop-opacity=".18"/><stop offset="1" stop-color="#FFC27A" stop-opacity="0"/></radialGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE3A8"/><stop offset="1" stop-color="#FFB86B"/></linearGradient>
+    <linearGradient id="h1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8C84C9"/><stop offset="1" stop-color="#5C5596"/></linearGradient>
+    <linearGradient id="h2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5FA898"/><stop offset="1" stop-color="#3B7C70"/></linearGradient>
+    <linearGradient id="h3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9CC27A"/><stop offset="1" stop-color="#5E8E45"/></linearGradient>
+  </defs>
+  <!-- The view from a vantage point: rolling hills at dusk under a warm sun. -->
+  <g clip-path="url(#sq)">
+    <rect width="128" height="128" fill="url(#sky)"/>
+    <circle cx="86" cy="50" r="32" fill="url(#glow)"/>
+    <circle cx="86" cy="50" r="12" fill="url(#sun)"/>
+    <path d="M0 78 C36 62 80 90 128 70 V128 H0Z" fill="url(#h1)"/>
+    <path d="M0 94 C44 80 84 104 128 88 V128 H0Z" fill="url(#h2)"/>
+    <path d="M0 110 C40 98 88 116 128 104 V128 H0Z" fill="url(#h3)"/>
+  </g>
+</svg>

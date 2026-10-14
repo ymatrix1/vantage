@@ -131,3 +131,16 @@ These are first proposals; research bean R14 (`vantage-700a`) validates contrast
 - Motion respects `prefers-reduced-motion`.
 - Status is never color-only (shape and icon always present).
 - Custom themes may restyle scenes but must keep the meaning colors distinguishable (D27).
+
+## Brand
+
+| Asset | File | Use |
+|---|---|---|
+| Icon | `assets/logo.svg` | App icon, favicon, avatar |
+| Wordmark, light backgrounds | `assets/logo-wordmark.svg` | README, docs, light UI |
+| Wordmark, dark backgrounds | `assets/logo-wordmark-dark.svg` | Dark UI |
+
+- **The icon** is the view from a vantage point: rolling hills at dusk under a warm sun, in a rounded square.
+- **The wordmark** uses Bree Serif (SIL Open Font License, by TypeTogether), converted to outlines so it renders the same everywhere. Its x-height band is centered on the icon's middle.
+- Don't recolor, stretch or add effects to the icon.
+
