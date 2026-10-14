@@ -6,7 +6,7 @@ This is the canonical instruction file for AI coding agents working on Vantage: 
 
 Vantage is a local-first, personal tool that shows the true state of a developer's work across AI coding agents, git, pull requests, CI/CD, monitoring, Jira or Linear, and Slack. It tracks **work items** along the evidence-based A2V track (see [docs/METHOD.md](docs/METHOD.md)): Asked → Built → Proven → Reviewed → Shipped → Verified.
 
-**Status: planning.** Don't write application code until the user approves starting a roadmap phase.
+**Status:** Phase 1 (the first usable slice) is built and merged; Phase 2 is planned as draft beans. Don't start a roadmap phase until the user approves it.
 
 ## Sources of truth
 
