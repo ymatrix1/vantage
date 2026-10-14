@@ -7,7 +7,7 @@
     "lint": "oxlint --type-aware --deny-warnings",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
-    "test": "vitest run",
+    "test": "tsc -b && vitest run",
     "check:fixtures": "node tools/check-fixtures.mjs",
     "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm check:fixtures"
   },

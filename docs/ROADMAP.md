@@ -31,7 +31,7 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 | Core | `vantage-9xbi` (linker), then `vantage-lxud` (stage machine and proof) | capture |
 | Surfaces | `vantage-8nb2` (Stop gate), `vantage-p9at` (status line), `vantage-olgf` (Track page) | stage machine |
 | Delivery | `vantage-p9x2` (install with a prompt, `vantage add`, `doctor`) | capture and surfaces |
-
+ Hook cold start cut from a median 126 to 133 ms to 95 to 99 ms by running built JS; a native binary is the open next step (`vantage-of25`, D67).
 - [x] Hook collector writing to the spool; daemon ingesting it into SQLite; transcript backfill.
 - [ ] git scanner for registered repos and worktrees. Delivered: discovery, events, repo identity, cadence helper (`vantage-in31`). Remaining: scheduling loop and cursor persistence (`vantage-0k45`).
 - [ ] Linker with branch or worktree and issue-key anchors only.
