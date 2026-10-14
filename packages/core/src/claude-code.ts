@@ -21,6 +21,8 @@ export interface ToolCall {
   name: string;
   input: Rec;
   sessionId?: string | undefined;
+  /** Set when a sub-agent made the call (transcript `agentId`, hook `agent_id`). */
+  agentId?: string | undefined;
   timestamp: string;
   /** undefined when the outcome is unknown (transcript call with no result yet). */
   ok?: boolean | undefined;
@@ -60,6 +62,7 @@ export function toolCallEvents(call: ToolCall): VantageEvent[] {
   const common: Rec = { tool: call.name, toolUseId: call.toolUseId };
   if (call.ok !== undefined) common["ok"] = call.ok;
   if (call.cwd) common["cwd"] = call.cwd;
+  if (call.agentId) common["agentId"] = call.agentId;
   const events: VantageEvent[] = [];
 
   if (EDIT_TOOLS.has(call.name)) {
@@ -139,7 +142,13 @@ export function hookEvents(record: SpoolRecord, ctx?: IngestContext): VantageEve
   const sid = sessionId ? { sessionId } : {};
   const cwd = str(h["cwd"]);
   const promptId = str(h["prompt_id"]);
-  const meta: Rec = { hook: name, ...(cwd ? { cwd } : {}), ...(promptId ? { promptId } : {}) };
+  const agentId = str(h["agent_id"]);
+  const meta: Rec = {
+    hook: name,
+    ...(cwd ? { cwd } : {}),
+    ...(promptId ? { promptId } : {}),
+    ...(agentId ? { agentId } : {}),
+  };
   // Non-tool hooks have no stable id from Claude Code; hash the payload so a replayed line dedupes.
   const id = `cc:${sessionId ?? "none"}:${name}:${digest(JSON.stringify(h) + ts)}`;
   const make = (kind: VantageEvent["kind"], extra: Rec = {}): VantageEvent[] => [
@@ -174,6 +183,7 @@ export function hookEvents(record: SpoolRecord, ctx?: IngestContext): VantageEve
         input: isRec(h["tool_input"]) ? h["tool_input"] : {},
         timestamp: ts,
         sessionId,
+        agentId,
         ok: name === "PostToolUse",
         cwd,
         repoRoot: rootFor(cwd, ctx),
@@ -194,6 +204,8 @@ export interface TranscriptLine {
   cwd?: string;
   gitBranch?: string;
   isSidechain: boolean;
+  /** Sub-agent id on sidechain lines. Sub-agent lines carry the parent's `sessionId`. */
+  agentId?: string;
   isMeta: boolean;
   content: Rec[];
   /** Plain string content, when the line is a user message with string content. */
@@ -223,6 +235,8 @@ export function parseTranscriptLine(line: string): TranscriptLine | null {
   const uuid = str(raw["uuid"]);
   const cwd = str(raw["cwd"]);
   const gitBranch = str(raw["gitBranch"]);
+  const agentId = str(raw["agentId"]);
+  if (agentId) out.agentId = agentId;
   if (sessionId) out.sessionId = sessionId;
   if (timestamp) out.timestamp = timestamp;
   if (uuid) out.uuid = uuid;
@@ -251,6 +265,7 @@ export function transcriptEvents(lines: TranscriptLine[], ctx?: IngestContext): 
           input: isRec(b["input"]) ? b["input"] : {},
           timestamp: ts,
           sessionId: l.sessionId,
+          agentId: l.agentId,
           cwd: l.cwd,
           repoRoot: rootFor(l.cwd, ctx),
         });
