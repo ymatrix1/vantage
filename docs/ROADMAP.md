@@ -34,8 +34,8 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
  Hook cold start cut from a median 126 to 133 ms to 95 to 99 ms by running built JS; a native binary is the open next step (`vantage-of25`, D67).
 - [x] Hook collector writing to the spool; daemon ingesting it into SQLite; transcript backfill.
 - [x] git scanner for registered repos and worktrees: discovery, events, repo identity, cadence helper (`vantage-in31`), scheduling loop and cursor persistence (`vantage-0k45`).
-- [x] Linker with branch or worktree and issue-key anchors only (`vantage-9xbi`). Delivered: pure linker in core, `links` table, undo. Remaining: a scheduled link pass and the item-view undo control (`vantage-lxud` and the Track page).
-- [ ] Stage machine for Asked, Built, Proven, with proof at L1 and proof expiry.
+- [x] Linker with branch or worktree and issue-key anchors only (`vantage-9xbi`). Delivered: pure linker in core, `links` table, undo. The scheduled link pass arrived with the stage machine (`vantage-lxud`). Remaining: the item-view undo control (Track page).
+- [x] Stage machine for Asked, Built, Proven, with proof at L1 and proof expiry (`vantage-lxud`, D71). Delivered: pure machine in core, scheduled pass, `work_items`, `proofs`, `flags` and `stage_changes` tables, read functions. Output capture for zero-test detection is a follow-up bean.
 - [ ] `Stop` hook proof gate in warn mode.
 - [ ] Status line: edits vs. proof, sessions waiting.
 - [ ] A minimal Track page (attention grouping, six-dot rows) on a secured localhost server.

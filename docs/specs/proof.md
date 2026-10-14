@@ -54,7 +54,7 @@ Proven needs at least L1 for v1. The target is L2 by default once R1 data shows 
 ## Freshness
 
 - A proof is **fresh** while the code fingerprint matches the current content of the files it covers.
-- Any later edit to those files **expires** it. The card drops back from Proven to Built and the proof shows as "expired" (struck through), never deleted.
+- Any later edit to those files **expires** it. Phase 1 derives the fingerprint from the item's code-edit events, since file content is not captured, so any later linked code edit expires every fresh proof; documentation edits do not (D71). The card drops back from Proven to Built and the proof shows as "expired" (struck through), never deleted.
 - Expiry is per behavior: an edit only expires proofs whose files changed.
 
 ## Weak or fake proof detection

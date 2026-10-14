@@ -12,12 +12,13 @@ SQLite, WAL mode, in `~/.vantage/vantage.db`. Field lists come from the [work it
 | `sessions` | id, agent, cwd, repo, branch, started_at, last_activity | |
 | `contexts` | id, name, rules_json | |
 | `projects` | id, context_id, name, kind, external_id, repos_json | |
-| `work_items` | id, kind, title, project_id, repo, stage, sub_state, priority, difficulty_estimate, parked, parent_id, created_at, updated_at | |
+| `work_items` | id, item_key (unique), kind, title, project_id, repo, stage, sub_state, proof_status, proof_level, docs_only, priority, difficulty_estimate, parked, parent_id, first_activity, last_activity, created_at, updated_at | Derived by the stage pass (D71). `item_key` is the linker's key, e.g. `issue:FTK-1`. |
 | `anchors` | id, work_item_id, kind, value | Unique on (kind, value) |
-| `links` | id, work_item_id, event_id, method, confidence, confirmed, created_at | Undo = delete row, keep an audit event |
+| `links` | event_id, item_key, method, anchor_kind, anchor_value, rule, confidence, created_at, undone_at | Keyed by `item_key`, not `work_items.id`, so the linker runs before items exist. Undo sets `undone_at`; the row stays as a tombstone. |
 | `behaviors` | id, work_item_id, text, origin, approved, created_at | |
-| `proofs` | id, work_item_id, behavior_id, type, level, source, command, cwd, exit_code, started_at, finished_at, result_json, excerpt, artifacts_json, fingerprint | |
+| `proofs` | id, work_item_id, behavior_id, event_id, type, level, source, command, cwd, exit_code, started_at, finished_at, state (`fresh`, `expired`, `failed`, `weak`), weak_reason, expired_by_event_id, result_json, excerpt, artifacts_json, fingerprint | Phase 1 fills event_id, type, level, source, command, cwd, started_at, state, weak_reason, expired_by_event_id and fingerprint. Expired and failed rows stay. |
 | `flags` | id, work_item_id, kind, severity, raised_at, cleared_at, dismissed, reason | Dismissals feed flag precision |
+| `stage_changes` | id, work_item_id, from_stage, to_stage, at, event_id, reason | Why a card moved, with the causing event (D45). Rebuilt each pass. |
 | `people` | id, display_name, ids_json | |
 | `explanations` | id, target_kind, target_id, kind (`brief`, `why_tree`, `status_tree`), audience, depth, blocks_json, evidence_ids_json, frozen, created_at, stale | Explain cache; `why_tree` rows are frozen once confirmed |
 | `pings` | id, work_item_id, kind (`owe_reply`, `follow_up_due`, `close_the_loop`), person_id, source_ref, due_at, state (`open`, `drafted`, `done`, `snoozed`), draft_text, cleared_by_event_id | Drafts stay local until the user sends them |

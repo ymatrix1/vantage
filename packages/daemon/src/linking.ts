@@ -26,7 +26,7 @@ const textOrNull = (r: Row, col: string): string | null => {
   return typeof v === "string" ? v : null;
 };
 
-function loadEvents(store: Store): { ids: Map<string, number>; events: VantageEvent[] } {
+export function loadEvents(store: Store): { ids: Map<string, number>; events: VantageEvent[] } {
   const rows = store.db
     .prepare(
       "SELECT id, source, source_id, kind, occurred_at, session_id, payload_json FROM events ORDER BY occurred_at, id",
