@@ -73,8 +73,12 @@ const HOUR = 3_600_000;
 const SAFE_WORD = /^[a-z][a-z0-9_.-]{0,31}$/;
 
 const KIND = "substr(w.item_key, 1, instr(w.item_key, ':') - 1)";
-/** A fallback title: a session item whose title is the stage pass placeholder (or empty), not a real name. */
-const UNTITLED = "(w.item_key LIKE 'session:%' AND (w.title = '' OR w.title LIKE 'Session %'))";
+/**
+ * A fallback title: every provisional session item. Its title is built from repo, branch and date, or
+ * `Session xxxxxxxx` (never from prompt text, D84), so it names no request. Issue, branch and worktree
+ * items carry their anchor as the title.
+ */
+const UNTITLED = "w.item_key LIKE 'session:%'";
 
 /** SQL for "this event happened in the repo": a path segment of its cwd or repo root equals the name. */
 function repoPredicate(alias: string): string {
