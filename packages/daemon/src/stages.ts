@@ -2,7 +2,7 @@
 // work_items, proofs, flags and stage_changes (docs/specs/data-schema.md). Every pass replays all
 // events, so the tables are derived state and can be rebuilt at any time. Also the read side the
 // Stop gate, status line and Track page call.
-import { computeStages } from "@vantage/core";
+import { computeStages, fallbackTitle } from "@vantage/core";
 import type { ItemState, LinkOptions, StageOptions } from "@vantage/core";
 import { linkStoredEvents, loadEvents } from "./linking.ts";
 import type { Store } from "./store.ts";
@@ -27,17 +27,26 @@ const textOrNull = (r: Row, c: string): string | null => {
 };
 const num = (r: Row, c: string): number => Number(r[c] ?? 0);
 
-function titleOf(itemKey: string): { title: string; repo: string | null } {
-  const [kind = "", ...rest] = itemKey.split(":");
+/** Title and repo from the item key; an item with no name of its own gets a title from repo, branch and date. */
+function titleOf(item: ItemState): { title: string; repo: string | null } {
+  const [kind = "", ...rest] = item.itemKey.split(":");
   const value = rest.join(":");
-  if (kind === "issue") return { title: value, repo: null };
+  if (kind === "issue") return { title: value, repo: item.repo };
   if (kind === "branch") {
     const i = value.indexOf(":");
-    return { title: value.slice(i + 1), repo: i > 0 ? value.slice(0, i) : null };
+    return { title: value.slice(i + 1), repo: i > 0 ? value.slice(0, i) : item.repo };
   }
   if (kind === "worktree")
-    return { title: value.replaceAll("\\", "/").split("/").pop() ?? value, repo: null };
-  return { title: `Session ${value.slice(0, 8)}`, repo: null };
+    return { title: value.replaceAll("\\", "/").split("/").pop() ?? value, repo: item.repo };
+  return {
+    title: fallbackTitle({
+      repo: item.repo,
+      branch: item.branch,
+      firstActivity: item.firstActivity,
+      id: value,
+    }),
+    repo: item.repo,
+  };
 }
 
 /** Links every stored event, evaluates every item, and rewrites the derived tables. */
@@ -63,12 +72,14 @@ export function runStagePass(store: Store, opts: StagePassOptions = {}, now = ne
       db.prepare("DELETE FROM work_items WHERE id = ?").run(id);
     }
     for (const item of items) {
-      const { title, repo } = titleOf(item.itemKey);
+      const { title, repo } = titleOf(item);
       db.prepare(
-        `INSERT INTO work_items (item_key, title, repo, stage, proof_status, proof_level, docs_only,
+        `INSERT INTO work_items (item_key, title, repo, branch, has_edits, stage, proof_status, proof_level, docs_only,
            first_activity, last_activity, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT (item_key) DO UPDATE SET stage = excluded.stage, proof_status = excluded.proof_status,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT (item_key) DO UPDATE SET title = excluded.title, repo = excluded.repo,
+           branch = excluded.branch, has_edits = excluded.has_edits,
+           stage = excluded.stage, proof_status = excluded.proof_status,
            proof_level = excluded.proof_level, docs_only = excluded.docs_only,
            first_activity = excluded.first_activity, last_activity = excluded.last_activity,
            updated_at = excluded.updated_at`,
@@ -76,6 +87,8 @@ export function runStagePass(store: Store, opts: StagePassOptions = {}, now = ne
         item.itemKey,
         title,
         repo,
+        item.branch,
+        item.codeEdits > 0 ? 1 : 0,
         item.stage,
         item.proofStatus,
         item.proofLevel,
@@ -185,6 +198,9 @@ export interface ItemSummary {
   proofStatus: string;
   proofLevel: number;
   docsOnly: boolean;
+  branch: string | null;
+  /** False when no code edit is linked (a conversation, or documentation only). */
+  hasEdits: boolean;
   firstActivity: string;
   lastActivity: string;
   /** Open and not dismissed. */
@@ -209,7 +225,7 @@ function flagsOf(store: Store, id: number): StoredFlag[] {
     }));
 }
 
-function summary(store: Store, r: Row): ItemSummary {
+export function summary(store: Store, r: Row): ItemSummary {
   return {
     itemKey: text(r, "item_key"),
     title: text(r, "title"),
@@ -218,6 +234,8 @@ function summary(store: Store, r: Row): ItemSummary {
     proofStatus: text(r, "proof_status"),
     proofLevel: num(r, "proof_level"),
     docsOnly: num(r, "docs_only") === 1,
+    branch: textOrNull(r, "branch"),
+    hasEdits: num(r, "has_edits") === 1,
     firstActivity: text(r, "first_activity"),
     lastActivity: text(r, "last_activity"),
     flags: flagsOf(store, num(r, "id")),

@@ -46,7 +46,7 @@ HTTP on `127.0.0.1`, token required on every `/api/*` call as `Authorization: Be
 | Method and path | Purpose |
 |---|---|
 | `GET /api/focus` | Top 3 items plus digest groups |
-| `GET /api/track` | Track rows grouped by attention, with `lastPassAt`, `stale` and per-source health (Phase 1; `group` and `filter` parameters arrive with project and stage grouping) |
+| `GET /api/track` | Track rows: filtered, sorted, paged and grouped, with `page`, `facets`, `lastPassAt`, `stale` and per-source health. Parameters below (proposed [D84](../DECISIONS.md)) |
 | `GET /api/items/:id` | Item detail: stage, behaviors, proofs, review, after-ship, history, links |
 | `GET /api/journal?since=` | Timeline entries |
 | `GET /api/inbox` | Mentions, review requests, commitments by person |
@@ -70,6 +70,32 @@ HTTP on `127.0.0.1`, token required on every `/api/*` call as `Authorization: Be
 | `GET /api/live` (WebSocket) | Pushes `item.changed`, `flag.raised`, `source.health` events |
 
 Phase 1 ships only `GET /api/track`, `GET /api/items/:id/trace`, `GET /api/diagnostics` and `GET /api/live`; the item id is the URL-encoded `item_key` (for example `issue%3AFTK-2`). `/api/live` (proposed D81) passes the same Host, Origin and token checks as every route before the upgrade; the token rides in the `Sec-WebSocket-Protocol` header (`vantage.v1, <token>`), never the URL. It pushes `item.changed` (id and changed fields), `flag.raised` (id, kind, severity), `source.health` and `resync` after each stage pass, with no transcript or command text, and caps at 8 connections with a 15 s ping. The page refetches `/api/track` on every connect and polls it every 5 seconds only while the socket is down, reconnecting with backoff from 1 s to 30 s.
+
+### `GET /api/track` parameters
+
+All optional. A list is comma-separated (`stage=asked,built`); an empty value means unset. Anything unknown, malformed, repeated or out of range is `400 {"error": "..."}` (the message names the parameter, never its value). The token stays in the `Authorization` header; there are no secrets in the query string.
+
+| Parameter | Values | Default |
+|---|---|---|
+| `repo`, `branch` | up to 50 names, 200 characters each, matched exactly | all |
+| `stage` | `asked`, `built`, `proven`, `reviewed`, `shipped`, `verified` | all |
+| `proof` | `none`, `fresh`, `expired`, `failed`, `weak`, `not_required` | all |
+| `flag` | `thrashing`, `unproven_claim`, `forgotten`, `none` (an item matches if it has any listed flag; `none` matches items with no open flag) | all |
+| `since` | `24h`, `7d`, `30d`, `all`: last activity within the window | `7d` |
+| `hasEdits` | `true`, `false`: any code edit linked (false for conversations and documentation-only items) | both |
+| `q` | at most 80 characters; case-insensitive substring over title, repo and branch only (ASCII case folding) | none |
+| `sort`, `order` | `activity`, `stage`, `title`, `repo`, `flags`; `asc`, `desc` | `activity` `desc` |
+| `group` | `attention`, `repo`, `stage`, `none` | `attention` |
+| `page`, `pageSize` | integers from 1 (`pageSize` up to 100) | `1`, `25` |
+
+Response, on top of the Phase 1 fields (`generatedAt`, `lastPassAt`, `stale`, `sources`):
+
+- `page`: `{page, pageSize, total, pages}`. `total` counts the whole filter; `pages` is at least 1. A page past the end returns `200` with no items.
+- `groups`: `{id, label, total, items, attention?}`. `total` counts the whole filter; `items` are only this page's rows. Pagination runs over the flat sorted list and groups are derived from the page. `group=attention` always lists its four groups (`needs_you`, `in_progress`, `waiting`, `done`); `repo` and `stage` list only groups that have rows on the page (`repo:<name>`, `repo:` for no repo, `stage:<name>`); `none` is one group `all`.
+- `facets`: `{repo, branch, stage, proof, flag, age: {today, week, older}, hasEdits: {true, false}}`: counts per value, each over the items that pass every filter except that dimension's own (the `since` filter does not apply to `age`), so the UI can show what selecting a value would give. `stage`, `proof`, `flag`, `age` and `hasEdits` list every known value, zero included. `repo` and `branch` list at most 200 values, largest first. `today` is the last 24 hours and `week` the 7 days before that.
+- Each item adds `branch`, `hasEdits` and `firstActivity`; each flag's `reason` is a short sentence naming files by base name only. An item with no title of its own is titled from repo, branch and first activity date (`claude-code · main · Oct 14`), never from prompt text.
+
+Cost: filtering, sorting and paging run in SQLite over `work_items` (indexed on `last_activity`, `(repo, last_activity)` and `(stage, last_activity)`): one bounded scan for the count, one for the page and one per facet dimension, about ten scans in all. A daemon test runs a combined query (search, sort by flags, filters, a deep page, all facets) over 3,000 items against a 250 ms budget. Only the page's rows load their flags.
 
 Rules: no state change on GET; every POST is recorded in `user_actions` (see [data schema](data-schema.md)).
 

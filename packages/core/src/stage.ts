@@ -67,6 +67,9 @@ export interface ItemState {
   /** Only documentation files were edited (D53): proof is not required. */
   docsOnly: boolean;
   codeEdits: number;
+  /** Repo and branch the item's events name (payload `repo` or `cwd` folder, `branch`); null when unknown. */
+  repo: string | null;
+  branch: string | null;
   firstActivity: string;
   lastActivity: string;
 }
@@ -78,7 +81,15 @@ export interface StageOptions {
   forgottenDays?: number;
   /** Consecutive failing edit cycles on one file that raise `thrashing` (D55). */
   thrashThreshold?: number;
+  /**
+   * `thrashing` and `unproven_claim` are raised only while the item's last activity is this many hours
+   * old or less (default 48; proposed D84). Older items keep stage and proof state but no urgent flag.
+   * Without `now` the window cannot be applied and every flag is raised as before.
+   */
+  flagWindowHours?: number;
 }
+
+export const DEFAULT_FLAG_WINDOW_HOURS = 48;
 
 const DOC_EXT = /\.(?:md|mdx|txt|rst)$/i;
 const isDoc = (path: string): boolean => DOC_EXT.test(path);
@@ -154,6 +165,21 @@ function ranNothing(e: VantageEvent): boolean {
 
 const norm = (p: string): string => p.replaceAll("\\", "/").toLowerCase();
 
+/** File name without its folders; flag reasons name files, never full paths or commands. */
+const baseName = (p: string): string => p.replaceAll("\\", "/").split("/").filter(Boolean).pop() ?? p;
+
+/** Repo and branch an event names. The repo is the `repo` field, else the last folder of `cwd`. */
+function originOf(events: readonly VantageEvent[]): { repo: string | null; branch: string | null } {
+  let repo: string | null = null;
+  let branch: string | null = null;
+  for (const e of events) {
+    repo ??= str(e.payload["repo"]) ?? (str(e.payload["cwd"]) ? baseName(String(e.payload["cwd"])) : null);
+    branch ??= str(e.payload["branch"]) ?? null;
+    if (repo && branch) break;
+  }
+  return { repo, branch };
+}
+
 /** L2: the command names an edited file, or a test named after it (billing.ts, billing.test.ts). */
 function namesChangedPath(command: string, edited: ReadonlySet<string>): boolean {
   const c = norm(command);
@@ -187,6 +213,7 @@ function evaluate(itemKey: string, events: readonly VantageEvent[], opts: StageO
   let cycleHadCommand = false;
   let thrashAt: string | null = null;
   let thrashPath = "";
+  let lastEditPath = "";
   const closeCycle = (at: string): void => {
     if (cycleOpen && cycleFailed) {
       for (const p of cyclePaths) {
@@ -234,6 +261,7 @@ function evaluate(itemKey: string, events: readonly VantageEvent[], opts: StageO
         lastCodeEdit = e;
         editIds.push(e.sourceId);
         for (const p of paths ?? []) edited.add(norm(p));
+        lastEditPath = paths?.at(-1) ?? lastEditPath;
         if (stage === "asked") move("built", e, "first code edit");
         for (const pr of proofs) {
           if (pr.state === "fresh") {
@@ -315,7 +343,10 @@ function evaluate(itemKey: string, events: readonly VantageEvent[], opts: StageO
 
   const lastActivity = events.at(-1)?.timestamp ?? first?.timestamp ?? "";
   const flags: Flag[] = [];
+  const windowMs = (opts.flagWindowHours ?? DEFAULT_FLAG_WINDOW_HOURS) * 3_600_000;
+  const recent = !opts.now || opts.now.getTime() - Date.parse(lastActivity) <= windowMs;
   if (
+    recent &&
     lastStop &&
     lastCodeEdit &&
     !docsOnly &&
@@ -325,15 +356,15 @@ function evaluate(itemKey: string, events: readonly VantageEvent[], opts: StageO
     flags.push({
       kind: "unproven_claim",
       severity: "amber",
-      reason: "The session stopped with code edits and no fresh proof after the last one.",
+      reason: `Session stopped after editing ${lastEditPath ? baseName(lastEditPath) : "code"} with no passing check since.`,
       raisedAt: lastStop.timestamp,
     });
   }
-  if (thrashAt !== null) {
+  if (recent && thrashAt !== null) {
     flags.push({
       kind: "thrashing",
       severity: "amber",
-      reason: `${threshold} edit and failing-command cycles on ${thrashPath === "*" ? "the same files" : thrashPath} with no passing check.`,
+      reason: `${threshold} failing edit cycles on ${thrashPath === "*" ? "the same files" : baseName(thrashPath)}`,
       raisedAt: thrashAt,
     });
   }
@@ -360,6 +391,7 @@ function evaluate(itemKey: string, events: readonly VantageEvent[], opts: StageO
     flags,
     docsOnly,
     codeEdits,
+    ...originOf(events),
     firstActivity: first?.timestamp ?? "",
     lastActivity,
   };

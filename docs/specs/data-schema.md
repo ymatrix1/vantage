@@ -12,7 +12,7 @@ SQLite, WAL mode, in `~/.vantage/vantage.db`. Field lists come from the [work it
 | `sessions` | id, agent, cwd, repo, branch, started_at, last_activity | |
 | `contexts` | id, name, rules_json | |
 | `projects` | id, context_id, name, kind, external_id, repos_json | |
-| `work_items` | id, item_key (unique), kind, title, project_id, repo, stage, sub_state, proof_status, proof_level, docs_only, priority, difficulty_estimate, parked, parent_id, first_activity, last_activity, created_at, updated_at | Derived by the stage pass (D71). `item_key` is the linker's key, e.g. `issue:FTK-1`. |
+| `work_items` | id, item_key (unique), kind, title, project_id, repo, stage, sub_state, proof_status, proof_level, docs_only, branch, has_edits, priority, difficulty_estimate, parked, parent_id, first_activity, last_activity, created_at, updated_at | Derived by the stage pass (D71). `item_key` is the linker's key, e.g. `issue:FTK-1`. |
 | `anchors` | id, work_item_id, kind, value | Unique on (kind, value) |
 | `links` | event_id, item_key, method, anchor_kind, anchor_value, rule, confidence, created_at, undone_at | Keyed by `item_key`, not `work_items.id`, so the linker runs before items exist. Undo sets `undone_at`; the row stays as a tombstone. |
 | `behaviors` | id, work_item_id, text, origin, approved, created_at | |

@@ -207,7 +207,7 @@ describe("live pushes", () => {
     const loop = createStageLoop({ store, now, onPass: () => hub.publish() });
     loop.tick(); // ftk-1 is edited and proven; baseline for the diff
     // The agent edits again and stops with no proof: a new item with a flag.
-    put("feat/ftk-2-claim", "file.edited", 3, { path: "/w/SECRET-PATH.ts", command: "SECRET-COMMAND" });
+    put("feat/ftk-2-claim", "file.edited", 3, { path: "/w/some/dir/claimed.ts", command: "SECRET-COMMAND" });
     put("feat/ftk-2-claim", "session.stopped", 4, {});
     const msgs: Msg[] = [];
     const t0 = performance.now();
@@ -230,6 +230,9 @@ describe("live pushes", () => {
     expect(msgs.find((m) => m["type"] === "flag.raised")).toMatchObject({ itemId: "issue:FTK-2" });
     const wire = JSON.stringify(msgs);
     expect(wire).not.toContain("SECRET");
+    // Flag reasons may name a file by base name (D84), never its folders.
+    expect(wire).toContain("claimed.ts");
+    expect(wire).not.toContain("some/dir");
     expect(Object.keys(msgs[0] ?? {})).toContain("lastPassAt");
     ws.close();
     console.log(`stage pass to client message: ${ms.toFixed(1)} ms`);
