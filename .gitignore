@@ -6,3 +6,4 @@ dist/
 *.sqlite
 .claude/settings.local.json
 .DS_Store
+*.tsbuildinfo

@@ -1,0 +1,37 @@
+name: code
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Type check
+        run: pnpm typecheck
+      - name: Lint (Oxlint, type-aware)
+        run: pnpm lint
+      - name: Format (Oxfmt)
+        run: pnpm format:check
+      - name: Tests (Vitest)
+        run: pnpm test
+      - name: Fixture scrub check
+        run: pnpm check:fixtures
+      - name: UI build
+        run: pnpm -F @vantage/ui build

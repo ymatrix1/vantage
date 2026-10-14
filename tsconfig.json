@@ -1,0 +1,9 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/core" },
+    { "path": "packages/daemon" },
+    { "path": "packages/hooks" },
+    { "path": "packages/cli" }
+  ]
+}

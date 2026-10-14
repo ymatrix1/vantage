@@ -1,0 +1,11 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "import", "vitest"],
+  "categories": { "correctness": "error", "suspicious": "warn" },
+  "rules": {
+    "typescript/no-floating-promises": "error",
+    "typescript/no-explicit-any": "error",
+    "import/no-unassigned-import": ["warn", { "allow": ["**/*.css"] }]
+  },
+  "ignorePatterns": ["dist", "node_modules", "**/*.svelte"]
+}

@@ -1,0 +1,6 @@
+{"_fixture":"synthetic","note":"Hand-written events for parser tests; no real data."}
+{"sourceId":"cc:s-0001:1","source":"claude_code","kind":"session.started","timestamp":"2026-01-05T09:00:00Z","sessionId":"s-0001","payload":{"cwd":"/work/demo"}}
+{"sourceId":"cc:s-0001:2","source":"claude_code","kind":"file.edited","timestamp":"2026-01-05T09:02:00Z","sessionId":"s-0001","payload":{"path":"src/app.ts"}}
+{"sourceId":"cc:s-0001:3","source":"claude_code","kind":"command.ran","timestamp":"2026-01-05T09:03:00Z","sessionId":"s-0001","payload":{"command":"pnpm test","exitCode":0}}
+{"sourceId":"cc:s-0001:4","source":"claude_code","kind":"session.flew","timestamp":"2026-01-05T09:04:00Z","payload":{}}
+not json

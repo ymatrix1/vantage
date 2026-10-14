@@ -16,9 +16,13 @@ Runs on every push to `main` and every PR.
 
 Run locally before pushing: `python tools/check_docs.py`.
 
-## Phase 1: code
+## Phase 1: code (workflow `.github/workflows/code.yml`)
 
-Added when code exists.
+Runs on every push to `main` and every PR. Run locally with `pnpm check`.
+
+- [x] Type check, lint (Oxlint), format (Oxfmt), Vitest, fixture scrub check, UI build; Windows and Linux
+- [ ] Hook budget test (with the hooks bean)
+- [ ] Security tests (with the daemon API bean)
 
 | Check | Notes |
 |---|---|

@@ -1,0 +1,12 @@
+packages:
+  - packages/*
+
+# Supply-chain guard: don't install versions published less than a day ago (minutes).
+minimumReleaseAge: 1440
+
+# Only these packages may run install scripts.
+onlyBuiltDependencies:
+  - esbuild
+
+# Exact versions: Oxfmt is beta (D64).
+savePrefix: ""

@@ -75,11 +75,22 @@ docs/research/        landscape and research findings
 .beans/               task files
 ```
 
-Code layout is decided when Phase 1 starts.
+```
+packages/core/        shared event types and pure logic (no I/O)
+packages/daemon/      ingest, store, API (shell)
+packages/hooks/       agent and git hook entry points (shell)
+packages/cli/         `vantage` command (shell)
+packages/ui/          Svelte + Vite + Tailwind, shadcn-svelte components
+tools/                repo checks (docs, fixtures)
+```
 
-## Toolchain (tentative)
+Packages import each other as `@vantage/<name>`. Test fixtures live in `packages/<name>/test/fixtures/` and start with a `synthetic` or `scrubbed` header.
 
-TypeScript on Node, SQLite (live store), DuckDB (analysis), Vitest, Oxlint and Oxfmt. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#tech-stack-tentative).
+Run every check before pushing: `pnpm check` (type check, Oxlint, Oxfmt, Vitest, fixture scrub) and `python tools/check_docs.py`.
+
+## Toolchain
+
+TypeScript on Node with pnpm workspaces, Vitest, Oxlint and Oxfmt, Svelte with shadcn-svelte. Tentative: SQLite (live store), DuckDB (analysis). See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#tech-stack-tentative).
 
 ## Landing the plane (session completion)
 

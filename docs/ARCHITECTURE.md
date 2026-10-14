@@ -93,7 +93,9 @@ Candidates: a fast decision model (for example Jev from TypeSafe AI) or a small 
 - SQLite for the live store (`better-sqlite3`, or Node's built-in `node:sqlite` if stable enough by then).
 - DuckDB for analysis and Phase 0 measurement.
 - Vitest for tests, with recorded `.jsonl` fixtures.
+- pnpm workspaces, Node 20+ runtime ([D66](DECISIONS.md#d66-pnpm-workspaces-on-node)).
 - Oxlint (type-aware) for lint and Oxfmt for format ([D64](DECISIONS.md#d64-oxc-tools-for-lint-and-format)).
+- Svelte with Vite for the UI ([D62](DECISIONS.md#d62-svelte-for-the-web-ui)), with shadcn-svelte components and Tailwind ([D65](DECISIONS.md#d65-shadcn-svelte-for-ui-components)).
 
 ## Local security
 
