@@ -80,6 +80,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 | [D64](#d64-oxc-tools-for-lint-and-format) | 2026-10-14 | Oxc tools for lint and format |
 | [D65](#d65-shadcn-svelte-for-ui-components) | 2026-10-14 | shadcn-svelte for UI components |
 | [D66](#d66-pnpm-workspaces-on-node) | 2026-10-14 | pnpm workspaces on Node |
+| [D67](#d67-spool-hook-runs-built-javascript-native-binary-deferred) | 2026-10-14 | Spool hook runs built JavaScript; native binary deferred |
 | [D68](#d68-one-settings-view-for-engines-budgets-and-data-policy) | 2026-10-14 | One Settings view for engines, budgets and data policy |
 
 ---
@@ -638,6 +639,14 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Why:** The user's choice. First-class workspaces and filters, strict dependencies (no undeclared imports), a shared store, install scripts blocked unless allowed, and a delay on brand-new releases as a supply-chain guard.
 - **Alternatives:** npm workspaces (works, but flat `node_modules` hides missing dependencies and every install script runs); Bun (fastest installs and about 10 ms startup, but as runtime it conflicts with `npx` install (D63) and has more Windows edge cases).
 - **Impact:** Contributors need pnpm (corepack). Revisit Bun for a compiled hook binary only if Node hooks miss the 100 ms budget.
+
+### D67. Spool hook runs built JavaScript; native binary deferred
+
+- **Context:** The real hook command (`node src/bin.ts`) cold-started in a median 126 to 133 ms on the dev laptop (Windows 11, Node 24, 40 runs, interleaved). Node itself needs a median 82 ms (`node -e ''`) here, so the 100 ms budget (D21) leaves about 18 ms for everything else. About 45 ms of the overhead was Node stripping TypeScript types at start-up. Hooks are async (D59), so the agent is not blocked either way.
+- **Decision:** Register `node <repo>/packages/hooks/dist/src/bin.js` (plain JavaScript built by `tsc -b`) instead of the `.ts` source. `pnpm test` builds first. A native binary is not adopted now; it is the recorded next step if the budget must hold strictly (new bean).
+- **Why:** It is the only lever that needs no new toolchain or per-platform release: median 95 to 99 ms, p95 130 ms, a 30 to 35 ms cut. Node's own start-up is the floor, and only a non-Node binary gets clearly below 100 ms.
+- **Alternatives:** A single hand-written CJS file (median 92 ms, p95 119 to 129 ms; 3 to 7 ms better, but needs a bundler or duplicated code). A Bun-compiled binary (median 114 to 117 ms; slower than built Node). `bun src/bin.ts` (224 ms). A Go binary spike (median 32 to 33 ms, p95 41 to 47 ms, 2 MB; the only option clearly under budget, but it adds a Go toolchain and per-OS builds, and conflicts with the npm install of D63).
+- **Impact:** The hook command now needs a build before use (`tsc -b`, which `pnpm test` runs); the installer (`vantage-p9x2`) must register the `dist` path. The budget is met at the median only marginally and not at p95 on this machine. Revisit with a native binary if hook latency shows up as a real cost (Q28).
 
 ### D68. One Settings view for engines, budgets and data policy
 

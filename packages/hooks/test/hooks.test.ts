@@ -7,7 +7,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import { collect } from "../src/collect.ts";
 import { SPOOL_HOOK_EVENTS, hooksSettings } from "../src/settings.ts";
 
-const bin = fileURLToPath(new URL("../src/bin.ts", import.meta.url));
+// The registered hook command runs the built JS (D67); `pnpm test` builds first, so dist exists.
+const bin = fileURLToPath(new URL("../dist/src/bin.js", import.meta.url));
 let home = "";
 afterEach(() => rmSync(home, { recursive: true, force: true }));
 
@@ -49,6 +50,28 @@ describe("collector", () => {
     });
     expect(status).toBe(0);
     expect(readdirSync(join(home, "spool"))).toHaveLength(1);
+  });
+
+  it("real command writes the spool line and exits 0 with the daemon down (cold start under a CI ceiling)", () => {
+    home = mkdtempSync(join(tmpdir(), "vantage-hooks-"));
+    const payload = '{"hook_event_name":"PostToolUse","session_id":"s-2"}';
+    run(payload, { VANTAGE_HOME: home }); // warm the disk cache
+    const times: number[] = [];
+    for (let i = 0; i < 5; i++) {
+      const r = run(payload, { VANTAGE_HOME: home });
+      expect(r.status).toBe(0);
+      times.push(r.ms);
+    }
+    const [file] = readdirSync(join(home, "spool"));
+    const lines = readFileSync(join(home, "spool", file ?? ""), "utf8")
+      .trim()
+      .split("\n");
+    expect(lines).toHaveLength(6);
+    expect(JSON.parse(lines[0] ?? "")).toMatchObject({ v: 1, hook: { session_id: "s-2" } });
+    // CI ceiling only (shared Windows and Ubuntu runners are slow and noisy). The 100 ms budget
+    // is measured locally, see docs/specs/ingestion.md "Hook latency".
+    times.sort((a, b) => a - b);
+    expect(times[2]).toBeLessThan(750);
   });
 
   it("exits 0 on garbage input and on an unwritable spool", () => {
