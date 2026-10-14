@@ -38,7 +38,7 @@ describe("requestTitle", () => {
     ["sk", "-ant-api03-ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"].join(""),
     ["gh", "p_abcdefghijklmnopqrstuvwxyz0123456789"].join(""),
     ["xox", "b-1234-5678-abcdefghijkl"].join(""),
-    "AKIAABCDEFGHIJKLMNOP",
+    ["AKIA", "ABCDEFGHIJKLMNOP"].join(""),
     "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.abcdef",
     "0123456789abcdef0123456789abcdef",
     "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVo=",
