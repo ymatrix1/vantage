@@ -79,7 +79,7 @@ Code layout is decided when Phase 1 starts.
 
 ## Toolchain (tentative)
 
-TypeScript on Node, SQLite (live store), DuckDB (analysis), Vitest. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#tech-stack-tentative).
+TypeScript on Node, SQLite (live store), DuckDB (analysis), Vitest, Oxlint and Oxfmt. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#tech-stack-tentative).
 
 ## Landing the plane (session completion)
 

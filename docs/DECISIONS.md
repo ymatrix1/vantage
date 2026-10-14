@@ -77,6 +77,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 | [D61](#d61-claude-code-opentelemetry-as-an-optional-local-source) | 2026-10-14 | Claude Code OpenTelemetry as an optional local source |
 | [D62](#d62-svelte-for-the-web-ui) | 2026-10-14 | Svelte for the web UI |
 | [D63](#d63-npm-package-for-install) | 2026-10-14 | npm package for install |
+| [D64](#d64-oxc-tools-for-lint-and-format) | 2026-10-14 | Oxc tools for lint and format |
 
 ---
 
@@ -610,6 +611,14 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Why:** Simplest for a personal tool on Node, matches the install-by-prompt flow (D52) and needs no build pipeline per OS.
 - **Alternatives:** A single binary (no Node needed, but per-OS builds and signing).
 - **Impact:** Requires Node 20+; release CI publishes to npm later. Revisit a binary if Vantage becomes a product (D18).
+
+### D64. Oxc tools for lint and format
+
+- **Context:** The Phase 1 scaffold (bean `vantage-vnn4`) needs a linter and a formatter. The bean assumed ESLint.
+- **Decision:** Use the Oxc family: Oxlint with type-aware rules (`--type-aware`) for lint, and Oxfmt for format. No ESLint or Prettier. `tsc --noEmit` stays the type check.
+- **Why:** The user's choice. Both are Rust tools that run in milliseconds, which keeps local checks and CI fast. Type-aware linting is stable since July 2026 and covers 59 of typescript-eslint's 61 type-aware rules. Oxfmt passes Prettier's JS and TS conformance tests.
+- **Alternatives:** ESLint with typescript-eslint and Prettier (mature, but much slower and more config); Biome (one tool, but a smaller type-aware rule set).
+- **Impact:** Oxfmt is still beta (0.x), so pin exact versions and expect small format churn on upgrades. A Svelte rule or plugin that only exists for ESLint is not available; revisit if the UI needs one, or add ESLint for `.svelte` files only.
 
 ---
 

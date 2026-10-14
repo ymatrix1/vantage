@@ -22,7 +22,7 @@ One consistent, tested foundation so parallel work doesn't diverge.
 ## Acceptance Criteria
 
 - [ ] Workspace layout decided and documented in AGENTS.md (daemon, hooks, CLI, UI packages)
-- [ ] TypeScript strict, ESLint, Vitest with a first passing test
+- [ ] TypeScript strict, Oxlint (type-aware) and Oxfmt (D64), Vitest with a first passing test
 - [ ] CI runs type check, lint and tests on Windows and Linux; fixture scrub check in place
 - [ ] Event schema types shared across packages (docs/specs/ingestion.md event catalog)
 
