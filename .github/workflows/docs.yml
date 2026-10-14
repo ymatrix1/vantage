@@ -10,7 +10,7 @@ permissions:
   pull-requests: read  # gitleaks-action lists PR commits on pull_request events
 
 jobs:
-  checks:
+  docs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
