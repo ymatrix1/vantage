@@ -1018,3 +1018,12 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Why:** A plain lookup keeps `add` offline and fast, and works before the packages are published. Putting the local build second lets a developer get the 29 ms hook today. A warning, not a failure, because the Node hook still works, only slower (p95 about 130 ms against the 100 ms budget).
 - **Alternatives:** Registering native only when a package resolves (leaves developers on the slow hook until publish). Building the crate from `vantage add` (needs a toolchain, slow, surprising). Failing doctor on the Node hook (breaks machines with no native build).
 - **Impact:** `packages/cli` only. A moved or deleted local build breaks the registered hook, so doctor fails on a missing binary and `vantage add --yes` repairs it. Revisit when the packages are published, since the local build then rarely matters.
+
+### D82. UI component tests: Vitest project with happy-dom and Svelte's own `mount`
+
+- **Status:** proposed
+- **Context:** The Track page (Svelte 5, D62) was verified only by `svelte-check` and a manual browser run, which breaks the evidence-over-claims rule. The specs name Vitest (testing rules) but leave open how components are rendered and in which DOM.
+- **Decision:** Component tests live in `packages/ui/test/` as a second Vitest project (`packages/ui/vitest.config.ts`, listed in the root config's `projects`), run by `pnpm test`. They use `happy-dom` (exact-pinned 21.0.1, published more than a day before install per D66) and Svelte's own `mount`, `flushSync` and `unmount`, with a faked `fetch` and synthetic data. The project resolves Svelte's `browser` condition; the Node project keeps its settings and excludes `packages/ui`.
+- **Why:** It adds one dev dependency and no wrapper library, runs on ubuntu and windows with no extra step, and keeps the Node packages off the browser build of Svelte.
+- **Alternatives:** `jsdom` (heavier, slower to start, same coverage here). `@testing-library/svelte` (two more dependencies for queries that `querySelector` already covers in a page this small). Playwright component tests or end-to-end runs (a browser download in CI; out of scope for this bean).
+- **Impact:** `pnpm test` also runs the UI tests. Browser-only behaviour that happy-dom lacks (layout, real focus rings) is not covered and would need a browser test. Revisit if the UI grows past what `querySelector` assertions keep readable.
