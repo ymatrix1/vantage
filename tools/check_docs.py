@@ -47,6 +47,26 @@ def check_links(files):
     return problems
 
 
+def check_tables(files):
+    """A table row right after a blank line, with no header separator below it, is a broken table."""
+    problems = []
+    for f in files:
+        if f.suffix != ".md" or not f.exists():
+            continue
+        lines = f.read_text(encoding="utf-8").splitlines()
+        in_code = False
+        for i, line in enumerate(lines):
+            if line.startswith("```"):
+                in_code = not in_code
+            if in_code or not line.startswith("|"):
+                continue
+            prev_blank = i == 0 or not lines[i - 1].strip()
+            next_is_sep = i + 1 < len(lines) and re.match(r"^\|[\s:|-]+\|$", lines[i + 1].strip())
+            if prev_blank and not next_is_sep:
+                problems.append(f"{f.relative_to(ROOT)}:{i + 1}: table row without a header (blank line splits the table?)")
+    return problems
+
+
 def check_decisions():
     text = (ROOT / "docs" / "DECISIONS.md").read_text(encoding="utf-8")
     problems = []
@@ -74,7 +94,7 @@ def check_privacy(files):
 
 def main():
     files = tracked_files()
-    problems = check_links(files) + check_decisions() + check_privacy(files)
+    problems = check_links(files) + check_tables(files) + check_decisions() + check_privacy(files)
     for p in problems:
         print(p)
     print(f"{len(problems)} problem(s) in {len(files)} tracked files")
