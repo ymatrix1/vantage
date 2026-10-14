@@ -183,7 +183,7 @@ Conclusion: do not rely on notifications for CI. Poll the rollup for the head co
 2. **Pings:** `owe_reply` from a review request or mention can't rely on `reason`. It needs the GraphQL pass, and bot authors must be recognized from the actor type (bots are 93% of comments).
 3. **Lifecycle:** Reviewed sub-states come from `reviews`, `reviewThreads` and the timeline, never from the notification. A re-request is a `ReviewRequestedEvent` after the user's last review.
 4. **CI and Shipped/Verified:** need their own poll (R5 covers deploys).
-5. **D22 stays valid as a trigger** but its Impact is now concrete: see proposal P4 in [DECISIONS](../DECISIONS.md#proposed-pending-confirmation).
+5. **D22 stays valid as a trigger** but its Impact is now concrete: see decision D56 in [DECISIONS](../DECISIONS.md#index).
 
 ## Not verified
 

@@ -6,7 +6,7 @@ How Vantage hears about things happening in each source.
 
 1. **Pull is the backbone; push is an accelerator.** A laptop sleeps, restarts and goes offline. Every source must support catch-up from a stored cursor, so nothing is lost while Vantage isn't running. Push channels only make updates arrive faster.
 2. **No public endpoint by default.** Local-first means nothing listens on the internet. Webhooks need a relay, which is optional and comes later.
-3. **Never slow down or break an agent.** Claude Code hooks must return in under 100 ms and must succeed even when the daemon is down. Spool hooks are registered with `async: true` so they never block the session (proposal P7); only the `Stop` gate runs synchronously.
+3. **Never slow down or break an agent.** Claude Code hooks must return in under 100 ms and must succeed even when the daemon is down. Spool hooks are registered with `async: true` so they never block the session (decision D59); only the `Stop` gate runs synchronously.
 4. **Idempotent.** Each event has a stable source id; replays and overlaps between push and pull are deduplicated.
 5. **Honest freshness.** Each source shows "last synced" in the UI. A stale source is shown as stale, never as quiet.
 

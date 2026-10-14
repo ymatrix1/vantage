@@ -53,7 +53,7 @@ A single file, `~/.vantage/config.toml` (*tentative*):
 ## Hooks performance budget
 
 - Claude Code and git hooks must finish in under 100 ms and exit 0 in warn mode, whatever happens.
-- They do one thing: append a JSON line to the spool file. Claude Code spool hooks use `async: true`, so they don't block the session (P7).
+- They do one thing: append a JSON line to the spool file. Claude Code spool hooks use `async: true`, so they don't block the session (D59).
 - Measured 2026-10-14 on Windows 11: a Node process alone takes about 80 ms and a Node append hook about 97 ms median, so a synchronous Node hook has no headroom (research [R2](../research/claude-code-hooks.md#8-hook-latency-on-windows), Q28).
 - The proof gate in `block` mode is the only hook that may return a non-zero exit code, and only from the `Stop` hook.
 
@@ -139,7 +139,7 @@ Telemetry is **local only**: it never leaves the machine unless the user exports
 - **`vantage debug-bundle`** writes a zip of logs, metrics and config with ids, names, URLs and message text scrubbed (same rules as fixtures), for the user to inspect or share by choice.
 - **Debug level** can be raised per component at runtime (`vantage log-level linker debug`), and drops back after an hour.
 
-**Optional: Claude Code's own telemetry** (P9). Claude Code exports OpenTelemetry over OTLP/HTTP JSON to a local receiver on `127.0.0.1:4318` (verified with 2.1.295 in research [R2](../research/claude-code-hooks.md#7-opentelemetry-to-a-local-receiver)). Vantage uses it as a supplement, never as the spine: token and cost per session and model, tool success and duration, and Claude Code's own hook timings (`claude_code.hook_execution_complete`). Setup:
+**Optional: Claude Code's own telemetry** (D61). Claude Code exports OpenTelemetry over OTLP/HTTP JSON to a local receiver on `127.0.0.1:4318` (verified with 2.1.295 in research [R2](../research/claude-code-hooks.md#7-opentelemetry-to-a-local-receiver)). Vantage uses it as a supplement, never as the spine: token and cost per session and model, tool success and duration, and Claude Code's own hook timings (`claude_code.hook_execution_complete`). Setup:
 
 - Off by default; `vantage init` offers it and writes `CLAUDE_CODE_ENABLE_TELEMETRY` and `OTEL_*` to the user settings `env` (repo settings are ignored for `OTEL_*`). Code tab sessions may need managed settings (Q29).
 - The receiver binds to `127.0.0.1` only and drops identity attributes (`user.email`, `user.account_uuid`, `user.account_id`, `organization.id`) on ingest.

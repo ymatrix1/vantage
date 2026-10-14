@@ -165,7 +165,7 @@ Docs offer `"async": true` on command hooks: the hook runs in the background and
 | [Status line](../specs/status-line.md) | Set `refreshInterval` (for example 30 s), since an idle session doesn't refresh and the 5-minute stale rule would otherwise misfire. Use `COLUMNS` for truncation. Use `session_id` to find the current item. Must finish fast because a newer run cancels it. |
 | [Operations](../specs/operations.md) | OTel receiver confirmed for the CLI; strip identity attributes; Code tab needs managed settings per docs. Use `hook_execution_complete` for hook latency metrics. |
 
-Recorded as proposals P7–P9 in [DECISIONS](../DECISIONS.md#proposed-pending-confirmation) and questions Q28–Q29 in [OPEN-QUESTIONS](../OPEN-QUESTIONS.md).
+Recorded as decisions D59–D61 in [DECISIONS](../DECISIONS.md#index) and questions Q28–Q29 in [OPEN-QUESTIONS](../OPEN-QUESTIONS.md).
 
 ## Follow-ups
 

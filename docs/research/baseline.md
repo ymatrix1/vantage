@@ -126,7 +126,7 @@ Of all dirty checkouts (tracked or untracked), 30 were idle 7+ days, 29 idle 14+
 ## Implications for the specs
 
 - **Proof gate (Q3, Q11):** a warn-mode gate would fire on about 43% of edit sessions, mostly because no check ran. That's the core pain, so the gate is worth building, but blocking now would be noisy. Keep L1 for v1. L2 looks reachable (85% by the rough proxy) once hooks capture real linkage; re-measure with hook data.
-- **Docs-only sessions:** no qualifying check exists for prose. The gate should skip sessions whose edits are only documentation. Proposed as P1 in [DECISIONS](../DECISIONS.md#proposed-pending-confirmation).
+- **Docs-only sessions:** no qualifying check exists for prose. The gate should skip sessions whose edits are only documentation. Proposed as P1 in [DECISIONS](../DECISIONS.md#index).
 - **Boundary rules (Q1, D25):** the rules fit. Over 96% of edit sessions have a key, branch or worktree; rule 4 is needed for about 4%. But half of edit sessions change branch mid-session, so events must take the branch at event time, not the session's first branch. Proposed as P2.
 - **Issue keys:** keys appear in prompts about as often as in branch names. Keys found only in prompt text are weaker anchors and need a stop list and the user's tracker prefixes to avoid false matches.
 - **Thrashing threshold:** 3 cycles fires on about 2% of edit sessions with the loose definition and never with the strict one. Keep 3, reset only on a passing qualifying check. Proposed as P3.

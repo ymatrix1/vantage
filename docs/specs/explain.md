@@ -41,7 +41,7 @@ The web UI's Explain button always shows layer 1 immediately. With an open sessi
 - **User-chosen order:** for example Claude first, Codex as fallback, or per task. If one hits its limit, fall back to the other, then to layer 1.
 - **Daily budget** for layer 4 (default: 10 runs a day), small fast models by default, results cached until the evidence changes. The Diagnostics tab shows Vantage's own usage.
 - **Policy check (R13, 2026-10-14):** Anthropic paused the planned separate billing; `claude -p` logged in with a plan draws from plan limits. Codex `exec` with a ChatGPT login uses ChatGPT/Codex rate limits. Behavior at a limit is undocumented, so any error falls back. See [Explain engine research](../research/explain-engine.md#vendor-policy-as-of-2026-10-14).
-- **Measured (R13):** `claude -p --json-schema` with Haiku was schema-valid in 20 of 20 runs, with a median of 52.5 s and a p95 of 76.2 s. Layer 4 therefore runs as a background job (proposal P6), and Vantage sets status and tree shape while the model writes text only (proposal P5). Both proposals are in [DECISIONS](../DECISIONS.md#proposed-pending-confirmation).
+- **Measured (R13):** `claude -p --json-schema` with Haiku was schema-valid in 20 of 20 runs, with a median of 52.5 s and a p95 of 76.2 s. Layer 4 therefore runs as a background job (decision D58), and Vantage sets status and tree shape while the model writes text only (decision D57). Both proposals are in [DECISIONS](../DECISIONS.md#index).
 - Gated by the data policy setting (decision bean `vantage-h8fv`): Slack and tracker content are off by default.
 
 ## Input

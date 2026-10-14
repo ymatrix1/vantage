@@ -66,6 +66,17 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 | [D50](#d50-one-command-to-add-an-existing-repo) | 2026-10-14 | One command to add an existing repo |
 | [D51](#d51-logo-and-wordmark) | 2026-10-14 | Logo and wordmark |
 | [D52](#d52-install-with-a-prompt) | 2026-10-14 | Install with a prompt |
+| [D53](#d53-the-proof-gate-skips-docs-only-sessions) | 2026-10-14 | The proof gate skips docs-only sessions |
+| [D54](#d54-events-take-the-branch-at-event-time) | 2026-10-14 | Events take the branch at event time |
+| [D55](#d55-thrashing-counts-only-failures-not-cleared-by-a-passing-check) | 2026-10-14 | Thrashing counts only failures not cleared by a passing check |
+| [D56](#d56-github-notifications-are-a-wake-up-signal-state-comes-from-graphql) | 2026-10-14 | GitHub notifications are a wake-up signal; state comes from GraphQL |
+| [D57](#d57-vantage-owns-status-and-tree-shape-the-model-writes-text-only) | 2026-10-14 | Vantage owns status and tree shape; the model writes text only |
+| [D58](#d58-headless-explain-runs-as-an-isolated-background-job) | 2026-10-14 | Headless Explain runs as an isolated background job |
+| [D59](#d59-claude-code-spool-hooks-run-async) | 2026-10-14 | Claude Code spool hooks run async |
+| [D60](#d60-stop-gate-output-contract) | 2026-10-14 | Stop gate output contract |
+| [D61](#d61-claude-code-opentelemetry-as-an-optional-local-source) | 2026-10-14 | Claude Code OpenTelemetry as an optional local source |
+| [D62](#d62-svelte-for-the-web-ui) | 2026-10-14 | Svelte for the web UI |
+| [D63](#d63-npm-package-for-install) | 2026-10-14 | npm package for install |
 
 ---
 
@@ -491,11 +502,10 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Why:** Users already work through agents; a prompt is easier than reading setup docs, and the dry-run and OK steps keep machine-level changes under the user's control.
 - **Alternatives:** Command-line install only (more friction); an agent installing silently (changes settings without consent).
 - **Impact:** The install guide must stay in sync with the `add` command; Phase 1 tests it end to end in Claude Code and Codex.
----
 
-## Proposed (pending confirmation)
+### D53. The proof gate skips docs-only sessions
 
-### P1. The proof gate skips docs-only sessions
+- **Status:** accepted 2026-10-14 (was proposal P1).
 
 - **Context:** R1 ([baseline](research/baseline.md#unproven-edits-p2-q3)) found 16 edit sessions in 90 days whose edits were only documentation; 50% of them ended with no qualifying check, because no test or data check applies to prose.
 - **Decision:** The `Stop` gate and `unproven_claim` ignore a session whose linked edits are all documentation files (`.md`, `.mdx`, `.txt`, `.rst`). Docs checks such as a link checker may still record proof when they run.
@@ -503,7 +513,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Alternatives:** Treat docs like code (noisy warnings); exempt by folder such as `docs/` (misses READMEs and misfires on generated code under docs).
 - **Impact:** Small change to the gate in the [proof spec](specs/proof.md#the-gate). Revisit if docs gain executable checks (doctests, notebooks).
 
-### P2. Events take the branch at event time
+### D54. Events take the branch at event time
+
+- **Status:** accepted 2026-10-14 (was proposal P2).
 
 - **Context:** R1 ([baseline](research/baseline.md#mapping-to-an-anchor-q1-d25)) found 130 of 255 edit sessions saw more than one non-default branch. Sessions start in a worktree on one branch and create or switch to another.
 - **Decision:** Under D25 rule 2, each event is linked by the branch recorded on that event, not by the session's first branch. A session that changes branch splits into the items of each branch; rule 6 still re-anchors renames.
@@ -511,7 +523,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Alternatives:** Use the session's last branch (wrong for early events); use the first branch (wrong for most switches); ask the user (too many prompts).
 - **Impact:** The linker needs a per-event branch field (Claude Code lines carry `gitBranch`). Updates the [work item model](specs/work-item-model.md#boundary-rules). Revisit if switches turn out to be mostly renames.
 
-### P3. Thrashing counts only failures not cleared by a passing check
+### D55. Thrashing counts only failures not cleared by a passing check
+
+- **Status:** accepted 2026-10-14 (was proposal P3).
 
 - **Context:** R1 ([baseline](research/baseline.md#thrash-loops-p5)) found 0 sessions with 3+ cycles when any successful command resets the count, and 5 (2.0% of edit sessions) when only a passing qualifying check resets it.
 - **Decision:** The `thrashing` flag keeps its threshold of 3 consecutive cycles on the same file. A cycle is edits to the file, then the commands until the next edit, with at least one failing command. Only a passing qualifying check (per the proof spec) resets the count.
@@ -519,7 +533,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Alternatives:** Reset on any success (never fires); a lower threshold of 2 (would flag 33 sessions in 90 days, mostly normal fix-and-retry).
 - **Impact:** Sharpens the definition in [flags](specs/flags.md) and [behaviors and detectors](specs/behaviors-and-detectors.md). Revisit with labeled precision once hooks capture real exit codes.
 
-### P4. GitHub notifications are a wake-up signal; state comes from GraphQL
+### D56. GitHub notifications are a wake-up signal; state comes from GraphQL
+
+- **Status:** accepted 2026-10-14 (was proposal P4).
 
 - **Context:** D22 made the Notifications API the main GitHub trigger. R4 ([research](research/github.md)) found that every comment or review on the owner's PRs bumps the PR's thread (784 of 784 PRs), but the payload can't say what happened: one thread per PR, a sticky `reason` that later notifications overwrite, no review state, and no CI notifications (0 of 909 threads, despite recent Actions runs). 4 of 27 direct review requests had no thread.
 - **Decision:** Keep D22 for *waking* the adapter. For every bumped PR thread, fetch a GraphQL snapshot (reviews, review threads, commits, timeline, `statusCheckRollup`) and derive events and Reviewed sub-states by diffing it against the stored snapshot. Never read an event from `reason`. Add slow reconcile polls: `review-requested:@me` every 5–10 min, CI rollup for open PRs (on bump, then 2–5 min while pending), authored-PR catch-up on start and hourly. Treat `X-GitHub-SSO` as a health warning.
@@ -527,7 +543,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Alternatives:** Notifications only (misses CI, hides review state, drops Done threads); polling every PR on a timer (wasteful, more rate-limit risk); webhooks (public endpoint, company approval, out of scope for v1).
 - **Impact:** The GitHub adapter does a snapshot diff and stores per-PR snapshots; [ingestion](specs/ingestion.md#github-adapter-rules-from-r4), [lifecycle](specs/lifecycle.md#reviewed-sub-states) and [pings](specs/pings.md) are updated to match. Requires a classic token. Revisit if event-to-bump delay measured in Phase 1 is too long, or if a webhook relay (Q13) is approved.
 
-### P5. Vantage owns status and tree shape; the model writes text only
+### D57. Vantage owns status and tree shape; the model writes text only
+
+- **Status:** accepted 2026-10-14 (was proposal P5).
 
 - **Context:** Research R13 ran `claude -p --json-schema` 20 times on one synthetic item. The output was always schema-valid, but the model chose three different headline statuses for identical facts and built trees with 2 to 5 branches, never by A2V step. See [Explain engine research](research/explain-engine.md).
 - **Decision:** For layers 2–4, Vantage builds the status tree, the headline status and the `missing` list from evidence (layer 1) and sends them with node ids. The model returns only text keyed by those ids (headline text, SCR, node labels, follow-ups) plus the why tree, diagrams and examples. The output schema puts the input's evidence ids in an `enum`, and the flag and gate names in an `enum` for `missing`.
@@ -535,7 +553,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Alternatives:** Keep model-built trees and check MECE afterwards (unstable, needs regroup retries); free-text evidence ids filtered after the fact (works, but wastes tokens on dropped claims).
 - **Impact:** Explain spec block table and schema; the MECE regroup retry only applies to why trees and project or week groupings. Revisit if a re-test shows labels-only output loses useful narrative.
 
-### P6. Headless Explain runs as an isolated background job
+### D58. Headless Explain runs as an isolated background job
+
+- **Status:** accepted 2026-10-14 (was proposal P6).
 
 - **Context:** R13 measured a 52.5 s median and 76.2 s p95 for `claude -p` with Haiku. The CLI accepted an invalid schema silently, and `--bare` can't use a subscription login.
 - **Decision:** Layer 4 runs as a background job with a 120 s timeout. It uses `claude -p --model haiku --output-format json --json-schema`, with `--tools ""`, `--strict-mcp-config`, `--setting-sources ""`, `--no-session-persistence` and an empty working folder; never `--bare`. Vantage validates its own schema at build time and every output itself. Any nonzero exit, `is_error: true`, timeout or failed validation is a failure: retry once only on validation failure, then follow the user's agent order, then layer 1.
@@ -545,7 +565,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 
 From research [R2](research/claude-code-hooks.md), 2026-10-14.
 
-### P7. Claude Code spool hooks run async
+### D59. Claude Code spool hooks run async
+
+- **Status:** accepted 2026-10-14 (was proposal P7).
 
 - **Context:** Hooks must finish in under 100 ms (D21). On the user's Windows laptop a Node append hook takes 97 ms median and 115 ms max before any real work, and the user's existing hooks already add seconds to `SessionStart`.
 - **Decision:** Register every Vantage spool hook (`SessionStart`, `PostToolUse`, `PostToolUseFailure`, `PermissionRequest`, `Notification`, `PreCompact`, `SessionEnd`) as a command hook with `"async": true`. Only the `Stop` gate runs synchronously.
@@ -553,7 +575,9 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** A native binary hook (faster but a second build target); a persistent helper process (more moving parts); synchronous Node hooks (no headroom on Windows).
 - **Impact:** Ingestion and operations specs; the hook latency test measures the sync `Stop` hook only. Revisit if async hooks drop events or reorder them in a way the spool can't fix (Q28).
 
-### P8. Stop gate output contract
+### D60. Stop gate output contract
+
+- **Status:** accepted 2026-10-14 (was proposal P8).
 
 - **Context:** The proof gate spec said "warn adds a message" and "block returns exit 2" without saying how Claude Code reads each. R2 found exit 1 is a hook error, `additionalContext` continues the turn, and a blocking hook can loop.
 - **Decision:** Warn = exit 0 with JSON `{"systemMessage": "..."}`. Block = exit 2 with the message on stderr, only when `stop_hook_active` is false. Never exit 1.
@@ -561,10 +585,34 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** `hookSpecificOutput.additionalContext` for warn (continues the turn, so it acts like a soft block); `decision: "block"` JSON (same effect as exit 2, but exit 2 wins if both appear).
 - **Impact:** Proof spec. Needs an observed test in follow-up bean `vantage-2vdj` before Phase 1 ships the gate.
 
-### P9. Claude Code OpenTelemetry as an optional local source
+### D61. Claude Code OpenTelemetry as an optional local source
+
+- **Status:** accepted 2026-10-14 (was proposal P9).
 
 - **Context:** Operations listed Claude Code's OTel export as "to be verified". R2 confirmed OTLP/HTTP JSON reaches a receiver on `127.0.0.1:4318`, with `session.id` and `prompt.id` on every record, and identity attributes (`user.email`, account ids) too.
 - **Decision:** An opt-in local OTLP receiver adds token and cost, tool result and Claude Code hook timing data. It binds to `127.0.0.1`, drops identity attributes on ingest, and keeps Claude Code's default redaction. It is a supplement; hooks and transcripts stay the spine.
 - **Why:** It gives cost and hook latency that hooks don't carry, at no polling cost. It is off by default in Claude Code and redacts commands and paths, so it can't replace hooks.
 - **Alternatives:** Parse token usage from transcripts only (no hook timings); require OTel (extra setup for every user).
 - **Impact:** Operations spec; `vantage init` writes user settings `env`; Code tab may need managed settings (Q29).
+
+### D62. Svelte for the web UI
+
+- **Context:** Open question Q17 asked which UI framework to use; the UI must be fast, keyboard-first and built on theme tokens.
+- **Decision:** Svelte (with Vite) for the local web UI.
+- **Why:** Small bundles and fast updates suit a calm, always-open local page; components map cleanly to the dot alphabet and theme tokens.
+- **Alternatives:** React (larger ecosystem, heavier); Solid (fast, smaller community); plain web components (more hand-written plumbing).
+- **Impact:** Phase 1 scaffolds a Svelte app served by the daemon. Revisit if a needed component library exists only for React.
+
+### D63. npm package for install
+
+- **Context:** Open question Q18 asked whether to ship an npm package or a single binary.
+- **Decision:** Ship Vantage as an npm package, run with `npx vantage add` and installed globally on request.
+- **Why:** Simplest for a personal tool on Node, matches the install-by-prompt flow (D52) and needs no build pipeline per OS.
+- **Alternatives:** A single binary (no Node needed, but per-OS builds and signing).
+- **Impact:** Requires Node 20+; release CI publishes to npm later. Revisit a binary if Vantage becomes a product (D18).
+
+---
+
+## Proposed (pending confirmation)
+
+None right now.

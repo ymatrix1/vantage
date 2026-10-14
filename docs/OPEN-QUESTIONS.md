@@ -2,7 +2,7 @@
 
 | # | Question | Notes |
 |---|---|---|
-| Q1 | **Work item boundaries.** When does one session's work become two items, or two sessions' work become one? | Rules accepted (D25) in [work item model](specs/work-item-model.md#boundary-rules). R1: over 96% of edit sessions have a key, branch or worktree; half change branch mid-session, so see proposal P2 ([baseline](research/baseline.md#mapping-to-an-anchor-q1-d25)). |
+| Q1 | **Work item boundaries.** When does one session's work become two items, or two sessions' work become one? | Rules accepted (D25) in [work item model](specs/work-item-model.md#boundary-rules). R1: over 96% of edit sessions have a key, branch or worktree; half change branch mid-session, so see D54 ([baseline](research/baseline.md#mapping-to-an-anchor-q1-d25)). |
 | Q2 | **Ghost detection quality.** How to propose ghosts from chat without flooding the board? | Probably an LLM proposal with user confirmation, capped per day. R1: about 18% of prompted sessions are strict candidates, roughly 0.9 a day ([baseline](research/baseline.md#ghost-candidates-p3-q2)); precision still unlabeled. |
 | Q3 | **Proof strength.** Is L1 (a qualifying check passed after the last edit) enough for Proven, or should the default be L2 (the check touches the changed code)? | Levels defined in the [proof spec](specs/proof.md#strength-levels). Start at L1. R1: 43.5% of edit sessions end with no L1; among L1 sessions a file-name proxy suggests 85% could reach L2 ([baseline](research/baseline.md#unproven-edits-p2-q3)). Re-measure with hook data. |
 | Q4 | **Judgment model.** Jev, a small LLM, or rules only? | Compare on ~100 labeled examples. Check company data policy first. |
@@ -12,14 +12,12 @@
 | Q8 | **UI host.** Localhost page, VS Code panel, or desktop app mod? | Start with localhost; revisit after Phase 2. |
 | Q9 | **Codex live events.** Is tailing session files enough? | Yes for v1 (see [ingestion](specs/ingestion.md)). Revisit if Codex adds hooks. |
 | Q10 | **Slack, Jira and Linear access.** API tokens vs. MCP connectors; rate limits; company approval. | Needed before Phase 6. |
-| Q11 | **Stop hook strictness.** When, if ever, should the gate block (exit 2) instead of warn? | Warn only until false positive rate is known. Warn and block mechanics are settled by research [R2](research/claude-code-hooks.md#3-stop-hook-warn-vs-block) (P8); the policy question stays. |
+| Q11 | **Stop hook strictness.** When, if ever, should the gate block (exit 2) instead of warn? | Warn only until false positive rate is known. Warn and block mechanics are settled by research [R2](research/claude-code-hooks.md#3-stop-hook-warn-vs-block) (D60); the policy question stays. |
 | Q12 | **Slack app approval.** Will the workspace admin allow a custom Slack app (Socket Mode, user-scoped events)? | If not, fall back to search polling with a user token, or the Slack connector through a scheduled agent. |
 | Q13 | **Webhook relay.** Is a hosted relay for GitHub, Jira, Linear and monitoring webhooks acceptable under company policy? | Off by default; polling alone works. |
 | Q14 | **Reviewing others' PRs.** Should `review_request` items appear on the main board or only in Focus and the digest? | Proposal: Focus and digest only, to keep the board about own work. |
 | Q15 | **Multiple machines.** Is one laptop enough, or is sync needed later? | Out of scope for now. |
 | Q16 | **Context inference.** How to assign repos to Work or Personal automatically (path, GitHub org, git email)? | Proposal: GitHub org first, then path; user can override. |
-| Q17 | **UI framework.** React, Svelte, Solid, or plain web components? | Needs: fast, keyboard-first, theme tokens. Decide at Phase 1 start. |
-| Q18 | **Install method.** npm global package or a single binary? | npm is simplest for a personal tool; a binary helps if it becomes a product. |
 | Q19 | **Behavior extraction.** Should agents propose behaviors from prompts automatically, or only from tickets and the user? | See [behaviors spec](specs/behaviors-and-detectors.md). |
 | Q21 | **Why tree without a ticket.** How to draft "why we built it" from chat without inventing reasons? | Only from the user's own words and decisions, each node citing them; the user confirms before it's frozen. |
 | Q22 | **Companion character.** Still needed now that every item is a character? | Keep optional; decide after testing the landscape. |

@@ -108,8 +108,8 @@ A localhost page can be reached by other local programs and, through the browser
 
 - **Process model:** one daemon (ingest, link, score, serve) plus a browser UI. The status line is a tiny command that reads a small summary file the daemon writes, so it never waits on the daemon.
 - **UI to daemon:** HTTP for queries and actions; one WebSocket for live updates.
-- **UI framework:** to decide (open question Q17). Must be fast, keyboard-friendly and theme-token based.
-- **Install:** to decide (Q18): an npm global package or a single binary. `vantage init` installs hooks; `vantage uninstall` removes them.
+- **UI framework:** Svelte with Vite (D62).
+- **Install:** an npm package, `npx vantage add` (D63). `vantage init` installs hooks; `vantage uninstall` removes them.
 
 ## Packaging and integration
 
