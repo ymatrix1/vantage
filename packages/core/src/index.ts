@@ -8,3 +8,4 @@ export * from "./stage.ts";
 export * from "./status-line.ts";
 export * from "./track.ts";
 export * from "./test-summary.ts";
+export * from "./lineage.ts";

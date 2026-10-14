@@ -1060,4 +1060,20 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 
 ## Proposed (pending confirmation)
 
-None right now.
+### D86. Derived sessions join their parent's item, from explicit signals only
+
+- **Status:** proposed
+- **Context:** On the first real run the Track page listed hundreds of untitled `Session <id>` rows, because D25 rule 4 makes one provisional item per session with edits. Measured over 14 days ([session lineage](research/session-lineage.md)): 79 of 519 sessions (15%) copy their parent's history into a new session file, and sub-agent runs carry the parent's session id. No hook payload or transcript field names a parent directly.
+- **Decision:** The transcript backfill emits a `session.derived` event (`parentSessionId`, `lineage`) when a session file starts with another session's lines. The linker keeps anchors first (D25, D54). An event with no anchor of its own joins the anchored item its family (the root session and everything derived from it) mostly landed on, else `session:<root>`. Sub-agent runs stay inside the parent's session; `agentId` is kept on events. Compaction is not a lineage (the session id never changed in 129 of 129 boundaries). The kind is `resume` or `fork` when `SessionStart` says so, else `continuation`. Per-item `session_count`, `derived_count` and `subagent_count` come from the `item_sessions` view (migration 4).
+- **Why:** The only signals used are ones the data carries, so a card still moves on evidence and not on a guess. Each link stays on its event, so the existing undo works unchanged.
+- **Alternatives:** One item per session (status quo; it fragments work, and D25 lists it as a loser). Grouping by cwd and branch within a gap (D87). Reading the parent from a hook (no hook carries one).
+- **Impact:** New event kind `session.derived` (catalog 38 to 39), linker rule `derived-session`, migration 4, specs [work item model](specs/work-item-model.md) and [ingestion](specs/ingestion.md). Revisit when a hook or transcript field names the parent, or when a labelled set shows the copied-history signal groups unrelated sessions.
+
+### D87. Heuristic grouping by cwd, branch and time gap is not a rule
+
+- **Status:** proposed
+- **Context:** After the explicit signals (D86), some sessions may still be one piece of work: same cwd and branch, starting soon after another ended.
+- **Decision:** Do not build it yet. Measured over 14 days: of 519 sessions, 87 (16.8%) start within 5 or 30 minutes of the previous session on the same cwd and branch (89 at 120 minutes). 68 of them are already derived by a signal; 19 (3.7%) would be grouped by the heuristic alone, and 80 of the 87 sit on non-default branches where the branch anchor already groups them. Revisit if the user confirms a labelled sample of the 19.
+- **Why:** The gain is small (3.7% of sessions) and its precision is unmeasured, while a wrong merge hides work. D25 makes merging a user action when no anchor agrees.
+- **Alternatives:** Build it as an inferred link shown as "suggested" (the inferred-link path is in the spec but not built, Q25); build it as a deterministic rule (rejected: it is not one).
+- **Impact:** None until accepted. If accepted: an `inferred` link method with a visible suggestion, and a labelled set to track its precision.

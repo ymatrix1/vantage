@@ -3,6 +3,7 @@
 export const EVENT_KINDS = {
   agent: [
     "session.started",
+    "session.derived",
     "prompt.submitted",
     "file.edited",
     "command.ran",
