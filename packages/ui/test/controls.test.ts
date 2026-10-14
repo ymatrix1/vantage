@@ -325,32 +325,48 @@ describe("empty results", () => {
 
 describe("groups", () => {
   const flag = { kind: "thrashing", severity: "amber", reason: "Edited 9 times, no progress" };
+  const long = new Date(Date.now() - 20 * 86_400_000).toISOString();
+  // The daemon groups by attention and marks hasEdits; the page folds the quiet rows itself.
   const groups = [
     group("needs_you", "Needs you", [item({ id: "n1", title: "Needs one", flags: [flag] })], 12),
     group(
-      "no_edits",
-      "Conversations without code",
-      [item({ id: "c1", title: "Chat only", hasEdits: false })],
-      30,
+      "in_progress",
+      "In progress",
+      [
+        item({ id: "c1", title: "Chat only", hasEdits: false }),
+        item({ id: "o1", title: "Old work", lastActivity: long }),
+        item({ id: "r1", title: "Regular work" }),
+      ],
+      20,
     ),
-    group("older", "Older", [item({ id: "o1", title: "Old work" })], 5),
   ];
+  const facets = { ...FACETS, hasEdits: { true: 8, false: 30 } };
+  const opts = { groups, facets };
 
-  it("headers are headings with totals; without-code and Older start collapsed", async () => {
-    const { root } = await ready({ groups });
+  it("headers are headings with totals; without-code and Older are built by the page and start collapsed", async () => {
+    const { root } = await ready(opts, "?since=all");
     const heads = [...root.querySelectorAll("h2")].map((h) => h.textContent?.replace(/\s+/g, " ").trim());
     expect(heads).toEqual([
       "Needs you · 12 (1 on this page)",
+      "In progress · 20 (1 on this page)",
       "Conversations without code · 30 (1 on this page)",
-      "Older · 5 (1 on this page)",
+      "Older · 1",
     ]);
-    expect(rows(root)).toHaveLength(1);
+    expect(rows(root).map((r) => r.textContent)).toHaveLength(2);
     expect(root.textContent).not.toContain("Chat only");
-    expect(root.querySelector("h2 button[aria-expanded='false']")).not.toBeNull();
+    expect(root.textContent).not.toContain("Old work");
+    expect(root.querySelectorAll("h2 button[aria-expanded='false']")).toHaveLength(2);
+  });
+
+  it("Older stays out of the 7-day view", async () => {
+    const { root } = await ready(opts);
+    const heads = [...root.querySelectorAll("h2")].map((h) => h.textContent ?? "");
+    expect(heads.some((h) => h.includes("Older"))).toBe(false);
+    expect(root.textContent).toContain("Old work");
   });
 
   it("a header opens and closes its group", async () => {
-    const { root } = await ready({ groups });
+    const { root } = await ready(opts, "?since=all");
     click(buttonText(root, "Conversations without code"));
     expect(root.textContent).toContain("Chat only");
     click(buttonText(root, "Conversations without code"));
@@ -360,16 +376,33 @@ describe("groups", () => {
   });
 
   it("each flag shows its reason text", async () => {
-    const { root } = await ready({ groups });
+    const { root } = await ready(opts);
     expect(root.textContent).toContain("Edited 9 times, no progress");
   });
 
   it("j skips rows of collapsed groups", async () => {
-    const { root } = await ready({ groups });
-    click(buttonText(root, "Older"));
+    const { root } = await ready(opts, "?since=all");
     press("j");
     press("j");
-    expect(root.querySelector("li[aria-current='true']")?.textContent).toContain("Old work");
+    expect(root.querySelector("li[aria-current='true']")?.textContent).toContain("Regular work");
+    press("j");
+    expect(root.querySelector("li[aria-current='true']")?.textContent).toContain("Regular work");
+  });
+
+  it("shows N sessions on a row only when the daemon sends more than one", async () => {
+    const { root } = await ready({
+      groups: [
+        group("in_progress", "In progress", [
+          item({ id: "s1", title: "Many", sessionCount: 3 }),
+          item({ id: "s2", title: "One", sessionCount: 1 }),
+          item({ id: "s3", title: "None" }),
+        ]),
+      ],
+    });
+    const text = rows(root).map((r) => r.textContent ?? "");
+    expect(text[0]).toContain("3 sessions");
+    expect(text[1]).not.toContain("session");
+    expect(text[2]).not.toContain("session");
   });
 
   it("no heading is shown when grouping is off", async () => {

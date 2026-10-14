@@ -4,6 +4,7 @@
   import { describeError, fetchTrace, fetchTrack } from "$lib/api";
   import { COLLAPSED_BY_DEFAULT, GROUP_VALUES, type GroupBy, type TrackRow, type TrackView } from "$lib/contract";
   import Dots from "$lib/Dots.svelte";
+  import { foldGroups } from "$lib/fold";
   import Legend from "$lib/Legend.svelte";
   import { stageLabel } from "$lib/stage-label";
   import { applyPush, mergeCounts, startLive } from "$lib/live";
@@ -75,7 +76,7 @@
   let facetTimer: ReturnType<typeof setTimeout> | null = null;
 
   const isCollapsed = (id: string): boolean => collapsedBy[id] ?? COLLAPSED_BY_DEFAULT.includes(id);
-  const groups = $derived(data ? data.groups.filter((g) => g.total > 0 || g.items.length > 0) : []);
+  const groups = $derived(data ? foldGroups(view, data, now) : []);
   const flat = $derived<TrackRow[]>(groups.filter((g) => !isCollapsed(g.id)).flatMap((g) => g.items));
   const unconfigured = $derived(data ? data.sources.filter((s) => s.state === "unconfigured") : []);
   const filters = $derived(activeFilters(view));
@@ -354,7 +355,7 @@
                     >
                       <span class="min-w-0 flex-1">
                         <span class="block truncate font-medium">{item.title}</span>
-                        <span class="block truncate text-xs text-muted-foreground">{item.repo ?? item.id}<span class="md:hidden"> · {stageLabel(item)}</span></span>
+                        <span class="block truncate text-xs text-muted-foreground">{item.repo ?? item.id}{#if (item.sessionCount ?? 0) > 1}<span> · {item.sessionCount} sessions</span>{/if}<span class="md:hidden"> · {stageLabel(item)}</span></span>
                       </span>
                       <Dots {item} />
                       <span class="hidden w-44 shrink-0 text-xs md:block">{stageLabel(item)}</span>

@@ -49,7 +49,7 @@ Built in `packages/ui` (`vantage-4ty4`, proposed D85). The request mirrors the `
 | Search | Title, repo and branch, at most 80 characters, sent after a 250 ms pause or on `Enter`; typing replaces the history entry instead of adding one |
 | Filters | Chips with live counts from `facets`: since (24 h, 7 d, 30 d, all), has code edits, repo, branch, stage, proof, flag. Each count is computed without its own filter, so a chip shows what choosing it would give. Active filters show as removable chips; "Clear all filters" keeps sort, group and page size |
 | Sort and group | Sort by activity, stage, title, repo or flags, with direction (title and repo start A to Z, the rest newest or highest first). Group by attention, repo, stage or none |
-| Groups | Real headings with the group total; "(N on this page)" when paging splits a group. Each collapses; "Conversations without code" (`no_edits`) and "Older" (`older`) start collapsed |
+| Groups | Real headings with the group total; "(N on this page)" when paging splits a group. Each collapses. Grouped by attention, the page folds rows without code edits into "Conversations without code" and, for 30 days or all time, rows older than 7 days into "Older" (both collapsed by default). A row shows "N sessions" when the daemon sends a `sessionCount` above 1 |
 | Pagination | First, previous, next, last, "26 to 50 of 312", and 25, 50 or 100 per page. Any filter, sort or group change returns to page 1; a page past the end lands on the last page |
 | Flags | Each flag shows its `reason` text on the row |
 
