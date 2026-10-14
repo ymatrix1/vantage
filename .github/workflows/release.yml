@@ -146,7 +146,8 @@ jobs:
           (cd assets && sha256sum -- * > ../SHA256SUMS && mv ../SHA256SUMS SHA256SUMS && cat SHA256SUMS)
       - name: Publish dry run for every tarball (always; no auth, nothing leaves the runner)
         run: |
-          for t in assets/*.tgz; do
+          # ./ matters: npm reads "assets/x.tgz" as a GitHub user/repo shorthand.
+          for t in ./assets/*.tgz; do
             npm publish "$t" --dry-run --access public
           done
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -221,14 +222,14 @@ jobs:
           test -n "$NODE_AUTH_TOKEN" || { echo "::error::NPM_TOKEN is not set in the npm-publish environment. Nothing was published (RELEASING.md)."; exit 1; }
       - name: Dry run first
         run: |
-          for t in assets/vantage-hook-*.tgz assets/vantage-a2v-*.tgz; do
+          for t in ./assets/vantage-hook-*.tgz ./assets/vantage-a2v-*.tgz; do
             npm publish "$t" --dry-run --access public
           done
       - name: Publish native packages first, then the main package
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          for t in assets/vantage-hook-*.tgz assets/vantage-a2v-*.tgz; do
+          for t in ./assets/vantage-hook-*.tgz ./assets/vantage-a2v-*.tgz; do
             spec=$(tar -xOzf "$t" package/package.json | node -e 'const p=JSON.parse(require("fs").readFileSync(0,"utf8"));console.log(p.name+"@"+p.version)')
             # A re-run after a partial publish must not fail on what is already out.
             if npm view "$spec" version > /dev/null 2>&1; then
