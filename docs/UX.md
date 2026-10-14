@@ -2,44 +2,102 @@
 
 ## Principles
 
-1. **One question per screen.** Focus: "what needs me?". Board: "where is everything?". Item: "is this right?".
+1. **One question per page.** Each page answers exactly one question (see [pages](#pages)).
 2. **Status comes only from evidence.** Never from what an agent says.
-3. **One line per row, one action per alert.** No paragraphs. Card text stays under about 140 characters. Transcripts are one click away, never shown by default.
+3. **One line per row, one action per alert.** No paragraphs. Card and row text stays under about 140 characters. Transcripts are one click away, never shown by default.
 4. **Fixed color meaning everywhere:** gray = not started, blue = in progress, amber = unproven or at risk, red = needs you, green = done.
 5. **Calm by default.** Top 3, not top 30. Interrupt only for red. Batch the rest. Say "safe to ignore" out loud.
 6. **Honest dots.** A skipped or unconfigured stage is hollow, never green.
+7. **Attention first, project second.** Default grouping is by what needs you, across all projects. Grouping by project is one click away.
 
-## Surfaces
+## Organization: context, project, work item
 
-### Focus (default screen)
+| Level | What it is | Default |
+|---|---|---|
+| **Context** | A top-level switch such as *Work* and *Personal* | Inferred from repo location or org; user can edit |
+| **Project** | A Jira epic, a Linear project, or a group of repos the user defines | One project per repo |
+| **Work item** | One card (see [work item model](specs/work-item-model.md)) | |
+
+- A context switch (Work, Personal, All) hides everything outside the selected context, for example personal projects during work hours.
+- A project can span several repos; a repo can belong to several projects only through explicit user choice.
+
+## Pages
+
+| Page | Question | Layout |
+|---|---|---|
+| **Focus** (home) | What matters today? | Top 3 cards plus a batched digest |
+| **Track** | Where is all my work? | One row per item with an inline six-dot stage track |
+| **Item** | Is this right? | Stage track, behaviors with proof, review, after-ship, history, small relationship graph |
+| **Journal** | What happened? | Timeline by day; "since yesterday" by default (the morning standup) |
+| **Inbox** | What do people need from me? | Mentions, review requests and commitments, grouped by person |
+| **Sources** | Can I trust this data? | Per-source last sync, errors, rate limits; settings |
+
+Ambient surfaces (status line, toasts, badge) are always present.
+
+### Focus (home)
 
 - Header: "Today, 3 things matter" and "N other changes batched for HH:MM".
-- Three focus cards. Each shows title, one-line context, priority chip with reason ("P1 · blocks Ana"), difficulty (S/M/L), and the spread bar.
-- A batched groups panel: Reviews, Mentions you haven't seen, Going stale, Shipped but unverified, and "Safe to ignore today · N items".
+- Three focus cards, from any project. Each shows title, project tag, one-line context, priority chip with reason ("P1 · blocks Ana"), difficulty (S/M/L) and the spread bar.
+- A batched digest panel: Reviews, Mentions you haven't seen, Going stale, Shipped but unverified, and "Safe to ignore today · N items".
 
-### Board
+### Track
 
-- Six columns, one per stage: Asked, Built, Proven, Reviewed, Shipped, Verified.
-- Cards: title, repo, one-line evidence ("3 files dirty", "12 tests pass"), flag chips.
-- Ghosts are dashed cards in Asked.
-- "Moved since yesterday" marker on cards that changed stage. The morning standup is this board with the "since yesterday" filter on.
-- Filters: repo, flag, agent.
+The main "all work" view. A table, not a board, because it stays readable with many items and keeps priority visible.
 
-### Item detail
+- **Row:** priority chip, title, project or repo with one line of evidence, six-dot track (Asked, Built, Proven, Reviewed, Shipped, Verified), main flag, last activity.
+- **Dot states:** filled green = done, blue ring = current, amber = at risk (for example unproven), red = needs you, dashed = skipped or not configured.
+- **Short tracks:** `review_request` and `commitment` items show only their relevant dots.
+- **Group by** toggle:
+  - **Attention** (default): Needs you, In progress, Waiting on others, Done this week (collapsed).
+  - **Project:** one collapsible header per project with a stage health bar (share of items per stage) and a one-word summary ("2 need you", "1 at risk", "calm").
+  - **Stage:** rows grouped by current stage.
+- **Filters:** context, project, flag, agent, item kind.
+- **"Moved since yesterday"** marker on rows whose stage changed.
+- **Board toggle:** an optional kanban rendering (six columns) of the same data, for people who prefer it. Not the default.
 
-- Title, repo, ticket and PR links, the six-dot stage track.
-- **Behaviors:** one row each with a proof badge (proven, no proof, failed). AI-decided behaviors are marked and have Approve or Change.
+### Item
+
+- Title, project, ticket and PR links, the stage track.
+- **Behaviors:** one row each with a proof badge (proven, no proof, failed). AI-decided behaviors are marked with Approve or Change.
 - **Review:** threads with status, including `claimed_fixed`.
-- **After ship:** deploy, post-deploy checks, monitoring window, any regression and its follow-up card.
+- **After ship:** deploy, post-deploy checks, monitoring window, any regression and its follow-up item.
 - **History:** a horizontal strip of events by day, agent and session ("Mon · Claude · discussed → Tue · Codex · built 3 files → Wed · Claude · 1 of 3 proven").
-- **Actions:** Resume with context, Ask for proof, Park, Unlink.
+- **Links:** a small relationship graph (item ↔ sessions ↔ PRs ↔ tickets ↔ Slack threads ↔ follow-ups). This is the only place a graph is used; graphs are hard to scan as a main view.
+- **Actions:** Resume with context, Ask for proof, Park, Split, Merge, Unlink.
+
+### Journal
+
+- Vertical timeline grouped by day, then by project.
+- Default range: since the user was last active (usually "since yesterday").
+- Each entry is one line: stage changes, merges, deploys, regressions, new mentions. No raw event feed.
+- Filters: project chips, context.
+
+### Inbox
+
+- Grouped by person, then by item.
+- Mentions, review requests and commitments, with "seen" state as defined in [operations](specs/operations.md#seen-state).
+- One action per row: Open, Reply (opens the source), Mark done.
+
+### Sources
+
+- Per source: last successful sync, last error, rate-limit headroom, enabled or disabled.
+- Settings: contexts and projects, digest times, quiet hours, thresholds, proof gate mode.
 
 ### Ambient
 
 - **Status line** in every Claude Code session, for example `vantage · flipto-dbt · 3 edits, 0 proof · 2 waiting on you`.
-- **Toasts** only for red items.
+- **Toasts** only for red items, respecting quiet hours.
 - **Badge count** of red items.
+
+## View choices considered
+
+| Option | Verdict |
+|---|---|
+| Kanban board (Trello-like) | Optional toggle on Track. Gets noisy past about 15 items; priority hard to see. |
+| Graph view | Only inside Item. Hard to scan, unstable layout. |
+| Rows with stage track | **Default for Track.** Scans like a table, scales, keeps priority visible. |
+| Timeline | Journal and Item history. Good for "what happened", not for current state. |
 
 ## Mockups
 
-Early mockups were made in the planning conversation (lifecycle track, main board, item detail, Focus screen). Recreate them as static HTML in `docs/mockups/` when the UI phase starts.
+Mockups were made in the planning conversation: lifecycle track, board, item detail, Focus, Track (attention grouping), Track (project grouping). Recreate them as static HTML in `docs/mockups/` when the UI phase starts.

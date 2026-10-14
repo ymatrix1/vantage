@@ -31,7 +31,20 @@ Remote sources are polled at modest intervals. Nothing is pushed to them without
 - Append-only table of normalized events, with source, kind, timestamp, payload and session id.
 - Ingestion is idempotent (dedupe by source id) so backfill and live hooks can overlap.
 - Unknown fields are kept in the payload so log format changes don't break ingestion.
-- Storage: SQLite in `~/.vantage/` (*tentative*).
+- Storage: **SQLite** in `~/.vantage/`, in write-ahead-log (WAL) mode so the UI can read while the daemon writes.
+
+### Why SQLite, and where DuckDB fits
+
+| | SQLite | DuckDB |
+|---|---|---|
+| Built for | Many small reads and writes (transactional) | Large scans and aggregates (analytical) |
+| Vantage live workload | Small inserts, item updates, key lookups: a good fit | Slower for frequent single-row writes and updates |
+| Concurrency | WAL: one writer, many readers across processes | One process holds the write lock |
+| Expected size | Thousands to hundreds of thousands of events: sub-millisecond with indexes | Advantage appears at much larger scale |
+
+- **SQLite** is the live store for events, links and work items.
+- **DuckDB** is used for analysis: Phase 0 transcript mining (it queries `.jsonl` files directly), metrics and ad-hoc reports. It can read Vantage's SQLite file through its SQLite extension, so no export step is needed.
+- Hooks never write to the database; they append to a spool file (see [operations](specs/operations.md#hooks-performance-budget)).
 
 ## Linker
 
@@ -52,7 +65,7 @@ See [lifecycle](specs/lifecycle.md) and [scoring](specs/scoring.md).
 
 ## Surfaces
 
-- Local web UI served by the daemon (*tentative*: localhost page, can be pinned in a browser or side pane).
+- Local web UI served by the daemon (*tentative*: localhost page, can be pinned in a browser or side pane). Pages: Focus, Track, Item, Journal, Inbox, Sources (see [UX](UX.md#pages)).
 - Claude Code status line command reading from the daemon.
 - OS toasts for red items.
 - Later options: a VS Code panel or a desktop app mod.
@@ -77,5 +90,6 @@ Candidates: a fast decision model (for example Jev from TypeSafe AI) or a small 
 ## Tech stack (tentative)
 
 - TypeScript on Node for daemon, hooks and UI, to share types end to end.
-- SQLite for storage.
+- SQLite for the live store (`better-sqlite3`, or Node's built-in `node:sqlite` if stable enough by then).
+- DuckDB for analysis and Phase 0 measurement.
 - Vitest for tests, with recorded `.jsonl` fixtures.

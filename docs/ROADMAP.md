@@ -4,7 +4,7 @@ Built in layers. Local sources first, then GitHub, then CI/CD and monitoring, th
 
 ## Phase 0: measure (1–2 days)
 
-- Mine existing Claude Code and Codex transcripts plus `gh` data to get baselines: share of sessions ending with unproven edits, thrash loops, abandoned dirty work, review rounds per PR, time to first review.
+- Use DuckDB to mine existing Claude Code and Codex transcripts (queried directly as `.jsonl`) plus `gh` data to get baselines: share of sessions ending with unproven edits, thrash loops, abandoned dirty work, review rounds per PR, time to first review.
 - **Exit:** a short baseline report in `docs/research/baseline.md` that ranks the pains by real numbers.
 
 ## Phase 1: event spine and proof gate
@@ -18,14 +18,15 @@ Built in layers. Local sources first, then GitHub, then CI/CD and monitoring, th
 
 - Linker with deterministic anchors (branch or worktree, issue key in branch, todos).
 - Stage machine for Asked, Built and Proven.
-- Local web UI: Board and Item detail; "since yesterday" filter.
+- Local web UI: Track (attention and project grouping), Item and Journal; "since yesterday" filter.
 - Ghost proposals from sessions with no edits.
 - **Exit:** the morning catch-up uses the board instead of terminals.
 
 ## Phase 3: Focus, calm and alerts
 
 - Priority, difficulty, spread, staleness.
-- Focus screen, digest batching, "safe to ignore".
+- Focus page, Inbox page, digest batching, "safe to ignore".
+- Contexts (Work, Personal) and project settings on the Sources page.
 - Toasts for red items; `waiting_on_you` and `forgotten` flags.
 
 ## Phase 4: reviews

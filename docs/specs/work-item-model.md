@@ -28,7 +28,9 @@ Where one work item ends and another begins:
 
 | Entity | Meaning | Key fields |
 |---|---|---|
-| `work_item` | One goal the user cares about. One card. | id, title (≤ 6 words), repo, stage, sub_state, flags, priority, difficulty_estimate, parked, parent_id (for follow-ups), created_at |
+| `context` | Top-level switch such as Work or Personal | id, name, rules (repo paths, GitHub orgs) |
+| `project` | Jira epic, Linear project, or a user-defined group of repos | id, context_id, name, source (`jira_epic`, `linear_project`, `repo_group`), repos |
+| `work_item` | One goal the user cares about. One card. | id, title (≤ 6 words), project_id, repo, stage, sub_state, flags, priority, difficulty_estimate, parked, parent_id (for follow-ups), created_at |
 | `anchor` | A deterministic identifier that ties evidence to an item | kind (`branch`, `worktree`, `issue_key`, `pr`, `slack_thread`, `todo`, `file_set`), value |
 | `event` | An immutable fact from a source | source, kind, timestamp, payload, session_id? |
 | `link` | Attaches an event or anchor to a work item | work_item_id, target, method (`anchor`, `inferred`, `user`), confidence, confirmed |
@@ -52,6 +54,14 @@ Where one work item ends and another begins:
 - **Every link is visible and undoable** from the item view.
 - **A session can feed several items** (one chat touching two tickets). Events are linked individually, not whole sessions.
 - **Ghosts:** a session with user requests, no edits and no anchor yields a *proposed* Asked item that the user confirms or dismisses.
+
+## Project assignment
+
+1. The item's Jira epic or Linear project, if its issue has one.
+2. Otherwise the user-defined repo group that contains its repo.
+3. Otherwise the default project for its repo.
+
+The user can move an item to another project; that choice wins.
 
 ## Follow-ups
 

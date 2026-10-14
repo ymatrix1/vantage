@@ -10,6 +10,7 @@
 | Q6 | **Deploy signal.** Do the main repos use GitHub deployments, Actions environments, or something else? | Needed for Shipped. |
 | Q7 | **Monitoring window length.** Default 2 days; per repo? | Data pipelines may need a longer window. |
 | Q8 | **UI host.** Localhost page, VS Code panel, or desktop app mod? | Start with localhost; revisit after Phase 2. |
+| Q16 | **Context inference.** How to assign repos to Work or Personal automatically (path, GitHub org, git email)? | Proposal: GitHub org first, then path; user can override. |
 | Q9 | **Codex live events.** Is tailing session files enough? | Yes for v1 (see [ingestion](specs/ingestion.md)). Revisit if Codex adds hooks. |
 | Q10 | **Slack, Jira and Linear access.** API tokens vs. MCP connectors; rate limits; company approval. | Needed before Phase 6. |
 | Q11 | **Stop hook strictness.** When, if ever, should the gate block (exit 2) instead of warn? | Warn only until false positive rate is known. |

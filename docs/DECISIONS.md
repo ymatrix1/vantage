@@ -15,6 +15,10 @@
 | D11 | 2026-10-13 | **Local-first**; remote sources read-only unless the user acts. | Company data and trust. |
 | D12 | 2026-10-13 | Build order: local sources → GitHub → CI/CD and monitoring → issue tracker (Jira or Linear) and Slack. | Each layer is useful alone; most reliable data first. |
 | D13 | 2026-10-13 | Issue tracker is pluggable: **Jira or Linear** behind one adapter interface. | Different teams and projects use different trackers; nothing else in the model should depend on which. |
+| D14 | 2026-10-14 | Pages: **Focus, Track, Item, Journal, Inbox, Sources**, plus ambient status line and toasts. | One question per page. |
+| D15 | 2026-10-14 | **Track is a table of rows with an inline stage track**, not a kanban board. Board is an optional toggle; graph only inside Item. | Scales past 15 items, keeps priority visible, easy to scan. |
+| D16 | 2026-10-14 | **Group by attention by default**; group by project or stage is a toggle. Projects are Jira epics, Linear projects or repo groups; contexts (Work, Personal) sit above. | Stress comes from cross-project attention; projects still matter for overview. |
+| D17 | 2026-10-14 | **SQLite (WAL) for the live store; DuckDB for analysis.** | The live workload is small transactional writes; DuckDB shines at scans and can read SQLite and `.jsonl` directly. |
 
 ## Proposed (pending confirmation)
 
