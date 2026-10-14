@@ -69,6 +69,20 @@ Or hand the whole thing to an agent. Paste this into Claude Code in your repo:
 Install Vantage in this repo. Follow https://github.com/ymatrix1/vantage/blob/main/docs/install-for-agents.md exactly: show me the dry run first, wait for my OK, then install, verify with vantage doctor, and tell me what changed.
 ```
 
+### Slash commands in Claude Code
+
+Optional. Install the plugin (`claude plugin install vantage@vantage`, then a new session) to run the CLI from the chat:
+
+| Command | Does |
+|---|---|
+| `/vantage:open` | opens the Track page |
+| `/vantage:start` | starts the daemon in the background |
+| `/vantage:doctor` | PASS, WARN and FAIL with fixes |
+| `/vantage:status` | this repo's current item |
+| `/vantage:add` | dry run, your yes, then install |
+
+Claude Code names plugin commands `/<plugin>:<command>`, so there is no plain `/vantage open`. Details in [plugin/vantage](plugin/vantage/README.md).
+
 ### What the installer changes
 
 | Where | What | Undo |

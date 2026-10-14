@@ -25,7 +25,7 @@ One command from inside any repo, existing work included:
 npx vantage add
 ```
 
-Or from inside Claude Code: `/plugin install vantage`, then `/vantage add`.
+Or from inside Claude Code: `claude plugin install vantage@vantage` (the marketplace is also named `vantage`), then `/vantage:add`. Claude Code namespaces plugin commands as `/<plugin>:<command>`, so there is no plain `/vantage add` ([D83](../DECISIONS.md), proposed). `/vantage:add` runs the dry run, shows the plan, waits for an explicit yes in chat, and only then runs `vantage add --yes`. Siblings: `/vantage:open`, `:start`, `:doctor`, `:status`; see [plugin/vantage](../../plugin/vantage/README.md).
 
 What it does, in under a minute:
 

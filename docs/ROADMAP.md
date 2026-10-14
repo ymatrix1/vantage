@@ -45,6 +45,7 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 - [x] The installer registers the native hook and `vantage doctor` reports it (`vantage-ijmb`, D80 proposed): package, then local build, then Node; dry run says which; doctor warns when Node is registered while native is available. Tested with fake binaries in temp directories; never run against a real machine.
 - [ ] Install with a prompt: `docs/install-for-agents.md` works end to end in Claude Code and Codex on a fresh machine. The guide is updated for Claude Code; the fresh-machine run, the Codex steps and the `npx vantage` entry are not done (`vantage-o06l`).
 - [x] Daemon runtime: `vantage start` runs ingest, git loop, stage loop with the status file and the secured server in one process with a single-instance lock; `vantage open` opens the Track page (`vantage-6bni`, `vantage-v3sw`, D78 proposed). The token stays in a file (D75); keychain storage is `vantage-5fek`.
+- [x] `vantage` Claude Code plugin (`vantage-u902`, D83 proposed): `/vantage:open`, `:start`, `:doctor`, `:status`, `:add`, each wrapping one CLI call with restricted `allowed-tools`; a CI check validates the command files. Remaining: a live run of each command in a real Claude Code session (touches the user's real config).
 - [ ] **Exit:** used every day for a week, and the morning catch-up happens on the Track page instead of in terminals.
 
 ## Phase 2: work items and board
