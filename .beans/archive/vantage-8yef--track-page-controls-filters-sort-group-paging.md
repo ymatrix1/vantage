@@ -1,10 +1,11 @@
 ---
 # vantage-8yef
 title: 'Track page controls: filters, sort, group, paging'
-status: todo
+status: scrapped
 type: task
+priority: normal
 created_at: 2026-10-14T23:08:56Z
-updated_at: 2026-10-14T23:08:56Z
+updated_at: 2026-10-14T23:25:22Z
 parent: vantage-fmfh
 blocked_by:
     - vantage-r0kv
@@ -31,3 +32,7 @@ API changes.
 ## Summary of Changes
 
 (filled in when done)
+
+## Reasons for Scrapping
+
+Duplicate: the UI session created vantage-4ty4 (PR #50) for the same work.

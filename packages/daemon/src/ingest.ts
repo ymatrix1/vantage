@@ -1,8 +1,14 @@
 // Spool ingestion and transcript backfill (docs/specs/ingestion.md). Both resume from a byte offset
 // stored in `cursors`, and both write through the unique (source, source_id) key, so replays are safe.
 import { readdirSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
-import { hookEvents, parseSpoolRecord, parseTranscriptLine, transcriptEvents } from "@vantage/core";
+import { basename, join, relative, sep } from "node:path";
+import {
+  hookEvents,
+  parseSpoolRecord,
+  parseTranscriptLine,
+  transcriptEvents,
+  transcriptLineage,
+} from "@vantage/core";
 import type { IngestContext, TranscriptLine, VantageEvent } from "@vantage/core";
 import type { Store } from "./store.ts";
 import { tailLines } from "./tail.ts";
@@ -95,13 +101,19 @@ export function backfillTranscripts(
     const { lines, nextOffset } = tailLines(path, before);
     if (lines.length === 0 && nextOffset === before) continue;
     const parsed: TranscriptLine[] = [];
+    const all: TranscriptLine[] = [];
     for (const l of lines) {
       const p = parseTranscriptLine(l);
+      if (p) all.push(p);
       // Lines older than the window are skipped; a long-lived file may start before the cutoff.
       if (p && p.timestamp && Date.parse(p.timestamp) >= cutoff) parsed.push(p);
     }
+    // A session file is named by its session id. Sub-agent files (`subagents/`) carry the parent's id
+    // and are not sessions of their own. Copied history is read before the window filter (D86).
+    const own = path.split(sep).includes("subagents") ? null : basename(path, ".jsonl");
+    const lineage = own ? transcriptLineage(all, own) : [];
     result.files++;
-    result.inserted += commit(store, key, nextOffset, transcriptEvents(parsed, ctx), stamp);
+    result.inserted += commit(store, key, nextOffset, [...lineage, ...transcriptEvents(parsed, ctx)], stamp);
   }
   return result;
 }

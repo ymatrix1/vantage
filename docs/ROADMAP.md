@@ -46,13 +46,14 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 - [ ] Install with a prompt: `docs/install-for-agents.md` works end to end in Claude Code and Codex on a fresh machine. The guide is updated for Claude Code; the fresh-machine run, the Codex steps and the `npx vantage` entry are not done (`vantage-o06l`).
 - [x] Daemon runtime: `vantage start` runs ingest, git loop, stage loop with the status file and the secured server in one process with a single-instance lock; `vantage open` opens the Track page (`vantage-6bni`, `vantage-v3sw`, D78 proposed). The token stays in a file (D75); keychain storage is `vantage-5fek`.
 - [x] `vantage` Claude Code plugin (`vantage-u902`, D83 proposed): `/vantage:open`, `:start`, `:doctor`, `:status`, `:add`, each wrapping one CLI call with restricted `allowed-tools`; a CI check validates the command files. Remaining: a live run of each command in a real Claude Code session (touches the user's real config).
-- [x] Track query API (`vantage-r0kv`, D84 proposed): `thrashing` and `unproven_claim` only for items active in the last 48 hours (`flag_window_hours`), flag reasons naming files by base name, and `GET /api/track` with filters, sort, grouping, paging and live facet counts, validated and read-only, plus a fallback title from repo, branch and date. Remaining: the page controls (`vantage-8yef`).
+- [x] Track query API (`vantage-r0kv`, D84 proposed): `thrashing` and `unproven_claim` only for items active in the last 48 hours (`flag_window_hours`), flag reasons naming files by base name, and `GET /api/track` with filters, sort, grouping, paging and live facet counts, validated and read-only, plus a fallback title from repo, branch and date. Remaining: the page controls (`vantage-4ty4`).
 - [ ] **Exit:** used every day for a week, and the morning catch-up happens on the Track page instead of in terminals.
 
 ## Phase 2: work items and board
 
 - [x] Linker with deterministic anchors (branch or worktree, issue key in branch). Delivered in Phase 1 (`vantage-9xbi`); todo anchors are not built.
 - [x] Stage machine for Asked, Built and Proven. Delivered in Phase 1 (`vantage-lxud`, D71).
+- [x] Derived sessions grouped under their parent's item (`vantage-o3s3`, D86 proposed): `session.derived` from copied transcript history, linker rule, `item_sessions` counts, [measurements](research/session-lineage.md). Remaining: show `sessionCount`, `derivedCount` and `subagentCount` in the Track view (follow-up bean); heuristic grouping waits on D87.
 - [ ] Local web UI: Track (attention and project grouping), Item and Journal; "since yesterday" filter.
 - [ ] Ghost proposals from sessions with no edits.
 - [ ] **Exit:** the morning catch-up uses the board instead of terminals.
@@ -102,7 +103,7 @@ Draft epic `vantage-nqh6`. It starts after the Phase 1 exit (a week of daily use
 
 ## Phase 6: issue tracker and Slack
 
-- [ ] Tracker adapter with Jira and Linear implementations; build whichever is in use first. Vantage only syncs issues, it does not manage them (D90); the read-only sync and the `issue_policy` setting are drafted as `vantage-nqh6` children and may move earlier with the user's OK.
+- [ ] Tracker adapter (read-only) for the tracker the user has in use: Jira, Linear or GitHub Issues; build whichever is in use first, and the others after. Vantage only syncs issues, it does not manage them (D90); the read-only sync and the `issue_policy` setting are drafted as `vantage-nqh6` children and may move earlier with the user's OK.
 - [ ] Assigned issues as Asked items; priority and due date.
 - [ ] Unseen mentions; commitment detection.
 - [ ] Pings on Slack, Jira and Linear: owed replies, nudges and close-the-loop drafts.

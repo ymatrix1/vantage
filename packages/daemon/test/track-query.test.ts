@@ -475,13 +475,13 @@ const plan = (sql: string): string =>
     .map((r) => String(r["detail"]))
     .join(" | ");
 
-describe("migration 4", () => {
-  it("upgrades a version 3 database in place: rows keep their data, new columns and indexes appear", () => {
-    const path = join(dir, "v3.db");
+describe("migration 5", () => {
+  it("upgrades a version 4 database in place: rows keep their data, new columns and indexes appear", () => {
+    const path = join(dir, "v4.db");
     const old = new DatabaseSync(path);
     old.exec(`
       CREATE TABLE schema_meta (version INTEGER NOT NULL);
-      INSERT INTO schema_meta (version) VALUES (3);
+      INSERT INTO schema_meta (version) VALUES (4);
       CREATE TABLE events (id INTEGER PRIMARY KEY AUTOINCREMENT, source TEXT NOT NULL, source_id TEXT NOT NULL,
         kind TEXT NOT NULL, occurred_at TEXT NOT NULL, ingested_at TEXT NOT NULL, session_id TEXT, repo TEXT,
         payload_json TEXT NOT NULL, payload_version INTEGER NOT NULL DEFAULT 1, UNIQUE (source, source_id));
@@ -503,6 +503,7 @@ describe("migration 4", () => {
         reason TEXT NOT NULL, UNIQUE (work_item_id, kind));
       CREATE TABLE stage_changes (id INTEGER PRIMARY KEY AUTOINCREMENT, work_item_id INTEGER NOT NULL,
         from_stage TEXT, to_stage TEXT NOT NULL, at TEXT NOT NULL, event_id INTEGER NOT NULL, reason TEXT NOT NULL);
+      CREATE VIEW item_sessions AS SELECT l.item_key AS item_key, 0 AS session_count, 0 AS derived_count, 0 AS subagent_count FROM links l;
       INSERT INTO work_items (item_key, title, repo, stage, proof_status, first_activity, last_activity, created_at, updated_at)
         VALUES ('issue:OLD-1', 'Old item', 'r', 'built', 'none', '2026-01-05T09:00:00Z', '2026-01-05T09:00:00Z',
           '2026-01-05T09:00:00Z', '2026-01-05T09:00:00Z');
@@ -510,7 +511,7 @@ describe("migration 4", () => {
     old.close();
     const upgraded = new Store(path);
     try {
-      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(4);
+      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(5);
       const idx = upgraded.db
         .prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'work_items'")
         .all()
