@@ -15,7 +15,7 @@ Then **start a new session**: plugins load at session start.
 
 | Piece | Always on? | What it does |
 |---|---|---|
-| Communication rule | **Yes**, via a `SessionStart` hook | Answer first, visual, short, full sentences, one example for complex ideas, a fixed symbol set (✅ ❌ 🚧 ⚠️ ⬜ ⏭️ ⏳ ❓ 👉 →) for status, and one-line short references instead of repeated titles |
+| Communication rule | **Yes**, via a `SessionStart` hook | Answer first, visual, short, full sentences, one example for complex ideas, a fixed symbol set (✅ ❌ 🚧 ⚠️ ⬜ ⏭️ ⏳ ❓ 👉 →) for status, and one-line short references instead of repeated titles, and log-style action lines (`Messaged in31: wait for #10 merge before rebasing.`) |
 | Output style "A2V Top-down" | **No: choose it** in the app's output style setting or with `/output-style` | Makes the rule the default style of every reply |
 | `explain-top-down` | On demand | Headline, SCR, MECE breakdown, example, one main visual |
 | `prove-it` | On demand | Proves a change with a check after the last edit, with level L0-L4 |
