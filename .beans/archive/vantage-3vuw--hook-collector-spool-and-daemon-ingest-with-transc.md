@@ -27,7 +27,7 @@ Never lose an event and never slow an agent down.
 - [x] Async command hooks for SessionStart, PostToolUse, PostToolUseFailure, PermissionRequest, Notification, PreCompact, SessionEnd append JSON lines to the spool (D59)
 - [x] Hook test: exit 0 with the daemon down
 - [x] Hook test: in-process `collect` under 100 ms
-- [ ] Cold start of the real hook command under 100 ms (tracked in vantage-of25)
+- [ ] Cold start of the real hook command under 100 ms (vantage-of25: cut to a median 95 to 99 ms, but p95 is 130 ms; a native binary is needed to clear it, see D67)
 - [x] Daemon ingests the spool into the events table, idempotent by source id (docs/specs/data-schema.md)
 - [x] Transcript backfill of the last 14 days by byte offset, deduplicated by tool-use id (R1 finding)
 - [x] Shell writes and commits detected as edits, not only edit tools (R1 finding)
