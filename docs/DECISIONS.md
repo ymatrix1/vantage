@@ -102,6 +102,8 @@ Rules:
 | [D73](#d73-how-the-phase-1-stop-gate-reads-state-and-takes-its-mode) | 2026-10-14 | How the Phase 1 Stop gate reads state and takes its mode |
 | [D74](#d74-status-line-reads-a-daemon-written-summary-file-phase-1-glyph-and-fallback-rules) | 2026-10-14 | Status line reads a daemon-written summary file; Phase 1 glyph and fallback rules |
 | [D75](#d75-phase-1-track-page-and-local-server-rules-the-specs-left-open) | 2026-10-14 | Phase 1 Track page and local server rules the specs left open |
+| [D77](#d77-capture-accuracy-repo-root-from-scanned-worktrees-test-counts-from-runner-summaries) | 2026-10-14 | Capture accuracy: repo root from scanned worktrees, test counts from runner summaries |
+| [D78](#d78-phase-1-daemon-runtime-one-process-lock-and-health-files-vantage-start-and-vantage-open) | 2026-10-14 | Phase 1 daemon runtime: one process, lock and health files, `vantage start` and `vantage open` |
 
 ---
 
@@ -947,13 +949,10 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** OS credential store now (platform code and a native dependency for no Phase 1 gain); token on the static shell too (breaks the fragment hand-off, protects only public code); mark a source stale after N quiet minutes (false alarms when idle); WebSocket first (more moving parts than a 30-second pass justifies).
 - **Impact:** Updates the [web UI spec](specs/web-ui.md) API table and the architecture doc's token line. Revisit the token file once `vantage init` can write to the OS credential store, and the stale rule once GitHub or CI sources report their own sync times.
 
----
-
-## Proposed (pending confirmation)
-
 ### D77. Capture accuracy: repo root from scanned worktrees, test counts from runner summaries
 
-- **Status:** proposed
+- **Status:** accepted 2026-10-14
+- **Decided by:** user (delegated to the parent session on 2026-10-14; checked against measured data and the standards: consistent with earlier decisions, alternatives recorded, reversible, nothing leaves the machine)
 - **Context:** D70 left `repoRoot` unset, so a session started in a subdirectory lost real edits to sibling paths (`vantage-1ulu`). D71 left output capture open, so a run that executed zero tests could still count as proof (`vantage-ci4u`). The hook only appends the raw payload to the spool (D67, D72), so any parsing happens in the daemon.
 - **Decision:**
   1. **Repo root:** at ingest, `repoRoot` is the longest worktree path from stored `worktree.scanned` events that lexically contains the session `cwd`. No match keeps today's reading (`cwd` is the root). No `git` call runs in the hook or in ingest.
@@ -964,7 +963,8 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 
 ### D78. Phase 1 daemon runtime: one process, lock and health files, `vantage start` and `vantage open`
 
-- **Status:** proposed
+- **Status:** accepted 2026-10-14
+- **Decided by:** user (delegated to the parent session on 2026-10-14; checked against measured data and the standards: consistent with earlier decisions, alternatives recorded, reversible, nothing leaves the machine)
 - **Context:** Beans `vantage-6bni` and `vantage-v3sw` needed a long-running process. The specs say "one daemon" and "a single instance per machine" but not how the instance is detected, how the CLI finds it, which port it uses, or how `repos` are configured.
 - **Decision:**
   1. **One process** (`vantage start`) runs spool ingest and transcript backfill every 5 s, the git scan loop (only when repos are configured), the stage loop with `statusFile = $VANTAGE_HOME/status.json`, and the HTTP server on `127.0.0.1`. SIGINT and SIGTERM stop the loops, finish the in-flight tick, close the server and the store, and release the lock.
@@ -977,3 +977,9 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Why:** Evidence for every status the Track page and status line show comes from this one process; the lock, health file and fixed port are the smallest mechanisms that make "already running", "open it" and "is it healthy" answerable without talking to the server.
 - **Alternatives:** An OS service or Task Scheduler entry now (installer scope, `vantage-p9x2`); a named pipe or HTTP call for the instance check (needs the token or a second endpoint); a random port per start (breaks bookmarks and the fragment URL habit); a TOML parser dependency for `repos` (headroom, and one list is enough for Phase 1).
 - **Impact:** Updates [operations](specs/operations.md#daemon-lifecycle). The installer registers the start at login and writes `config.toml`. Revisit the 60 s takeover and the 5 s ingest cadence after a week of daily use, and the single-process model if ingest blocks the HTTP server (backfill is synchronous).
+
+---
+
+## Proposed (pending confirmation)
+
+None right now.
