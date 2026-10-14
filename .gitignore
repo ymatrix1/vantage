@@ -8,5 +8,4 @@ dist/
 .DS_Store
 *.tsbuildinfo
 tools/spike-native-hook/go/hook*
-tools/spike-native-hook/rust/target/
-tools/spike-native-hook/rust/Cargo.lock
+packages/hooks-native/target/

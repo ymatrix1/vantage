@@ -16,7 +16,7 @@ How Vantage hears about things happening in each source.
 
 ### Hook latency
 
-The registered command is the built `packages/hooks/dist/src/bin.js` run by `node` (D67). Measured on the dev laptop (Windows 11, Node 24.6, 40 runs interleaved after 3 warm-ups, spool on local disk; numbers only):
+The registered command is the native binary built from `packages/hooks-native` (D72), or the built `packages/hooks/dist/src/bin.js` run by `node` (D67) when no native package resolves. The binary hands `Stop` to that Node entry (D76). Measured on the dev laptop (Windows 11, Node 24.6, 40 runs interleaved after 3 warm-ups, spool on local disk; numbers only):
 
 | Launcher | Median | p95 |
 |---|---|---|
@@ -24,6 +24,11 @@ The registered command is the built `packages/hooks/dist/src/bin.js` run by `nod
 | `node src/bin.ts` (before) | 126 to 133 ms | 167 to 181 ms |
 | `node dist/src/bin.js` (after) | 95 to 99 ms | 130 ms |
 | Go binary (spike, not shipped) | 32 to 33 ms | 41 to 47 ms |
+| Rust binary (`packages/hooks-native`, 0.25 MB) | 29 ms | 36 ms |
+| `node dist/src/bin.js`, same run (control) | 101 ms | 134 ms |
+| `node -e ''`, same run (floor) | 86 ms | 110 ms |
+| `Stop` through the Rust binary, then Node (D76) | 123 ms | 148 ms |
+| `Stop` through `node dist/src/bin.js` alone | 103 ms | 130 ms |
 
 Node's start-up alone is most of the budget, so the median is just under 100 ms and p95 is not. The automated test asserts a CI ceiling of 750 ms median (shared runners are slow); the 100 ms figure is a local measurement, not a CI gate.
 

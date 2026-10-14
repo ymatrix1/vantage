@@ -57,6 +57,8 @@ importers:
         specifier: workspace:*
         version: link:../daemon
 
+  packages/hooks-native: {}
+
   packages/ui:
     dependencies:
       '@vantage/core':
