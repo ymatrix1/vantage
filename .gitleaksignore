@@ -1,0 +1,2 @@
+# Fake 32-hex token in the UI component test helper (synthetic, not a credential); later commits build it at runtime.
+13b0db2f2974b793b10195b0c48f07a032214cd6:packages/ui/test/helpers.ts:generic-api-key:8
