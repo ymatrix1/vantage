@@ -53,6 +53,7 @@ Where one work item ends and another begins:
 - **Inferred links** (`method = inferred`) come from an LLM or a judgment model and are shown as "suggested" until confirmed, or until enough deterministic evidence agrees.
 - **Every link is visible and undoable** from the item view.
 - **A session can feed several items** (one chat touching two tickets). Events are linked individually, not whole sessions.
+- **Implementation (Phase 1).** `packages/core/src/linker.ts` replays events in time order and links each event by its own branch (D54), resolving branch-less events through the worktree path of the latest git event. Order: issue key, branch, detached linked worktree, provisional per-session item. Each link stores its `method` (`anchor`) and a `rule` explaining why. The daemon persists links in `links` and an undo sets `undone_at`; later passes never re-create an undone link. Default branches and issue-key prefixes are options, not hard-coded per repo.
 - **Ghosts:** a session with user requests, no edits and no anchor yields a *proposed* Asked item that the user confirms or dismisses.
 
 ## Project assignment
