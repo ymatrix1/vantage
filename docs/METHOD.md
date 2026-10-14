@@ -50,6 +50,7 @@ A2V is also about stress. Its practices for the person doing the work:
 - **Say "safe to ignore" out loud.** Knowing what you can skip is as useful as knowing what to do.
 - **Land the day.** Before stopping, close, park or schedule each open loop, so work doesn't follow you home.
 - **Close loops with people.** Answer what you owe, nudge what's stuck, and tell people when their thing ships.
+- **No silent decisions.** Every choice, by an agent or a person, is written down with why and what else was considered. Agent choices count as proposals until a person approves them.
 - **Answer first.** When explaining status, lead with the answer, then situation, complication and resolution; let people expand only what they need.
 
 ## Glossary

@@ -24,6 +24,7 @@ SQLite, WAL mode, in `~/.vantage/vantage.db`. Field lists come from the [work it
 | `rewards` | id, kind (`streak`, `badge`), key, value_json, updated_at | Streaks pause, never reset |
 | `mood_checks` | id, day, score (1–5), note | One per evening landing; local only |
 | `settings` | key, value_json | Theme, working hours, digest times, thresholds, quiet mode |
+| `decisions` | id, work_item_id, project_id, who_kind (`ai`, `person`), who_ref, context, decision, why, alternatives, impact, status (`proposed`, `approved`, `changed`, `reverted`, `superseded`), replaces_id, evidence_ids_json, created_at, status_at | Append-only readable log; unstated fields stay null |
 | `user_actions` | id, kind, target, payload_json, at | Pins, demotes, splits, merges, unlinks; replayable |
 
 ## Rules

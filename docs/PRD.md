@@ -49,6 +49,7 @@ Team features are out of scope for now. The design should not prevent them later
 - G7. Local-first: all data stays on the machine by default.
 - G8. Visual first: state readable at a glance from shape, color and position, with about 30 words per screen.
 - G9. Explain on demand: answer-first, expandable explanations of any item, project or week, via the user's connected agent.
+- G11. Every decision visible: choices made by AI agents or people are logged with context, why, alternatives, impact, who and status; AI decisions need a person's approval.
 - G10. Close loops with people: owed replies, follow-ups and "tell them it shipped", drafted for the user to send.
 
 ## 5. Non-goals (for now)

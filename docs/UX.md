@@ -64,6 +64,7 @@ The main "all work" view. A table, not a board, because it stays readable with m
 - Title, project, ticket and PR links, the stage track.
 - **Behaviors:** one row each. AI-decided behaviors are marked with Approve or Change.
 - **Proof:** one row per behavior with a badge showing type and level (L1 ran, L2 linked, L3 behavior, L4 production), last run time and command. Expand a row for the result summary, output excerpt or screenshot. Expired and failed proofs stay visible in a history list. See the [proof spec](specs/proof.md).
+- **Decisions:** every choice made by the AI or a person, newest first, with proposed AI decisions to approve or change. See [decision log](specs/decision-log.md).
 - **Review:** threads with status, including `claimed_fixed`.
 - **After ship:** deploy, post-deploy checks, monitoring window, any regression and its follow-up item.
 - **History:** a horizontal strip of events by day, agent and session ("Mon · Claude · discussed → Tue · Codex · built 3 files → Wed · Claude · 1 of 3 proven").

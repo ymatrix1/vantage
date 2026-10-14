@@ -51,6 +51,7 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 - Focus page drawn as the landscape (dot characters, bands, shelf, sky), Inbox page, digest batching, "safe to ignore".
 - Evening landing and morning wake-up moments.
 - Explain: brief and status tree from evidence, via the connected agent; why tree drafted at Asked.
+- Decision log from agent transcripts and Vantage actions; review and approve proposed AI decisions.
 - Contexts (Work, Personal) and project settings on the Sources page.
 - Toasts for red items; `waiting_on_you` and `forgotten` flags.
 
@@ -72,6 +73,7 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 - Assigned issues as Asked items; priority and due date.
 - Unseen mentions; commitment detection.
 - Pings on Slack, Jira and Linear: owed replies, nudges and close-the-loop drafts.
+- Decisions from PR reviews, Slack, Jira and Linear in the decision log.
 
 ## Later
 

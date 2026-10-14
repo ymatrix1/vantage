@@ -61,6 +61,8 @@ HTTP on `127.0.0.1`, token required on every call (D32). JSON throughout.
 | `GET /api/landing` | Evening landing: open loops to close, park or schedule |
 | `POST /api/landing` | Apply landing choices and the mood check |
 | `GET /api/rewards` | Streaks and badges |
+| `GET /api/decisions?item=&project=&since=&who=&status=` | Decision log |
+| `POST /api/decisions/:id/actions` | Approve or change a proposed decision |
 | `GET /api/live` (WebSocket) | Pushes `item.changed`, `flag.raised`, `source.health` events |
 
 Rules: no state change on GET; every POST is recorded in `user_actions` (see [data schema](data-schema.md)).

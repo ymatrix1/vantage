@@ -30,6 +30,7 @@ A card moves only on evidence: a git diff, a test or data check that ran after t
 | [Spec: pings](docs/specs/pings.md) | Who you owe a reply, who to nudge, who to tell it's done |
 | [Spec: status line](docs/specs/status-line.md) | Text glyphs for the dot alphabet in the terminal |
 | [Spec: first run](docs/specs/first-run.md) | `vantage init`, first view, one-time legend, demo mode |
+| [Spec: decision log](docs/specs/decision-log.md) | Every AI or person decision, with five fields, who and status |
 | [Spec: web UI](docs/specs/web-ui.md) | Navigation, screen states, keyboard map, API, performance budgets |
 | [Spec: CI/CD](docs/specs/ci.md) | Docs checks now, code checks in Phase 1, releases later |
 | [Mockups](docs/mockups/index.html) | Static HTML mockups with synthetic data |

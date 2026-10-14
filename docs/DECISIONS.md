@@ -55,6 +55,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 | [D39](#d39-landscape-scene-rules-from-the-25-item-test) | 2026-10-14 | Landscape scene rules from the 25-item test |
 | [D40](#d40-measure-felt-load-not-just-usage) | 2026-10-14 | Measure felt load, not just usage |
 | [D41](#d41-status-line-uses-text-glyphs) | 2026-10-14 | Status line uses text glyphs |
+| [D42](#d42-a-decision-log-for-every-ai-and-person-decision) | 2026-10-14 | A decision log for every AI and person decision |
 
 ---
 
@@ -386,6 +387,14 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Why:** Keeps the shape-first rule (D34) in the terminal, with no emoji and no dependency on color.
 - **Alternatives:** Words only (more reading); emoji (inconsistent across terminals).
 - **Impact:** [Status line spec](specs/status-line.md); glyph rendering tests.
+
+### D42. A decision log for every AI and person decision
+
+- **Context:** Decisions were scattered: the `ai_decided` detector covered business rules in diffs, `user_actions` logged raw actions, and choices made in agent chats, PR reviews or Slack were invisible.
+- **Decision:** A readable, append-only decision log per item, project and week. Each record has Context, Decision, Why, Alternatives, Impact, who (AI or person) and status. AI decisions start as proposed and need a person's approval or change. Unstated fields are marked "not stated", never invented.
+- **Why:** Silent AI decisions are a core pain; people's decisions get lost across tools. One log answers "who decided this and why?" and makes AI choices reviewable.
+- **Alternatives:** Only the diff-based detector (misses chat decisions); a free-text notes field (unstructured, unsearchable).
+- **Impact:** A `decisions` table, transcript and message detectors, Item page section, landscape badge, API routes; [decision log spec](specs/decision-log.md). Uses the same five fields as D30.
 ---
 
 ## Proposed (pending confirmation)
