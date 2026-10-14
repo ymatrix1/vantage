@@ -1,2 +1,2 @@
-// @vantage/hooks: empty shell until its Phase 1 bean starts.
-export type { VantageEvent } from "@vantage/core";
+export { collect, spoolDir, vantageHome } from "./collect.ts";
+export { SPOOL_HOOK_EVENTS, hooksSettings } from "./settings.ts";
