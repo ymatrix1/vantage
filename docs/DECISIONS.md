@@ -52,6 +52,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 | [D36](#d36-calm-gamification-rules) | 2026-10-14 | Calm gamification rules |
 | [D37](#d37-explain-through-the-connected-agent) | 2026-10-14 | Explain through the connected agent |
 | [D38](#d38-track-pings-draft-never-send) | 2026-10-14 | Track pings; draft, never send |
+| [D39](#d39-landscape-scene-rules-from-the-25-item-test) | 2026-10-14 | Landscape scene rules from the 25-item test |
 
 ---
 
@@ -359,6 +360,14 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Why:** Owed replies and silent waits are a large, invisible source of stress and delay; drafting removes friction while keeping the user in control of what's said.
 - **Alternatives:** Only track unseen mentions (misses seen-but-unanswered); auto-send nudges (risky, impersonal, could embarrass the user).
 - **Impact:** Question detection rules plus an optional judge (data policy), thresholds per case, Inbox sections and landscape badges; [pings spec](specs/pings.md).
+
+### D39. Landscape scene rules from the 25-item test
+
+- **Context:** D35 required the landscape to pass a scale test (Q20). A render with 25 items showed green grass hiding the green done arcs, rings merging with the dot body, badges covering arcs, and cryptic corner labels.
+- **Decision:** Neutral ground (no meaning colors in scenery); a clear gap between body and ring; white arcs for remaining steps; badges just outside the ring; "+N" overflow labels; moon and shelf icons with counts in the corners. Band caps (3 foreground, 8 middle) confirmed.
+- **Why:** With these fixes the 25-item view stays readable at a glance and green keeps one meaning.
+- **Alternatives:** Green landscape (breaks the color meaning); no ring for remaining steps (loses "out of six"); gray dots for remaining steps (worked, but the white ring with spacing reads more naturally).
+- **Impact:** Closes Q20. Scene palettes for dusk, night and dark mode still to design in the UI phase.
 ---
 
 ## Proposed (pending confirmation)

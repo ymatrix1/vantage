@@ -65,7 +65,7 @@ Every work item is drawn as a **dot character**. Each visual channel carries exa
 | Channel | Meaning |
 |---|---|
 | Body color | Project (identity, not status) |
-| Ring of six arcs around the body | The A2V track: green arcs done, one colored arc for the current step (red needs you, amber unproven, blue in progress) |
+| Ring of six arcs around the body, with a clear gap | The A2V track: green arcs done, one colored arc for the current step (red needs you, amber unproven, blue in progress), white arcs for steps still to go |
 | Face | Attention: awake and blinking = needs you; small eyes = working; closed eyes = forgotten |
 | Badge icon | The reason, as one flag icon |
 | Size | Priority within its band |
@@ -85,6 +85,12 @@ The home screen is the view from your vantage point:
 
 Rules:
 
+- **Neutral ground.** Scene backgrounds (ground, horizon) never use meaning colors. Green appears only on dots, so it always means done. A first render with green grass hid the done arcs.
+- **Ring spacing.** The ring sits clearly apart from the body (gap of at least 7 px, or about 40% of the body radius on large dots); without the gap the ring and body merge.
+- **Badges sit just outside the ring**, top right, so they never cover an arc.
+- **Overflow** shows as "+N need you" in the foreground and "+N more" in the middle ground.
+- **Corners:** forgotten items bottom left (moon icon and count), parked items bottom right (shelf and count).
+- **Validated at 25 items** (Q20): caps, overflow and placement hold without collisions; see [the stress-test render](../mockups/landscape-25.png). Middle-band rings show progress at a glance but aren't meant to be counted; counting happens on foreground dots and the Item card.
 - **Stable placement:** within a band, order is by priority and doesn't shuffle between visits.
 - **The Track page is the fallback** for finding a specific item or seeing many at once. Both views show the same data.
 - **The sky follows the time of day** (day, dusk, night palettes). Each scene has a quieter variant for the calm theme.
