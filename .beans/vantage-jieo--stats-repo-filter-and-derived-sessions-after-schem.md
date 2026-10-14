@@ -1,6 +1,6 @@
 ---
 # vantage-jieo
-title: 'Stats: repo filter and derived sessions after schema changes'
+title: 'Stats: repo filter after schema changes'
 status: todo
 type: task
 created_at: 2026-10-14T23:13:41Z
@@ -12,7 +12,7 @@ blocked_by:
 
 ## Context
 
-D88 matches `--repo` on the event cwd and detects derived sessions by `parent_id` on `session:` items because `work_items.repo` is unset and session lineage has not landed. Blocked by: vantage-v1o3 and the session-lineage work.
+D88 matches `--repo` on the event cwd because `work_items.repo` is unset. Blocked by: vantage-v1o3.
 
 ## Higher Goal
 
@@ -20,7 +20,7 @@ Keep the numbers honest as the schema changes.
 
 ## Acceptance Criteria
 
-- [ ] `--repo` uses `work_items.repo` once it is filled; derived-session share uses the lineage field
+- [ ] `--repo` uses `work_items.repo` once it is filled
 - [ ] Tests updated
 
 ## Out of Scope

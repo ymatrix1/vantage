@@ -151,8 +151,18 @@ export function computeStats(db: DatabaseSync, opts: StatsOptions, now: Date, db
     ...is.params,
   ).map((r) => ({ kind: SAFE_WORD.test(s(r, "k")) ? s(r, "k") : "other", count: n(r, "c") }));
 
-  const sessions = anchors.session;
-  const derived = count("w.item_key LIKE 'session:%' AND w.parent_id IS NOT NULL");
+  // Live-linked sessions and those with a parent come from the `item_sessions` view (D86), when the store has it.
+  const hasView =
+    q1("SELECT 1 AS x FROM sqlite_master WHERE type = 'view' AND name = 'item_sessions'") !== undefined;
+  const sess = hasView
+    ? q1(
+        `SELECT COALESCE(SUM(s.session_count), 0) AS total, COALESCE(SUM(s.derived_count), 0) AS derived
+           FROM item_sessions s JOIN work_items w ON w.item_key = s.item_key WHERE ${is.where}`,
+        ...is.params,
+      )
+    : undefined;
+  const sessions = n(sess, "total");
+  const derived = n(sess, "derived");
 
   const stages = { asked: 0, built: 0, proven: 0, other: 0 };
   for (const r of q(
@@ -397,7 +407,7 @@ function lines(st: Stats): Line[] {
             label: "Sessions derived",
             value: pct(st.sessions.derivedShare),
             goal: "",
-            meaning: "session items attached to a parent session",
+            meaning: "sessions that continue or branch from a parent session",
           } satisfies Line,
         ]),
     {

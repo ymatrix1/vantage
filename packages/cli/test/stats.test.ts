@@ -151,12 +151,12 @@ describe("vantage stats on a synthetic store", () => {
 
   it("shows derived sessions only when lineage data exists", () => {
     const store = fixture();
-    expect(json().sessions).toEqual({ total: 2, derived: null, derivedShare: null });
+    expect(json().sessions).toEqual({ total: 5, derived: null, derivedShare: null });
     expect(run([]).out.join("\n")).not.toContain("Sessions derived");
-    store.db.exec("UPDATE work_items SET parent_id = 1 WHERE item_key LIKE 'session:sess-dddd%'");
+    put(store, "sess-dddd1234", "session.derived", ago(2 * H), { parentSessionId: "sess-aaaa" });
     const st = json();
     store.close();
-    expect(st.sessions).toEqual({ total: 2, derived: 1, derivedShare: 0.5 });
+    expect(st.sessions).toEqual({ total: 5, derived: 1, derivedShare: 0.2 });
     expect(run([]).out.join("\n")).toContain("Sessions derived");
   });
 
