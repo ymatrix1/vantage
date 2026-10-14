@@ -4,7 +4,7 @@ This is the canonical instruction file for AI coding agents working on Vantage: 
 
 ## Project
 
-Vantage is a local-first, personal tool that shows the true state of a developer's work across AI coding agents, git, pull requests, CI/CD, monitoring, Jira or Linear, and Slack. It tracks **work items** along an evidence-based lifecycle: Asked → Built → Proven → Reviewed → Shipped → Verified.
+Vantage is a local-first, personal tool that shows the true state of a developer's work across AI coding agents, git, pull requests, CI/CD, monitoring, Jira or Linear, and Slack. It tracks **work items** along the evidence-based A2V track (see [docs/METHOD.md](docs/METHOD.md)): Asked → Built → Proven → Reviewed → Shipped → Verified.
 
 **Status: planning.** Don't write application code until the user approves starting a roadmap phase.
 
@@ -14,6 +14,7 @@ Read these before changing behaviour. If code and docs disagree, raise it; don't
 
 | Topic | File |
 |---|---|
+| The A2V method | [docs/METHOD.md](docs/METHOD.md) |
 | Problem, pains, goals, scope | [docs/PRD.md](docs/PRD.md) |
 | Phases and exit criteria | [docs/ROADMAP.md](docs/ROADMAP.md) |
 | Architecture | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |

@@ -2,7 +2,7 @@
 
 A personal, calm view of the true state of your work across AI coding agents, git, pull requests, CI/CD, monitoring, Jira or Linear, and Slack.
 
-Vantage tracks **work items**, not sessions. Each item moves along one evidence-based track:
+Vantage tracks **work items**, not sessions. Each item moves along one evidence-based track, the **A2V track** from the [A2V: Asked to Verified](docs/METHOD.md) method:
 
 ```
 Asked → Built → Proven → Reviewed → Shipped → Verified
@@ -16,6 +16,7 @@ A card moves only on evidence: a git diff, a test or data check that ran after t
 
 | Doc | What it covers |
 |---|---|
+| [A2V method](docs/METHOD.md) | The method Vantage implements: track, five rules, proof levels, signals |
 | [PRD](docs/PRD.md) | Problem, pains, user, goals, non-goals, success metrics |
 | [UX](docs/UX.md) | Surfaces (Focus, Board, Item, Ambient) and UX rules |
 | [Architecture](docs/ARCHITECTURE.md) | Sources, event store, linker, scorers, surfaces, privacy |

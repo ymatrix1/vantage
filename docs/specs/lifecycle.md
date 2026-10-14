@@ -1,6 +1,6 @@
 # Spec: lifecycle
 
-Every work item sits in exactly one stage. Stages change only on evidence.
+Implements the track of the [A2V: Asked to Verified](../METHOD.md) method. Every work item sits in exactly one stage. Stages change only on evidence.
 
 ```
 Asked → Built → Proven → Reviewed → Shipped → Verified

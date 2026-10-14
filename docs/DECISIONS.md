@@ -30,6 +30,7 @@
 | D26 | 2026-10-14 | **Agent setup ported from PortPS5:** `AGENTS.md` as the canonical instructions, shared `.agents/rules` and `.agents/skills`, beans for task tracking. No Ouroboros. | One setup across projects and agents. |
 | D27 | 2026-10-14 | **Calm default look inspired by Pane's Folio theme; token-based themes with user custom themes** that may change style but not meaning (contrast and distinguishability checked). | The user likes Pane's calm look and wants personalization; meaning colors carry status. |
 | D28 | 2026-10-14 | **Proof is first-class:** its own spec, types, strength levels L0–L4, freshness by code fingerprint, fake proof detection. Agents can only *reference* proof Vantage captured; they can't create it from text. | Proof is the core of evidence over claims; it must be hard to fake and visible when weak. |
+| D29 | 2026-10-14 | **The method is named A2V: Asked to Verified**, documented in `docs/METHOD.md` separately from the product, so it can be taught or sold on its own. Always written in full the first time. | A coined, ownable name; common phrases (evidence-driven, proof-driven, receipts) are taken. An unrelated "Agility to Value (A2V)" framework exists, so a trademark check is needed before selling. |
 
 ## Proposed (pending confirmation)
 
