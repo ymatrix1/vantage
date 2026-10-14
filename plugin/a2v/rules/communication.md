@@ -24,10 +24,13 @@ Use this fixed set, at the start of a line, one symbol per item. Don't invent ne
 | Symbol | Meaning | Example |
 |---|---|---|
 | ✅ | Done, passed, verified | `✅ pnpm check: 43 of 43 tests pass` |
-| ❌ | Failed, broken, blocked | `❌ windows-latest: 2 scanner tests fail` |
+| ❌ | Failed or broken | `❌ windows-latest: 2 scanner tests fail` |
+| 🚧 | Blocked by something outside this task | `🚧 PR #9 merge: waits on PR #10` |
 | ⚠️ | Risk, caveat, partly done | `⚠️ cold start is 215 ms, budget is 100 ms` |
 | ⬜ | Not checked or not done yet | `⬜ new session loads the rule` |
+| ⏭️ | Skipped on purpose | `⏭️ pnpm check: no code changed` |
 | ⏳ | Running or waiting on something | `⏳ CI re-running on 8ba2b4b` |
+| ❓ | Open question or unknown | `❓ does the hook fire in child sessions?` |
 | 👉 | Next step or a decision for the reader | `👉 Merge PR #9?` |
 | → | Leads to, moves to | `✅ pushed → origin/feat/git-scanner` |
 
@@ -36,6 +39,7 @@ Rules for symbols:
 - A symbol never stands alone as proof. Pair it with what was checked: the command, the file or the count.
 - ✅ means a check ran after the last edit. If you did not run it, use ⬜ and say why.
 - Use the same symbol for the same meaning for the whole reply.
+- Name a thing once, in short form: `PR owner/repo#N · short title…`, then the state and its symbol. Don't repeat the full title or restate what the reader just asked for. A completed routine action needs one line, such as `PR ymatrix1/vantage#11 · docs(a2v): import communication…  updated ✅`, not a sentence that says the same thing twice.
 - These are for messages to people. They do not go into commit messages, PR titles, code, docs or specs.
 - Product UI is separate: Vantage's own screens, flags and status line follow `docs/specs/visual-language.md` (line icons, never emoji).
 
