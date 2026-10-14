@@ -41,10 +41,29 @@ def check_links(files):
         for target in LINK.findall(text):
             if target.startswith(("http://", "https://", "mailto:", "#")):
                 continue
-            path = target.split("#", 1)[0]
-            if path and not (f.parent / path).exists():
+            path, _, anchor = target.partition("#")
+            dest = (f.parent / path) if path else f
+            if path and not dest.exists():
                 problems.append(f"{f.relative_to(ROOT)}: broken link -> {target}")
+            elif anchor and dest.suffix == ".md" and anchor not in anchors(dest):
+                problems.append(f"{f.relative_to(ROOT)}: missing section #{anchor} in {dest.relative_to(ROOT)}")
     return problems
+
+
+def anchors(md_file):
+    """GitHub-style heading slugs for a Markdown file."""
+    slugs, seen = set(), {}
+    text = re.sub(r"```.*?```", "", md_file.read_text(encoding="utf-8"), flags=re.S)
+    for line in text.splitlines():
+        m = re.match(r"^#{1,6}\s+(.*)", line)
+        if not m:
+            continue
+        s = re.sub(r"[`*_]", "", m.group(1).strip()).lower()
+        s = re.sub(r"[^\w\- ]", "", s).replace(" ", "-")
+        n = seen.get(s, 0)
+        seen[s] = n + 1
+        slugs.add(s if n == 0 else f"{s}-{n}")
+    return slugs
 
 
 def check_tables(files):
