@@ -111,6 +111,7 @@ Dragging never changes a stage; only evidence does (D3).
 - **Verified:** the dot rises and becomes a star. Click a star to see that item's history.
 - **Regression:** a small follow-up dot falls from the star. Visible, gentle.
 - **Evening landing:** at the end of your working hours the landscape dims. Each foreground dot asks *tomorrow, park, or done?* Then the dots sleep. This closes open loops so you can stop thinking about work.
+- **Mood check:** the landing ends with one tap: "How heavy does work feel? 1–5." Optional, local only, used for the PRD's felt-load metric.
 - **Morning:** the landscape wakes with "since yesterday" changes marked.
 
 ## Gamification rules
@@ -124,6 +125,18 @@ Reward good practice, never volume or speed:
 ## Companion (optional)
 
 A small dot character can summarize the overall state with its face (calm, focused, needs you, resting) and at most one line of text. It never chats on its own. Off in quiet mode. Whether it's needed now that every item is a character is open question Q22.
+
+## Scene palettes
+
+Scenes need their own palettes; meaning colors (dots, arcs, badges) stay the same in all of them.
+
+| Scene | Sky | Horizon | Middle | Foreground | Notes |
+|---|---|---|---|---|---|
+| Day (light mode) | `#3C3489` | `#F1EFE8` | `#E9E5DA` | `#DDD7C8` | Validated in the 25-item test |
+| Dusk | `#26215C` | `#E8E2D3` | `#DCD4C2` | `#CFC5AF` | Evening landing starts here |
+| Night and dark mode | `#15132E` | `#24262B` | `#1E2024` | `#18191C` | Dot bodies keep their tint; labels switch to light text |
+
+These are first proposals; research bean R14 (``) validates contrast for every meaning color on every scene.
 
 ## Quiet mode and accessibility
 

@@ -19,6 +19,11 @@ SQLite, WAL mode, in `~/.vantage/vantage.db`. Field lists come from the [work it
 | `proofs` | id, work_item_id, behavior_id, type, level, source, command, cwd, exit_code, started_at, finished_at, result_json, excerpt, artifacts_json, fingerprint | |
 | `flags` | id, work_item_id, kind, severity, raised_at, cleared_at, dismissed, reason | Dismissals feed flag precision |
 | `people` | id, display_name, ids_json | |
+| `explanations` | id, target_kind, target_id, kind (`brief`, `why_tree`, `status_tree`), audience, depth, blocks_json, evidence_ids_json, frozen, created_at, stale | Explain cache; `why_tree` rows are frozen once confirmed |
+| `pings` | id, work_item_id, kind (`owe_reply`, `follow_up_due`, `close_the_loop`), person_id, source_ref, due_at, state (`open`, `drafted`, `done`, `snoozed`), draft_text, cleared_by_event_id | Drafts stay local until the user sends them |
+| `rewards` | id, kind (`streak`, `badge`), key, value_json, updated_at | Streaks pause, never reset |
+| `mood_checks` | id, day, score (1–5), note | One per evening landing; local only |
+| `settings` | key, value_json | Theme, working hours, digest times, thresholds, quiet mode |
 | `user_actions` | id, kind, target, payload_json, at | Pins, demotes, splits, merges, unlinks; replayable |
 
 ## Rules

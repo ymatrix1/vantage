@@ -53,6 +53,8 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 | [D37](#d37-explain-through-the-connected-agent) | 2026-10-14 | Explain through the connected agent |
 | [D38](#d38-track-pings-draft-never-send) | 2026-10-14 | Track pings; draft, never send |
 | [D39](#d39-landscape-scene-rules-from-the-25-item-test) | 2026-10-14 | Landscape scene rules from the 25-item test |
+| [D40](#d40-measure-felt-load-not-just-usage) | 2026-10-14 | Measure felt load, not just usage |
+| [D41](#d41-status-line-uses-text-glyphs) | 2026-10-14 | Status line uses text glyphs |
 
 ---
 
@@ -368,6 +370,22 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Why:** With these fixes the 25-item view stays readable at a glance and green keeps one meaning.
 - **Alternatives:** Green landscape (breaks the color meaning); no ring for remaining steps (loses "out of six"); gray dots for remaining steps (worked, but the white ring with spacing reads more naturally).
 - **Impact:** Closes Q20. Scene palettes for dusk, night and dark mode still to design in the UI phase.
+
+### D40. Measure felt load, not just usage
+
+- **Context:** The product's promise is less stress, but the success metrics only measured usage and speed.
+- **Decision:** The evening landing ends with an optional one-tap check: "How heavy does work feel? 1–5." Stored locally; the PRD tracks its trend over the first month.
+- **Why:** Daily use proves habit, not relief. The core promise needs its own measure.
+- **Alternatives:** Usage metrics only (can't tell relief from compulsion); long surveys (nobody fills them in).
+- **Impact:** A `mood_checks` table, one step in the landing, a PRD metric.
+
+### D41. Status line uses text glyphs
+
+- **Context:** The terminal status line is always visible but can't draw the SVG dot alphabet; some terminals have no color.
+- **Decision:** Map dot states to Unicode shapes (● ◉ ◐ ◍ ◌ ○), with color optional and proof level as a superscript digit. Layout drops segments from the right to fit.
+- **Why:** Keeps the shape-first rule (D34) in the terminal, with no emoji and no dependency on color.
+- **Alternatives:** Words only (more reading); emoji (inconsistent across terminals).
+- **Impact:** [Status line spec](specs/status-line.md); glyph rendering tests.
 ---
 
 ## Proposed (pending confirmation)

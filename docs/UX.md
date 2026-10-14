@@ -91,7 +91,7 @@ The main "all work" view. A table, not a board, because it stays readable with m
 
 ### Ambient
 
-- **Status line** in every Claude Code session, for example `vantage · flipto-dbt · 3 edits, 0 proof · 2 waiting on you`.
+- **Status line** in every Claude Code session, using text glyphs for the dot alphabet (see [status line spec](specs/status-line.md)), for example `vantage · billing-api · ●●◐○○○ Checkout fixes · 2 need you`.
 - **Toasts** only for red items, respecting quiet hours.
 - **Badge count** of red items.
 

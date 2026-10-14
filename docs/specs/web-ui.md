@@ -53,6 +53,14 @@ HTTP on `127.0.0.1`, token required on every call (D32). JSON throughout.
 | `GET /api/sources` | Health per source |
 | `POST /api/items/:id/actions` | Pin, demote, park, split, merge, unlink, approve behavior, mark manual proof |
 | `POST /api/items/:id/resume` | Build the resume prompt (returns it; running needs a second confirm) |
+| `POST /api/explain` | Build or return a cached explanation (`target`, `kind`, `audience`, `depth`) |
+| `POST /api/explain/:id/freeze` | Confirm and freeze a why tree |
+| `GET /api/pings` | Owed replies, follow-ups and close-the-loop items by person |
+| `POST /api/pings/:id/draft` | Draft a message (returned, never sent) |
+| `POST /api/pings/:id/actions` | Mark done, snooze |
+| `GET /api/landing` | Evening landing: open loops to close, park or schedule |
+| `POST /api/landing` | Apply landing choices and the mood check |
+| `GET /api/rewards` | Streaks and badges |
 | `GET /api/live` (WebSocket) | Pushes `item.changed`, `flag.raised`, `source.health` events |
 
 Rules: no state change on GET; every POST is recorded in `user_actions` (see [data schema](data-schema.md)).

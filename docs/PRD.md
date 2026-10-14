@@ -32,7 +32,7 @@ Team features are out of scope for now. The design should not prevent them later
 | P5 | **Thrashing** | Edit → fail → edit → fail loops instead of building a reproduction harness. |
 | P6 | **Review loop** | Review comments, fixes, re-review requests and "claimed fixed" replies are hard to track across PRs. |
 | P7 | **Sessions waiting on me** | A session sits on a permission prompt or question while attention is elsewhere. |
-| P8 | **Unseen mentions** | Slack, Jira and Linear mentions, and review requests, never answered. |
+| P8 | **Unseen mentions and owed replies** | Slack, Jira and Linear mentions and review requests never answered, even when seen; follow-ups never sent; people never told their thing shipped. |
 | P9 | **No priority or effort view** | Everything looks equally urgent; no sense of difficulty or how effort was spread. |
 | P10 | **Text overload** | Reconstructing state means reading long transcripts and diffs. |
 | P11 | **Stress from constant change** | Many small updates, none batched, none marked safe to ignore. |
@@ -47,6 +47,9 @@ Team features are out of scope for now. The design should not prevent them later
 - G5. Short behaviors (Given/When/Then style) with a proof badge each, so the user judges behavior instead of diffs.
 - G6. Post-ship verification: deploy, post-deploy checks and a monitoring window before a card counts as done.
 - G7. Local-first: all data stays on the machine by default.
+- G8. Visual first: state readable at a glance from shape, color and position, with about 30 words per screen.
+- G9. Explain on demand: answer-first, expandable explanations of any item, project or week, via the user's connected agent.
+- G10. Close loops with people: owed replies, follow-ups and "tell them it shipped", drafted for the user to send.
 
 ## 5. Non-goals (for now)
 
@@ -79,10 +82,10 @@ See [lifecycle spec](specs/lifecycle.md). Summary:
 | P5 | `thrashing` flag from edit/fail patterns |
 | P6 | PR review state machine; `claimed_fixed` detector |
 | P7 | Needs-you queue; toasts for red items only |
-| P8 | Unseen mentions grouped and attached to cards |
+| P8 | Pings: `owe_reply`, `follow_up_due`, `close_the_loop` with drafted messages ([pings](specs/pings.md)) |
 | P9 | Computed priority, difficulty (estimate and actual), spread bar |
-| P10 | 1-line rows, about 140 characters max per card text, transcripts hidden by default |
-| P11 | Top 3 focus, batched digest at chosen times, explicit "safe to ignore" count |
+| P10 | Visual language and landscape home ([visual language](specs/visual-language.md)); Explain with SCR and expandable issue trees ([Explain](specs/explain.md)) |
+| P11 | Top 3 focus, batched digest, "safe to ignore" count, evening landing, calm gamification without loss mechanics |
 | P12 | Verified stage; `shipped_unverified` and `regression` flags; follow-up cards |
 
 ## 8. Success metrics
@@ -95,6 +98,7 @@ Measured on the author's own usage:
 - No "I forgot about that" item older than 7 days that Vantage didn't flag.
 - Fewer re-review rounds caused by unaddressed comments.
 - Regressions linked to their originating work item within a day.
+- **Felt load goes down:** a one-tap check at the evening landing ("How heavy does work feel? 1–5") trends down over the first month. This tests the core promise, not just usage.
 
 **Baseline first:** before Phase 1 ships, time the current morning catch-up for a week (start, end, number of terminals and tabs opened) so the target has something to compare against.
 

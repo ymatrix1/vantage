@@ -39,7 +39,7 @@ Asked → Built → Proven → Reviewed → Shipped → Verified
 
 ## Signals
 
-Signals are warnings that can sit on any piece of work, whatever its step: *waiting on you*, *AI decided alone*, *unproven claim*, *thrashing*, *collision*, *forgotten*, *unseen mention*, *claimed fixed*, *shipped unverified*, *regression*. Each one has one clear action.
+Signals are warnings that can sit on any piece of work, whatever its step: *waiting on you*, *AI decided alone*, *unproven claim*, *thrashing*, *collision*, *forgotten*, *unseen mention*, *claimed fixed*, *shipped unverified*, *regression*, *owe reply*, *follow-up due*, *close the loop*. Each one has one clear action.
 
 ## Calm practices
 
@@ -48,6 +48,9 @@ A2V is also about stress. Its practices for the person doing the work:
 - **Three things today.** Focus on the top three items; everything else is batched.
 - **Interrupt only for red.** Other changes arrive in a digest at chosen times.
 - **Say "safe to ignore" out loud.** Knowing what you can skip is as useful as knowing what to do.
+- **Land the day.** Before stopping, close, park or schedule each open loop, so work doesn't follow you home.
+- **Close loops with people.** Answer what you owe, nudge what's stuck, and tell people when their thing ships.
+- **Answer first.** When explaining status, lead with the answer, then situation, complication and resolution; let people expand only what they need.
 
 ## Glossary
 
