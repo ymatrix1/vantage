@@ -28,7 +28,7 @@ Know what code exists, committed or not, without asking the agent.
 - [x] Commits, branch checkouts, merges and dirty files emitted as events (ingestion catalog)
 - [x] Cadence helper (`scanIntervalMs`) with 30 s active, 10 min idle and battery saver doubling
 - [x] Read-only git commands with no optional locks
-- [ ] Scheduling loop that applies the cadence and persists cursors: owned by `vantage-0k45`
+- [x] Scheduling loop that applies the cadence and persists cursors: delivered by `vantage-0k45`
 - [x] Repos matched by remote URL and first commit, not path (operations edge cases)
 
 ## Out of Scope

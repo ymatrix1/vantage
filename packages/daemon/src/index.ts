@@ -5,3 +5,4 @@ export type { IngestResult } from "./ingest.ts";
 export { runOnce } from "./run.ts";
 export type { RunOptions } from "./run.ts";
 export * from "./git-scanner.ts";
+export * from "./git-loop.ts";

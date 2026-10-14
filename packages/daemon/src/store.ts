@@ -98,6 +98,21 @@ export class Store {
       .run(source, String(offset), now);
   }
 
+  /** Text cursor for sources whose position is not a byte offset (git scan state). */
+  getCursorText(source: string): string | null {
+    const v = this.db.prepare("SELECT cursor FROM cursors WHERE source = ?").get(source)?.["cursor"];
+    return typeof v === "string" ? v : null;
+  }
+
+  setCursorText(source: string, cursor: string, now: string): void {
+    this.db
+      .prepare(
+        `INSERT INTO cursors (source, cursor, updated_at) VALUES (?, ?, ?)
+         ON CONFLICT (source) DO UPDATE SET cursor = excluded.cursor, updated_at = excluded.updated_at`,
+      )
+      .run(source, cursor, now);
+  }
+
   countEvents(): number {
     return num(this.db.prepare("SELECT COUNT(*) AS n FROM events").get(), "n");
   }

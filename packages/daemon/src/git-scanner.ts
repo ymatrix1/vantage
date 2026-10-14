@@ -61,9 +61,16 @@ export async function discoverWorktrees(path: string, env?: NodeJS.ProcessEnv): 
 
 export interface GitScanner {
   /** Scans every registered repo and its worktrees once; returns the new events. */
-  scan(now?: Date): Promise<VantageEvent[]>;
+  scan(now?: Date, options?: ScanOptions): Promise<VantageEvent[]>;
   /** Scan state per worktree path, for persisting cursors. */
   state(): ReadonlyMap<string, ScanState>;
+}
+
+export interface ScanOptions {
+  /** Skips worktrees for which this returns false (the loop's per-worktree cadence). */
+  due?: (worktreePath: string) => boolean;
+  /** Called after each scanned worktree with the events it produced (before cross-worktree dedup). */
+  onWorktree?: (worktreePath: string, events: readonly VantageEvent[], hadState: boolean) => void;
 }
 
 export interface GitScannerOptions {
@@ -92,7 +99,7 @@ export function createGitScanner(options: GitScannerOptions): GitScanner {
 
   return {
     state: () => states,
-    async scan(now = new Date()) {
+    async scan(now = new Date(), scanOptions = {}) {
       const events: VantageEvent[] = [];
       const seen = new Set<string>();
       const emitted = new Set<string>();
@@ -100,6 +107,7 @@ export function createGitScanner(options: GitScannerOptions): GitScanner {
         for (const wt of await discoverWorktrees(registered, env)) {
           if (seen.has(wt.path)) continue;
           seen.add(wt.path);
+          if (scanOptions.due && !scanOptions.due(wt.path)) continue;
           const statusOut = await gitOrNull(wt.path, ["status", "--porcelain=v2", "--branch", "-z"], env);
           if (statusOut === null) continue; // worktree gone or unreadable
           const status = parseStatus(statusOut);
@@ -114,6 +122,7 @@ export function createGitScanner(options: GitScannerOptions): GitScanner {
             now: now.toISOString(),
           });
           states.set(wt.path, result.state);
+          scanOptions.onWorktree?.(wt.path, result.events, prev !== null);
           for (const e of result.events) {
             // Worktrees of one repo share commits; emit each commit event once per scan.
             if (emitted.has(e.sourceId)) continue;
