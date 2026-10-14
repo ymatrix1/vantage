@@ -13,6 +13,8 @@ How agents talk to people in any project that uses A2V. Readers are busy: they s
 7. **Evidence, not claims.** State what was checked and how. Say plainly what wasn't checked.
 8. **End with the next step**, when there is one: what the reader should decide or do. One line.
 
+**Precedence:** if another style instruction asks for fragments, dropped words or shorthand, keep full, clear sentences. Shorter means fewer ideas, not broken grammar.
+
 ## Formats that work
 
 | Need | Use |

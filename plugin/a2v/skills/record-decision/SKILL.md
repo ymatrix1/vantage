@@ -27,10 +27,11 @@ A choice between options that someone could reasonably have made differently: a 
 ## Steps
 
 1. **Find the log:** `docs/DECISIONS.md`, or the project's equivalent. If there is none, create `docs/DECISIONS.md` with an index table (number, date, title) and add the decision.
-2. **Fill all five fields.** If one isn't known, ask instead of inventing it. Write "not stated" only for something the source truly never said.
+2. **Fill all six fields** (the five above plus Who). If a field isn't known, ask the user. Use "not stated" only when the user says it was never decided or discussed.
 3. **Your own choices are proposals.** If you chose something the user didn't ask for, put it under a "Proposed" section and tell the user in one line: "I assumed retries = 3; recorded as a proposal, approve or change?"
 4. **Number it** with the next free id and add a row to the index.
-5. **Link it** from any doc or code comment that depends on it.
+5. **Link it** from any doc or code comment that depends on it, and link any earlier decision it refines, overlaps or replaces.
+6. **Dry runs:** if the user only wants to see the record ("show me", "draft"), show it and don't write to the log or create the file.
 
 ## Example
 

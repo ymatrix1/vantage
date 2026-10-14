@@ -3,7 +3,6 @@
 Claude Code entry point. The canonical instructions are shared with other agents, so edit those, not this file.
 
 @AGENTS.md
-@plugin/a2v/rules/communication.md
 @.agents/rules/privacy-boundary.md
 @.agents/rules/evidence-over-claims.md
 @.agents/rules/docs-and-specs.md
