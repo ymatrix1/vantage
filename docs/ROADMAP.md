@@ -27,13 +27,13 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 | Lane | Beans | Blocked by |
 |---|---|---|
 | Foundation | `vantage-vnn4` (scaffold, tests, code CI) | none |
-| Capture | `vantage-3vuw` (hooks, spool, ingest, backfill), `vantage-in31` (git scanner) | scaffold |
+| Capture | `vantage-3vuw` (hooks, spool, ingest, backfill), `vantage-in31` (git scanner), `vantage-0k45` (scan loop) | scaffold |
 | Core | `vantage-9xbi` (linker), then `vantage-lxud` (stage machine and proof) | capture |
 | Surfaces | `vantage-8nb2` (Stop gate), `vantage-p9at` (status line), `vantage-olgf` (Track page) | stage machine |
 | Delivery | `vantage-p9x2` (install with a prompt, `vantage add`, `doctor`) | capture and surfaces |
 
 - [x] Hook collector writing to the spool; daemon ingesting it into SQLite; transcript backfill.
-- [ ] git scanner for registered repos and worktrees.
+- [ ] git scanner for registered repos and worktrees. Delivered: discovery, events, repo identity, cadence helper (`vantage-in31`). Remaining: scheduling loop and cursor persistence (`vantage-0k45`).
 - [ ] Linker with branch or worktree and issue-key anchors only.
 - [ ] Stage machine for Asked, Built, Proven, with proof at L1 and proof expiry.
 - [ ] `Stop` hook proof gate in warn mode.
