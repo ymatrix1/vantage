@@ -42,6 +42,41 @@ describe("detectShellEffects", () => {
     expect(detectShellEffects("git -C repo commit -m x").commit).toBe(true);
     expect(detectShellEffects("git status").commit).toBe(false);
   });
+
+  // Regression: false-positive shapes found sampling real transcripts (vantage-9bg1). Synthetic commands.
+  it.each([
+    ['grep -n "a->b" src/x.cpp', "arrow inside a quoted grep pattern"],
+    ["grep -E 'size>256M' app.log | head", "redirect character inside single quotes"],
+    ["sed -E 's/[a-z]{4,}/<id>/g' notes.json", "angle brackets inside a quoted sed script"],
+    ['echo "a > b" | wc -c', "greater-than inside a quoted echo"],
+    ["awk '{ if (n>=3) print }' data.txt", "comparison operator inside quotes"],
+    ["python3 - <<'E'\nif a >= 1: print(a)\nE", "comparison inside a here-document body"],
+    ["cat <<EOF\nx => y\nEOF", "arrow inside a here-document body"],
+    ["echo pitch >= 3", "operator that is not a redirect"],
+  ])("does not name a write for %s (%s)", (cmd) => {
+    expect(detectShellEffects(cmd).writes).toEqual([]);
+  });
+
+  it("still names a quoted redirect target and a heredoc redirect", () => {
+    expect(detectShellEffects('echo hi > "my file.txt"').writes).toEqual(["my file.txt"]);
+    expect(detectShellEffects("cat > notes.md <<'EOF'\nbody > ignored\nEOF").writes).toEqual(["notes.md"]);
+  });
+
+  it("ignores sed -i and git commit that only appear as quoted text", () => {
+    expect(detectShellEffects("grep -n 'sed -i' docs/a.md").opaqueWrite).toBe(false);
+    expect(detectShellEffects('echo "run git commit later"').commit).toBe(false);
+  });
+
+  it("flags scripted file writes as opaque writes", () => {
+    const script = "python3 - <<'E'\np='a.txt'\nopen(p,'w',newline='').write('x')\nE";
+    expect(detectShellEffects(script).opaqueWrite).toBe(true);
+    expect(detectShellEffects("python3 - <<'E'\nprint(open('a.txt').read())\nE").opaqueWrite).toBe(false);
+    expect(detectShellEffects("git mv a.ts b.ts").opaqueWrite).toBe(true);
+  });
+
+  it("finds a commit whose config argument is quoted", () => {
+    expect(detectShellEffects('git -c user.name="A B" commit -m x').commit).toBe(true);
+  });
 });
 
 const kind = (name: string, extra = {}) =>
