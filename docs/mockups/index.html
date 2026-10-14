@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vantage mockups</title>
+<!-- Static mockups of the Vantage UI. All data is synthetic. Colors come from tokens, as themes will. -->
+<style>
+:root{
+  --page:#F7F7F5;--panel:#FFFFFF;--card:#F1F0EC;--text:#1F2933;--text-2:#5F6670;--muted:#9AA0A6;--border:#E3E1DA;
+  --done:#4CAF7A;--current:#3B7DD8;--risk:#C98A1B;--risk-bg:#FBF0DA;--red:#C8443B;--red-bg:#FBE6E3;--ok-bg:#E5F3EA;
+  --claude:#7F77DD;--codex:#1D9E75;--review:#BA7517;--radius:8px;--font:system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --page:#15181C;--panel:#1C2026;--card:#232830;--text:#E6E8EB;--text-2:#A3A9B2;--muted:#6F7680;--border:#2E343D;
+  --risk-bg:#3A2E14;--red-bg:#3D1F1C;--ok-bg:#1D3326;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--text);font:14px/1.5 var(--font);padding:24px 16px}
+main{max-width:920px;margin:0 auto}
+h1{font-size:20px;font-weight:500;margin:0 0 4px}
+h2{font-size:16px;font-weight:500;margin:40px 0 4px}
+.note{color:var(--text-2);font-size:13px;margin:0 0 14px}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.row{display:grid;grid-template-columns:34px minmax(0,1fr) 120px 120px 44px;gap:10px;align-items:center;padding:8px 4px;border-bottom:1px solid var(--border)}
+.row:last-child{border-bottom:none}
+.grp{display:flex;justify-content:space-between;font-size:12px;color:var(--text-2);padding:12px 4px 4px}
+.t{margin:0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s{margin:0;font-size:12px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip{font-size:11px;padding:1px 6px;border-radius:var(--radius);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block}
+.p1{background:var(--red-bg);color:var(--red)}.p2{background:var(--risk-bg);color:var(--risk)}.p3{background:var(--card);color:var(--text-2)}
+.dots{display:flex;gap:6px}
+.d{width:11px;height:11px;border-radius:50%;border:1.5px solid var(--muted)}
+.d.done{background:var(--done);border-color:var(--done)}
+.d.now{border:2px solid var(--current)}
+.d.risk{border:2px solid var(--risk);background:var(--risk-bg)}
+.d.red{border:2px solid var(--red);background:var(--red-bg)}
+.d.skip{border-style:dashed;opacity:.6}
+.age{font-size:11px;color:var(--muted);text-align:right}
+.cards{display:grid;gap:10px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+.head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.bar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--card);margin:10px 0 4px}
+.legend{display:flex;gap:14px;font-size:11px;color:var(--text-2);flex-wrap:wrap}
+.sq{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px}
+.dig{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.dig:last-child{border-bottom:none}
+button{font:inherit;font-size:12px;padding:3px 10px;border-radius:var(--radius);border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer}
+.proj{display:grid;grid-template-columns:minmax(0,1fr) 180px 80px;gap:12px;align-items:center;padding:10px 4px;border-bottom:1px solid var(--border)}
+.beh{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.beh span.x{flex:1}
+.ev{font-size:12px;background:var(--card);border-radius:var(--radius);padding:5px 9px;white-space:nowrap}
+</style>
+</head>
+<body>
+<main>
+<h1>Vantage mockups</h1>
+<p class="note">Static and synthetic. Specs: <a href="../UX.md">UX</a>, <a href="../specs/web-ui.md">web UI</a>. Follows light and dark mode.</p>
+
+<h2>Focus</h2>
+<p class="note">Today's top 3, then batched changes.</p>
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><strong style="font-weight:500">Today, 3 things matter</strong><span class="s">14 other changes batched for 14:00</span></div>
+<div class="cards">
+  <div class="card"><div class="head"><div><p class="t">Checkout API review fixes</p><p class="s">billing-api · PR #212 · re-review requested by Sam · 2 threads open</p></div><div><span class="chip p1">P1 · blocks Sam</span> <span class="chip p3">effort S</span></div></div>
+    <div class="bar"><div style="width:45%;background:var(--claude)"></div><div style="width:20%;background:var(--codex)"></div><div style="width:35%;background:var(--review)"></div></div>
+    <div class="legend"><span><span class="sq" style="background:var(--claude)"></span>Claude 3 sessions</span><span><span class="sq" style="background:var(--codex)"></span>Codex 1</span><span><span class="sq" style="background:var(--review)"></span>Review rounds 2</span></div></div>
+  <div class="card"><div class="head"><div><p class="t">ENG-142 dedupe events</p><p class="s">data-pipeline · due Thu · built, 0 proof · last touched 2 days ago</p></div><div><span class="chip p2">P2 · due soon</span> <span class="chip p3">effort L</span></div></div></div>
+  <div class="card"><div class="head"><div><p class="t">Webhook retry design</p><p class="s">Promised in chat 6 days ago · 0 code</p></div><div><span class="chip p2">forgotten</span> <span class="chip p3">effort M</span></div></div></div>
+</div>
+<div class="panel" style="margin-top:12px">
+  <div class="dig"><span>Reviews · 1 changes requested, 1 claimed fixed but lines untouched</span><button>Open</button></div>
+  <div class="dig"><span>Mentions you haven't seen · 3</span><button>Open</button></div>
+  <div class="dig"><span>Going stale · 2 items untouched 5+ days</span><button>Open</button></div>
+  <div class="dig" style="color:var(--text-2)"><span>Safe to ignore today · 9 items, nothing changed</span></div>
+</div>
+
+<h2>Track, grouped by attention</h2>
+<p class="note">One row per item. Dots: Asked, Built, Proven, Reviewed, Shipped, Verified.</p>
+<div class="panel">
+  <div class="grp"><span>Needs you</span><span>3</span></div>
+  <div class="row"><span class="chip p1">P1</span><div><p class="t">Checkout API review fixes</p><p class="s">billing-api · PR #212</p></div><div class="dots"><span class="d done"></span><span class="d done"></span><span class="d done"></span><span class="d risk"></span><span class="d"></span><span class="d"></span></div><span class="chip p2">claimed fixed</span><span class="age">2h</span></div>
+  <div class="row"><span class="chip p1">P1</span><div><p class="t">Event dedupe</p><p class="s">data-pipeline</p></div><div class="dots"><span class="d done"></span><span class="d done"></span><span class="d done"></span><span class="d done"></span><span class="d done"></span><span class="d red"></span></div><span class="chip p1">regression</span><span class="age">40m</span></div>
+  <div class="row"><span class="chip p2">P2</span><div><p class="t">Review: Sam's auth PR</p><p class="s">web-app · review request</p></div><div class="dots"><span class="d done"></span><span class="d now"></span></div><span class="chip p1">blocks Sam</span><span class="age">1d</span></div>
+  <div class="grp"><span>In progress</span><span>3</span></div>
+  <div class="row"><span class="chip p2">P2</span><div><p class="t">ENG-142 dedupe events</p><p class="s">data-pipeline · 5 sessions</p></div><div class="dots"><span class="d done"></span><span class="d risk"></span><span class="d"></span><span class="d"></span><span class="d"></span><span class="d"></span></div><span class="chip p2">no proof</span><span class="age">2d</span></div>
+  <div class="row"><span class="chip p3">P3</span><div><p class="t">Docs refresh</p><p class="s">web-app</p></div><div class="dots"><span class="d done"></span><span class="d now"></span><span class="d"></span><span class="d skip"></span><span class="d skip"></span><span class="d skip"></span></div><span></span><span class="age">5m</span></div>
+  <div class="row"><span class="chip p3">P3</span><div><p class="t">Webhook retry design</p><p class="s">commitment</p></div><div class="dots"><span class="d now" style="border-style:dashed"></span><span class="d"></span><span class="d"></span><span class="d"></span><span class="d"></span><span class="d"></span></div><span class="chip p2">forgotten 6d</span><span class="age">6d</span></div>
+  <div class="grp"><span>Done this week · 4</span><span>show</span></div>
+</div>
+
+<h2>Track, grouped by project</h2>
+<p class="note">Each project shows a stage health bar and one word.</p>
+<div class="panel">
+  <div class="proj"><div><p class="t">Data platform</p><p class="s">data-pipeline, warehouse · epic ENG-100</p></div><div class="bar" style="margin:0"><div style="width:20%;background:var(--muted)"></div><div style="width:30%;background:var(--risk)"></div><div style="width:15%;background:var(--current)"></div><div style="width:35%;background:var(--done)"></div></div><span class="chip p1">2 need you</span></div>
+  <div class="proj"><div><p class="t">Infra</p><p class="s">infra</p></div><div class="bar" style="margin:0"><div style="width:10%;background:var(--muted)"></div><div style="width:20%;background:var(--current)"></div><div style="width:70%;background:var(--done)"></div></div><span class="chip p3">calm</span></div>
+  <div class="proj" style="border-bottom:none"><div><p class="t">Web</p><p class="s">web-app, billing-api</p></div><div class="bar" style="margin:0"><div style="width:40%;background:var(--current)"></div><div style="width:60%;background:var(--done)"></div></div><span class="chip p2">1 at risk</span></div>
+</div>
+
+<h2>Item</h2>
+<p class="note">Behaviors with proof, history, one action per need.</p>
+<div class="panel">
+  <div class="head"><div><p class="t" style="font-size:16px">Webhook payment failure handling</p><p class="s">billing-api · ENG-142 · 3 sessions</p></div>
+    <div class="dots" style="align-items:center"><span class="d done"></span><span class="d done"></span><span class="d risk"></span><span class="d"></span><span class="d"></span><span class="d"></span></div></div>
+  <p class="s" style="margin-top:12px">Proof</p>
+  <div class="beh"><span class="x">Failed payment marks invoice past due</span><span class="chip" style="background:var(--ok-bg);color:var(--done)">L2 test · 4 passed</span></div>
+  <div class="beh"><span class="x">Duplicate webhook is ignored</span><span class="chip p2">no proof</span><button>Ask for proof</button></div>
+  <div class="beh" style="border-bottom:none"><span class="x">After 3 retries, revoke access <span style="color:var(--red);font-size:12px">· AI decided, not asked</span></span><button>Approve</button><button>Change</button></div>
+  <p class="s" style="margin-top:12px">History</p>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><span class="ev">Mon · Claude · discussed</span><span class="ev">Tue · Codex · built 3 files</span><span class="ev">Wed · Claude · 1 of 3 proven</span></div>
+  <div style="margin-top:14px"><button>Resume with context</button></div>
+</div>
+</main>
+</body>
+</html>

@@ -116,4 +116,4 @@ The main "all work" view. A table, not a board, because it stays readable with m
 
 ## Mockups
 
-Mockups were made in the planning conversation: lifecycle track, board, item detail, Focus, Track (attention grouping), Track (project grouping). Recreate them as static HTML in `docs/mockups/` when the UI phase starts.
+Mockups were made in the planning conversation: lifecycle track, board, item detail, Focus, Track (attention grouping), Track (project grouping). They're recreated as static HTML with synthetic data in [docs/mockups/index.html](mockups/index.html).

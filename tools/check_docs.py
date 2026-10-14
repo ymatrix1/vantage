@@ -1,0 +1,85 @@
+"""Docs checks for Vantage, run locally and in CI.
+
+Checks:
+1. Relative Markdown links point to files that exist.
+2. Every decision and proposal in docs/DECISIONS.md has the five required fields (D30).
+3. No secrets or personal identifiers slipped into tracked text files (privacy boundary).
+
+Exits non-zero with a list of problems. Standard library only.
+"""
+
+import pathlib
+import re
+import subprocess
+import sys
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+FIELDS = ["Context", "Decision", "Why", "Alternatives", "Impact"]
+LINK = re.compile(r"\]\(([^)\s]+)\)")
+PRIVACY = [
+    (re.compile(r"\bgh[opsu]_[A-Za-z0-9]{20,}"), "GitHub token"),
+    (re.compile(r"\bxox[abpr]-[A-Za-z0-9-]{10,}"), "Slack token"),
+    (re.compile(r"\bsk-[A-Za-z0-9_-]{20,}"), "API key"),
+    (re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"), "email address"),
+]
+TEXT_SUFFIXES = {".md", ".yml", ".yaml", ".json", ".toml", ".py", ".ts", ".js", ".html", ".css"}
+
+
+def tracked_files():
+    out = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True, text=True, check=True)
+    return [ROOT / p for p in out.stdout.splitlines()]
+
+
+def check_links(files):
+    problems = []
+    for f in files:
+        if f.suffix != ".md" or not f.exists():
+            continue
+        text = f.read_text(encoding="utf-8")
+        text = re.sub(r"```.*?```", "", text, flags=re.S)  # fenced code blocks
+        text = re.sub(r"`[^`\n]*`", "", text)  # inline code spans hold examples, not links
+        for target in LINK.findall(text):
+            if target.startswith(("http://", "https://", "mailto:", "#")):
+                continue
+            path = target.split("#", 1)[0]
+            if path and not (f.parent / path).exists():
+                problems.append(f"{f.relative_to(ROOT)}: broken link -> {target}")
+    return problems
+
+
+def check_decisions():
+    text = (ROOT / "docs" / "DECISIONS.md").read_text(encoding="utf-8")
+    problems = []
+    for block in re.split(r"(?m)^### ", text)[1:]:
+        title = block.splitlines()[0].strip()
+        if not re.match(r"^[DV]\d+\.", title):
+            continue
+        for field in FIELDS:
+            if f"**{field}:**" not in block:
+                problems.append(f"docs/DECISIONS.md: {title} is missing '{field}'")
+    return problems
+
+
+def check_privacy(files):
+    problems = []
+    for f in files:
+        if f.suffix not in TEXT_SUFFIXES or not f.exists() or f.name == "check_docs.py":
+            continue
+        for n, line in enumerate(f.read_text(encoding="utf-8", errors="ignore").splitlines(), 1):
+            for pattern, label in PRIVACY:
+                if pattern.search(line):
+                    problems.append(f"{f.relative_to(ROOT)}:{n}: possible {label}")
+    return problems
+
+
+def main():
+    files = tracked_files()
+    problems = check_links(files) + check_decisions() + check_privacy(files)
+    for p in problems:
+        print(p)
+    print(f"{len(problems)} problem(s) in {len(files)} tracked files")
+    return 1 if problems else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
