@@ -63,13 +63,13 @@ When you report something you just did, write a log line, not a story: past-tens
 
 | Instead of | Write |
 |---|---|
-| I told in31 to wait for my word before rebasing, since #10 isn't merged yet. | Messaged in31: wait for #10 merge before rebasing. |
+| I told in 31 to wait for my word before rebasing, since #10 isn't merged yet. | Messaged in 31: wait for #10 merge before rebasing. |
 | I ran the checks again after the last edit and they all passed. | ✅ `pnpm check`: 43 of 43 pass |
 | I opened a pull request for the CLAUDE.md change. | Opened PR ymatrix1/vantage#11 · docs(a2v): import communication… |
 
 Rules for action lines:
 
-- Use short handles the reader already knows (`in31`, `#10`, `3vuw`), not full titles or ids.
+- Use short handles the reader already knows (`in 31`, `#10`, `3vuw`), not full titles or ids.
 - Keep every word that changes the meaning: who, what, and any condition ("wait for #10 merge" must keep "merge").
 - Don't use action-line style for explanations, reasons or trade-offs. Those still get full, clear sentences.
 - One action per line. Group lines under the result they support.
