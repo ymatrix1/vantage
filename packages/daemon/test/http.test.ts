@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { VantageEvent } from "@vantage/core";
 import {
   BIND_HOST,
+  DEFAULT_QUERY,
   Store,
   loadOrCreateToken,
   runStagePass,
@@ -220,7 +221,7 @@ describe("read-only API over a synthetic store", () => {
 
   it("GET /api/diagnostics reports source health basics", async () => {
     const d = JSON.parse((await call("/api/diagnostics", auth)).body);
-    expect(d).toMatchObject({ events: 4, items: 2, schemaVersion: 4 });
+    expect(d).toMatchObject({ events: 4, items: 2, schemaVersion: 5 });
     expect(d.sources.find((s: { source: string }) => s.source === "claude_code").events).toBe(4);
   });
 
@@ -244,9 +245,11 @@ describe("performance budget (web-ui spec)", () => {
       }
     });
     const t0 = performance.now();
-    const body = JSON.stringify(trackView(store, NOW));
+    const body = JSON.stringify(trackView(store, NOW, { ...DEFAULT_QUERY, pageSize: 100, since: "all" }));
     const ms = performance.now() - t0;
-    expect(JSON.parse(body).groups[1].items.length).toBeGreaterThanOrEqual(500);
+    const parsed = JSON.parse(body);
+    expect(parsed.page.total).toBe(502);
+    expect(parsed.groups.flatMap((g: { items: unknown[] }) => g.items)).toHaveLength(100);
     expect(ms).toBeLessThan(100);
   });
 });

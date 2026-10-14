@@ -106,6 +106,13 @@ const MIGRATIONS: readonly string[] = [
    LEFT JOIN events d ON d.kind = 'session.derived' AND d.session_id = e.session_id
    WHERE l.undone_at IS NULL AND e.session_id IS NOT NULL
    GROUP BY l.item_key;`,
+  // Track query API: branch and has_edits for filters, and indexes for the sort and filter columns.
+  // Existing rows get has_edits = 1 and a null branch until the next stage pass rewrites them.
+  `ALTER TABLE work_items ADD COLUMN branch TEXT;
+   ALTER TABLE work_items ADD COLUMN has_edits INTEGER NOT NULL DEFAULT 1;
+   CREATE INDEX work_items_activity ON work_items (last_activity);
+   CREATE INDEX work_items_repo ON work_items (repo, last_activity);
+   CREATE INDEX work_items_stage ON work_items (stage, last_activity);`,
 ];
 
 /** Reads a numeric (or numeric-text) column from a row; 0 when the row or column is missing. */

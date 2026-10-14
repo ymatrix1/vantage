@@ -5,6 +5,7 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import { existsSync, readFileSync, statSync } from "node:fs";
 import type { Duplex } from "node:stream";
 import { extname, join, normalize, sep } from "node:path";
+import { parseTrackQuery } from "@vantage/core";
 import { diagnosticsView, traceView, trackView } from "./api.ts";
 import { LIVE_PROTOCOL, type LiveHub } from "./live.ts";
 import { tokenMatches } from "./token.ts";
@@ -137,7 +138,12 @@ export function startHttp(options: HttpOptions): Promise<HttpHandle> {
       if (!tokenMatches(token, bearer(req))) return refuse(res, 401, "missing or wrong token");
 
       if (url.pathname === "/api/live") return refuse(res, 426, "websocket upgrade required");
-      if (url.pathname === "/api/track") return send(res, 200, trackView(store, now()));
+      if (url.pathname === "/api/track") {
+        const parsed = parseTrackQuery(url.searchParams);
+        return parsed.ok
+          ? send(res, 200, trackView(store, now(), parsed.query))
+          : refuse(res, 400, parsed.error);
+      }
       if (url.pathname === "/api/diagnostics") return send(res, 200, diagnosticsView(store, now()));
       const m = /^\/api\/items\/([^/]+)\/trace$/.exec(url.pathname);
       if (m) {
