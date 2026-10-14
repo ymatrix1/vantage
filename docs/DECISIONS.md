@@ -907,7 +907,7 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 
 ## Proposed (pending confirmation)
 
-### D72. How the Phase 1 Stop gate reads state and takes its mode
+### D73. How the Phase 1 Stop gate reads state and takes its mode
 
 - **Status:** proposed
 - **Context:** Building the gate (`vantage-8nb2`) and `session.stopped` capture (`vantage-cji5`) hit choices D53, D59 and D60 leave open. The Stop hook is the only synchronous hook and has no latency headroom (D59, D67). The daemon derives item state on a 30 second pass, so the state a Stop hook reads can lag the last few edits. Config is `~/.vantage/config.toml` (*tentative*), and a TOML parser would add a dependency to the hot path.

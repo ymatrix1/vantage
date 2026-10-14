@@ -12,7 +12,7 @@ How Vantage hears about things happening in each source.
 
 ### Stop hook
 
-`Stop` is the only synchronous hook. The same command appends a `session.stopped` event (payload `stopHookActive`, `cwd`) to the spool, then runs the proof gate ([proof](proof.md#the-gate), D72). Local medians, 21 runs, built JS: spool-only hook 80 ms, Stop with no daemon store 84 ms, Stop reading a store 85 ms (max 106 ms).
+`Stop` is the only synchronous hook. The same command appends a `session.stopped` event (payload `stopHookActive`, `cwd`) to the spool, then runs the proof gate ([proof](proof.md#the-gate), D73). Local medians, 21 runs, built JS: spool-only hook 80 ms, Stop with no daemon store 84 ms, Stop reading a store 85 ms (max 106 ms).
 
 ### Hook latency
 

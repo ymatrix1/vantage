@@ -34,4 +34,4 @@ Block mode as a default (Q11).
 
 ## Summary of Changes
 
-`packages/hooks/src/gate.ts`: read-only gate over the daemon's derived tables, modes off and warn (block parsed, renders as warn), silent on any doubt, docs-only and `stop_hook_active`. `bin.ts` runs it only for `Stop`; `hooksSettings` registers `Stop` synchronously. Tests in `packages/hooks/test/gate.test.ts` cover unproven, proven, docs-only, expired, failed, weak, daemon down, loop safety and the real command. Proposed D72. Follow-ups: block wiring, gate lag.
+`packages/hooks/src/gate.ts`: read-only gate over the daemon's derived tables, modes off and warn (block parsed, renders as warn), silent on any doubt, docs-only and `stop_hook_active`. `bin.ts` runs it only for `Stop`; `hooksSettings` registers `Stop` synchronously. Tests in `packages/hooks/test/gate.test.ts` cover unproven, proven, docs-only, expired, failed, weak, daemon down, loop safety and the real command. Proposed D73. Follow-ups: block wiring, gate lag.

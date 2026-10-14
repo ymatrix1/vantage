@@ -12,7 +12,7 @@ blocked_by:
 
 ## Context
 
-The Stop gate reads derived tables, so a check or edit within the last 30 seconds may be missing (D72 Impact). Measure how often this gives a wrong warning, then decide whether the hook should ask for a pass first. Blocked by: vantage-8nb2.
+The Stop gate reads derived tables, so a check or edit within the last 30 seconds may be missing (D73 Impact). Measure how often this gives a wrong warning, then decide whether the hook should ask for a pass first. Blocked by: vantage-8nb2.
 
 ## Higher Goal
 

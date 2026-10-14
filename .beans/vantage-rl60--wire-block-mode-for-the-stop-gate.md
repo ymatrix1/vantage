@@ -12,7 +12,7 @@ blocked_by:
 
 ## Context
 
-The Stop gate (vantage-8nb2, D72) parses mode block but renders it as warn. D60: exit 2 with the message on stderr, only when stop_hook_active is false. Blocked by: vantage-8nb2, and the policy answer to Q11.
+The Stop gate (vantage-8nb2, D73) parses mode block but renders it as warn. D60: exit 2 with the message on stderr, only when stop_hook_active is false. Blocked by: vantage-8nb2, and the policy answer to Q11.
 
 ## Higher Goal
 

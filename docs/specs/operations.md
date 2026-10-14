@@ -20,7 +20,7 @@ A single file, `~/.vantage/config.toml` (*tentative*):
   - proof commands to add to the default list.
 - **Sources:** which ones are enabled.
 - **Calm settings:** digest times (default 10:00 and 14:00), quiet hours, `forgotten` threshold (default 5 days), Focus size (default 3).
-- **Proof gate mode:** `proof_gate = "off" | "warn" | "block"`, default `warn`; `VANTAGE_GATE_MODE` overrides it (D72). `block` is not wired yet.
+- **Proof gate mode:** `proof_gate = "off" | "warn" | "block"`, default `warn`; `VANTAGE_GATE_MODE` overrides it (D73). `block` is not wired yet.
 - **Engines, budgets and data policy:** which engine answers each AI-assisted job, daily limits, and which kinds of content an outside engine may receive. All outside calls are off by default (see [settings](settings.md)).
 
 `vantage init` writes the config, installs the Claude Code hooks and git hooks, and runs a first backfill.
