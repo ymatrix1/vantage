@@ -7,22 +7,23 @@ This file is written for an AI coding agent (Claude Code or similar) that a user
 ## The prompt users paste
 
 ```text
-Install Vantage in this repo. Follow https://github.com/ymatrix1/vantage/blob/main/docs/install-for-agents.md exactly: show me the dry run first, wait for my OK, then install, verify with vantage doctor, and tell me what changed.
+Install Vantage for this repo. Follow https://github.com/ymatrix1/vantage/blob/main/docs/install-for-agents.md exactly: check the prerequisites, get and build Vantage if it is not already on this machine, show me the dry run first and wait for my OK, then install, start it, verify with vantage doctor, and tell me what changed and how to undo it.
 ```
 
 ## Steps for the agent
 
-1. **Check prerequisites.** Node.js 22.5 or newer (`node --version`; Vantage uses the built-in `node:sqlite`) and git. In a checkout, `pnpm install && pnpm build` must have run. If something is missing, tell the user what to install and stop.
-2. **Dry run first.** From the repo root run `vantage add --dry-run`. It prints every file it would change and writes nothing. Show the user the full output: the Claude Code settings file (8 hooks and the status line), `config.toml` (the repo) and the hook command.
-3. **Wait for the user's explicit OK.** Installing changes machine-level settings (the user's Claude Code `settings.json`). Don't continue without a clear yes in this chat.
-4. **Install.** Run `vantage add --yes`. It backs up `settings.json` first, refuses unreadable settings, and never replaces another status line. Add `--git-hooks` only if the user asks for it.
-5. **Start and verify.** Run `vantage start` in a separate terminal (it stays running), then `vantage doctor`. A FAIL must be fixed (show its fix line and ask before applying it). A WARN is fine if the user understands it, for example "no repos registered" before the first add.
-6. **Report back** in a few lines: what was installed, where (file paths from the output), the backup path, how to open the Track page (`vantage open`), and how to undo it (`vantage remove` for this repo, `vantage uninstall` for the hooks and status line).
+1. **Check prerequisites.** Node.js 22.5 or newer (`node --version`; Vantage uses the built-in `node:sqlite`), pnpm (`pnpm --version`) and git. If something is missing, tell the user what to install and stop.
+2. **Get and build Vantage** (skip what already exists). Look for an existing checkout: `~/.vantage/install.json` names one, or ask the user. If there is none, ask where to put it (suggest `~/vantage`; never inside the repo being tracked), then `git clone https://github.com/ymatrix1/vantage.git <dir>`, and in that directory `pnpm install --frozen-lockfile && pnpm build`. Check that `packages/cli/dist/src/main.js` exists. From here, `vantage` means `node <dir>/packages/cli/dist/src/main.js`; run every command from the root of the repo the user wants to track.
+3. **Dry run first.** From that repo root run `vantage add --dry-run`. It prints every file it would change and writes nothing. Show the user the full output: the Claude Code settings file (8 hooks, and the status line unless another one is set), `config.toml` (the repo) and the hook command.
+4. **Wait for the user's explicit OK.** Installing changes machine-level settings (the user's Claude Code `settings.json`). Don't continue without a clear yes in this chat.
+5. **Install.** Run `vantage add --yes`. It backs up `settings.json` first, refuses unreadable settings, and never replaces another status line. Add `--git-hooks` only if the user asks for it.
+6. **Start and verify.** Start the daemon in the background so this session is not blocked (`vantage start`; a second start is harmless because of the single-instance guard), then run `vantage doctor`. A FAIL must be fixed (show its fix line and ask before applying it). A WARN is fine if the user understands it, for example "no repos registered" before the first add.
+7. **Report back** in a few lines: what was installed, where (file paths from the output), the backup path, how to open the Track page (`vantage open`), and how to undo it (`vantage remove` for this repo, `vantage uninstall` for the hooks and status line).
 
 ## Rules
 
 - **Never** add tokens, API keys or credentials. Remote sources are connected later by the user.
-- **Never** commit anything. Nothing in the repo changes.
+- **Never** commit anything. Nothing in the tracked repo changes (the Vantage checkout lives outside it).
 - **Never** run `vantage uninstall` or delete the Vantage home (`~/.vantage`) unless the user asks.
 - **Never** edit `settings.json` or git config by hand for Vantage. Use `vantage add`, so the entries carry the `--vantage-managed` marker and can be removed exactly.
 - If anything is unclear, ask the user instead of guessing.
