@@ -29,13 +29,19 @@ const textOrNull = (r: Row, col: string): string | null => {
 export function loadEvents(store: Store): { ids: Map<string, number>; events: VantageEvent[] } {
   const rows = store.db
     .prepare(
-      "SELECT id, source, source_id, kind, occurred_at, session_id, payload_json FROM events ORDER BY occurred_at, id",
+      `SELECT e.id, e.source, e.source_id, e.kind, e.occurred_at, e.session_id, e.payload_json, b.branch AS stored_branch
+       FROM events e LEFT JOIN event_branches b ON b.source = e.source AND b.source_id = e.source_id
+       ORDER BY e.occurred_at, e.id`,
     )
     .all();
   const ids = new Map<string, number>();
   const events: VantageEvent[] = [];
   for (const r of rows) {
     const sessionId = textOrNull(r, "session_id");
+    const payload: Record<string, unknown> = JSON.parse(text(r, "payload_json"));
+    // A branch recorded beside the event fills a payload that has none (D88); the payload stays as stored.
+    const stored = textOrNull(r, "stored_branch");
+    if (stored && !("branch" in payload)) payload["branch"] = stored;
     const e = parseEvent(
       JSON.stringify({
         sourceId: text(r, "source_id"),
@@ -43,7 +49,7 @@ export function loadEvents(store: Store): { ids: Map<string, number>; events: Va
         kind: text(r, "kind"),
         timestamp: text(r, "occurred_at"),
         ...(sessionId ? { sessionId } : {}),
-        payload: JSON.parse(text(r, "payload_json")),
+        payload,
       }),
     );
     if (!e) continue;

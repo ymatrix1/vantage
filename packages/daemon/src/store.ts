@@ -106,6 +106,14 @@ const MIGRATIONS: readonly string[] = [
    LEFT JOIN events d ON d.kind = 'session.derived' AND d.session_id = e.session_id
    WHERE l.undone_at IS NULL AND e.session_id IS NOT NULL
    GROUP BY l.item_key;`,
+  // The branch a transcript line said was checked out when a tool call ran (D88). A side table, not a
+  // rewrite of the event: the hook may have stored the call first, and events stay immutable.
+  `CREATE TABLE event_branches (
+     source TEXT NOT NULL,
+     source_id TEXT NOT NULL,
+     branch TEXT NOT NULL,
+     PRIMARY KEY (source, source_id)
+   );`,
 ];
 
 /** Reads a numeric (or numeric-text) column from a row; 0 when the row or column is missing. */
@@ -166,6 +174,17 @@ export class Store {
         JSON.stringify(e.payload),
       );
     return Number(r.changes) > 0;
+  }
+
+  /** Records the branch for a tool event, whether or not the event is stored yet. First value wins. */
+  setEventBranch(source: string, sourceId: string, branch: string): void {
+    this.db
+      .prepare("INSERT OR IGNORE INTO event_branches (source, source_id, branch) VALUES (?, ?, ?)")
+      .run(source, sourceId, branch);
+  }
+
+  countEventBranches(): number {
+    return num(this.db.prepare("SELECT COUNT(*) AS n FROM event_branches").get(), "n");
   }
 
   getCursor(source: string): number {

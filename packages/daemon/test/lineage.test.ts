@@ -132,7 +132,7 @@ describe("migration 4", () => {
     old.close();
     const upgraded = new Store(path);
     try {
-      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(4);
+      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(5);
       expect(upgraded.countEvents()).toBe(1);
       expect(itemSessionCounts(upgraded).get("issue:FTK-9")).toMatchObject({
         sessionCount: 1,

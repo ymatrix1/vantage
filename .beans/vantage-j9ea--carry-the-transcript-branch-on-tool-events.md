@@ -1,10 +1,11 @@
 ---
 # vantage-j9ea
 title: Carry the transcript branch on tool events
-status: todo
+status: in-progress
 type: task
+priority: normal
 created_at: 2026-10-14T23:17:12Z
-updated_at: 2026-10-14T23:17:12Z
+updated_at: 2026-10-14T23:24:41Z
 parent: vantage-fmfh
 ---
 
