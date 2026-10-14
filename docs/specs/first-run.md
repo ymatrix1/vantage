@@ -17,6 +17,31 @@ Run once, from any repo:
 
 Nothing is sent anywhere during init. Remote sources (Slack, Jira, Linear, monitoring) are offered later, one at a time, from the Sources page.
 
+## Adding an existing repo
+
+One command from inside any repo, existing work included:
+
+```bash
+npx vantage add
+```
+
+Or from inside Claude Code: `/plugin install vantage`, then `/vantage add`.
+
+What it does, in under a minute:
+
+1. **Starts Vantage** if it isn't running (installs it the first time, then runs the `vantage init` questions once per machine).
+2. **Registers the repo** and finds its worktrees automatically.
+3. **Hooks are installed once per machine, not per repo:** Claude Code hooks at the user level and git hooks through a global `core.hooksPath` that chains the repo's own hooks (Husky, Lefthook, plain `.git/hooks`). Existing hooks keep working.
+4. **Backfills this repo's history:** agent sessions whose working directory is the repo or one of its worktrees, plus git history, for the last 14 days.
+5. **Opens the landscape** filtered to this repo.
+
+Guarantees:
+
+- **Nothing in the repo changes by default.** No files written, nothing committed.
+- `--dry-run` prints every change before making it.
+- `--team` (opt-in) writes a small `.vantage/project.toml` with shared settings (project name, deploy signal, proof commands, monitoring service names) that teammates can commit.
+- `vantage remove` unregisters the repo; `vantage uninstall` removes everything (see [operations](operations.md#upgrades-backup-and-uninstall)).
+
 ## First view
 
 - **Backfill running:** the landscape fills in as items are found, with a quiet "reading the last 14 days" line.

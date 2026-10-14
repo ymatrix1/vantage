@@ -63,6 +63,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 | [D47](#d47-diff-comments-become-prompts) | 2026-10-14 | Diff comments become prompts |
 | [D48](#d48-a-vantage-mcp-server) | 2026-10-14 | A Vantage MCP server |
 | [D49](#d49-visual-proof-by-screenshot) | 2026-10-14 | Visual proof by screenshot |
+| [D50](#d50-one-command-to-add-an-existing-repo) | 2026-10-14 | One command to add an existing repo |
 
 ---
 
@@ -464,6 +465,14 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Alternatives:** A built-in preview browser (large scope); no visual proof.
 - **Impact:** Screenshot capture method to choose; storage in `~/.vantage/`; waits on research R12.
 
+
+### D50. One command to add an existing repo
+
+- **Context:** Most repos already exist with their own hooks and history; setup must be easy and safe there.
+- **Decision:** `npx vantage add` (or `/vantage add` inside Claude Code) registers the repo, installs hooks once per machine (user-level Claude Code hooks, global git hooks that chain the repo's own), backfills 14 days of this repo's sessions and git history, and opens the landscape. Nothing in the repo changes unless the user opts in with `--team`.
+- **Why:** One command removes friction; machine-level hooks avoid touching every repo; chaining keeps existing hook managers working.
+- **Alternatives:** Per-repo hook files (pollutes repos, conflicts with Husky and Lefthook); manual setup (too much friction).
+- **Impact:** An `add` command, hook chaining logic with tests for Husky and Lefthook, a `--dry-run` mode and an optional team config file.
 ---
 
 ## Proposed (pending confirmation)

@@ -12,6 +12,8 @@ A card moves only on evidence: a git diff, a test or data check that ran after t
 
 > **Status:** planning. No code yet. These docs are the source of truth.
 
+**Planned install** (see [first run](docs/specs/first-run.md#adding-an-existing-repo)): from any existing repo, run `npx vantage add`, or `/plugin install vantage` then `/vantage add` inside Claude Code. Nothing in the repo changes unless you opt in with `--team`.
+
 ## Documents
 
 | Doc | What it covers |
