@@ -110,3 +110,21 @@ A localhost page can be reached by other local programs and, through the browser
 - **UI to daemon:** HTTP for queries and actions; one WebSocket for live updates.
 - **UI framework:** to decide (open question Q17). Must be fast, keyboard-friendly and theme-token based.
 - **Install:** to decide (Q18): an npm global package or a single binary. `vantage init` installs hooks; `vantage uninstall` removes them.
+
+## Packaging and integration
+
+Vantage must observe all the time, even when no agent is asking it anything. Skills and MCP servers only act when an agent calls them, so the core is a local daemon, and Claude Code features are the connectors, shipped together as one **Claude Code plugin**.
+
+| Piece | Mechanism | Role | Phase |
+|---|---|---|---|
+| Core | Local daemon, SQLite, web UI on localhost | Always on; works with any agent | 1 |
+| Capture | Claude Code **hooks** appending to the spool | Deterministic capture, every time | 1 |
+| Proof gate | `Stop` **hook** (warn, optionally block) | Only hooks can stop an agent from finishing | 1 |
+| Ambient status | Claude Code **status line** command | Always visible | 1 |
+| Teach the method | **Skills** such as `a2v-proof` and `a2v-decide` | Shape how agents prove changes and record decisions | 1–3b |
+| Agents talk to Vantage | **MCP server** (proposal V2) | Read status, register behaviors, reference proof, propose decisions; never move a stage | 3b |
+| Explain | Headless `claude -p` with a JSON schema | Uses the user's subscription (research R13) | 3b |
+| Codex | Session file tailing, an `AGENTS.md` snippet, the same MCP server | Codex has no Claude-style hooks (research R3) | 1 |
+| Install | One plugin (hooks, status line, skills, MCP config) plus `vantage init` for the daemon | One-step setup and uninstall | 1 |
+
+**Principle:** hooks and evidence make results trustworthy; skills and MCP make agents cooperate. Vantage never depends on an agent choosing to cooperate.

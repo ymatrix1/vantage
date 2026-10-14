@@ -113,10 +113,29 @@ Vantage runs all day on a work laptop, so it must stay invisible.
 | CPU, backfill or replay | Under 25% of one core, throttled, at low process priority |
 | Memory | Under 200 MB for the daemon |
 | Disk | Database under 500 MB in typical use; retention trims events older than 180 days |
-| Network | Only the polling budgets in [ingestion](ingestion.md#polling-budget); no telemetry |
+| Network | Only the polling budgets in [ingestion](ingestion.md#polling-budget); no remote telemetry |
 | Battery | Polling intervals double on battery saver |
 | Status line | Reads the summary file in under 10 ms |
 | Hooks | Under 100 ms (D21) |
 
 Budgets are checked in Phase 1 with a one-week measurement on the user's machine, and a CI test for the hooks and status line.
 
+## Local telemetry and diagnostics
+
+Telemetry is **local only**: it never leaves the machine unless the user exports it.
+
+| Signal | What | Where |
+|---|---|---|
+| **Structured logs** | JSON lines per component (ingest, linker, scorers, server, hooks), with levels and a correlation id per event | `~/.vantage/logs/`, rotated daily, 14 days kept |
+| **Metrics** | Counters and timings: hook latency, spool lag, ingest lag per source, poll durations and errors, rate-limit headroom, linker decisions by method, flag raises and dismissals, Explain latency and validity, CPU, memory, database size | Local metrics table, sampled every minute, 30 days kept |
+| **Traces** | One trace per event through the pipeline: received → linked (which anchor or rule) → stage or flag change | Kept with the event, so any card can answer "why did this move?" |
+
+**Using it**
+
+- **Sources page, Diagnostics tab:** health per source, the budget table from this spec with current values, recent errors.
+- **"Why did this change?"** on any card shows the trace: the event, the rule that fired and the resulting change.
+- **`vantage doctor`** checks hooks, spool, daemon, database, tokens and source access, and prints fixes.
+- **`vantage debug-bundle`** writes a zip of logs, metrics and config with ids, names, URLs and message text scrubbed (same rules as fixtures), for the user to inspect or share by choice.
+- **Debug level** can be raised per component at runtime (`vantage log-level linker debug`), and drops back after an hour.
+
+**Optional: Claude Code's own telemetry.** Claude Code can export OpenTelemetry metrics and events. Vantage may run a local OTLP receiver on `127.0.0.1` to add token and cost data and tool events as another source. To be verified in research R2.

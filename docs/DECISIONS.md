@@ -57,6 +57,8 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 | [D41](#d41-status-line-uses-text-glyphs) | 2026-10-14 | Status line uses text glyphs |
 | [D42](#d42-a-decision-log-for-every-ai-and-person-decision) | 2026-10-14 | A decision log for every AI and person decision |
 | [D43](#d43-guard-the-scope) | 2026-10-14 | Guard the scope |
+| [D44](#d44-a-daemon-plus-one-claude-code-plugin) | 2026-10-14 | A daemon plus one Claude Code plugin |
+| [D45](#d45-local-only-telemetry) | 2026-10-14 | Local-only telemetry |
 
 ---
 
@@ -404,6 +406,22 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Why:** The kill rule only works if there's an early, small version to judge. Most open questions need real data, not more design.
 - **Alternatives:** Keep planning until every question is answered (delays learning); build everything in one Phase 3 (no early stop point).
 - **Impact:** Roadmap and PRD updated; [flag registry](specs/flags.md) replaces the flag tables in other specs. Next step is Phase 0, not more planning.
+
+### D44. A daemon plus one Claude Code plugin
+
+- **Context:** The user asked whether Vantage should be built as MCP, skills, or something else.
+- **Decision:** The core is a local daemon with a web UI. Claude Code integration ships as one plugin: hooks for capture and the proof gate, a status line, skills that teach the A2V method, and MCP config for agents to cooperate. Explain uses headless `claude -p`.
+- **Why:** Skills and MCP are passive; they act only when an agent chooses to, and agents forget. Hooks and a daemon are deterministic, which is what evidence over claims needs.
+- **Alternatives:** Skills only (advisory, easy to ignore); an MCP server only (no always-on capture); a desktop app with no Claude Code integration (misses live events).
+- **Impact:** Two deliverables to install (plugin and daemon) via `vantage init`; MCP stays proposal V2 until Phase 3b.
+
+### D45. Local-only telemetry
+
+- **Context:** An always-on daemon needs debugging; the resource budget said "no telemetry".
+- **Decision:** Structured logs, metrics and per-event traces are kept locally with retention limits. Nothing is sent anywhere. A scrubbed debug bundle is created only on the user's command. Every card can show "why did this change?" from its trace.
+- **Why:** Debugging and trust both need to see what happened; sending data out would break local-first (D11).
+- **Alternatives:** No telemetry (blind debugging); remote telemetry (company data leaves the machine).
+- **Impact:** Logs, metrics and trace storage; Diagnostics tab; `vantage doctor` and `vantage debug-bundle`; an optional local OTLP receiver for Claude Code's own telemetry (R2).
 ---
 
 ## Proposed (pending confirmation)
