@@ -23,6 +23,8 @@ Then **start a new session**: plugins load at session start.
 | `handoff` | On demand | Short state notes in `~/.a2v/handoffs/`, outside the repo |
 | `land-the-day` | On demand | Close, park or schedule every open loop |
 | `answer-review` | On demand | Verify review findings, fix with proof, draft replies |
+| `close-the-loop` | On demand | Who's waiting on you: replies owed, nudges, "shipped" notes, drafted for you to send |
+| `plan-task` | On demand | Context, Higher Goal, Acceptance Criteria, Out of Scope, Summary of Changes; reused as the PR description |
 
 ## Notes
 
