@@ -38,7 +38,10 @@ Width budget: fits in 80 columns; under 50 columns it shows only items 1 and 3.
 ## Behaviour
 
 - The status line command reads a small summary file the daemon rewrites on every change (see [architecture](../ARCHITECTURE.md#runtime-proposed)). It never calls the daemon, so it never blocks the terminal.
+- Claude Code runs the command on session start, each assistant message, `/compact` and mode changes, debounced at 300 ms, and cancels a run still in flight when a new one starts. An idle session doesn't refresh, so Vantage sets `refreshInterval` to 30 s (see research [R2](../research/claude-code-hooks.md)).
+- It reads the current session from stdin `session_id` and its width from the `COLUMNS` environment variable.
 - If the summary is older than 5 minutes it shows `vantage · stale` instead of guessing.
+- Whether the Claude desktop app (Code tab) shows a status line is unverified (Q29).
 - Quiet mode shows only the needs-you count.
 - No emoji, for consistent rendering across terminals.
 

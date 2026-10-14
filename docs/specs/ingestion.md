@@ -6,7 +6,7 @@ How Vantage hears about things happening in each source.
 
 1. **Pull is the backbone; push is an accelerator.** A laptop sleeps, restarts and goes offline. Every source must support catch-up from a stored cursor, so nothing is lost while Vantage isn't running. Push channels only make updates arrive faster.
 2. **No public endpoint by default.** Local-first means nothing listens on the internet. Webhooks need a relay, which is optional and comes later.
-3. **Never slow down or break an agent.** Claude Code hooks must return in under 100 ms and must succeed even when the daemon is down.
+3. **Never slow down or break an agent.** Claude Code hooks must return in under 100 ms and must succeed even when the daemon is down. Spool hooks are registered with `async: true` so they never block the session (proposal P7); only the `Stop` gate runs synchronously.
 4. **Idempotent.** Each event has a stable source id; replays and overlaps between push and pull are deduplicated.
 5. **Honest freshness.** Each source shows "last synced" in the UI. A stale source is shown as stale, never as quiet.
 
@@ -29,7 +29,7 @@ The daemon runs `catchUp` on start and on a schedule, runs `listen` when availab
 
 | Source | Push (fast path) | Pull (backbone) | Notes |
 |---|---|---|---|
-| **Claude Code** | Hooks (`SessionStart`, `PostToolUse`, `Notification`, `Stop`, `PreCompact`) append one JSON line to a local spool file | Tail transcripts in `~/.claude/projects/**/*.jsonl` by byte offset | Hooks only append to the spool; the daemon reads it. If the daemon is down, nothing is lost. |
+| **Claude Code** | Hooks (`SessionStart`, `PostToolUse`, `PostToolUseFailure`, `PermissionRequest`, `Notification`, `Stop`, `PreCompact`, `SessionEnd`) append one JSON line to a local spool file. Payload shapes: research [R2](../research/claude-code-hooks.md) | Tail transcripts in `~/.claude/projects/**/*.jsonl` by byte offset | Hooks only append to the spool; the daemon reads it. If the daemon is down, nothing is lost. |
 | **Codex** | File watcher on `~/.codex/sessions/` | Tail new or grown rollout files by byte offset | No hook system needed for v1. |
 | **git** | Global `post-commit`, `post-checkout`, `post-merge` hooks via `core.hooksPath` that append to the spool (chaining any repo hooks); file watcher on `.git/HEAD` and refs | Periodic scan of registered repos and worktrees: `git status`, `git log` since cursor | Dirty-file state comes from scans; it has no event. |
 | **GitHub** | Optional webhook relay (later) | **Notifications API** (`GET /notifications?all=true&since=<cursor>`), polled with `If-Modified-Since` and honoring `X-Poll-Interval` (observed: 60 s). It is a **wake-up signal**, not an event feed: one thread per PR, so a bump means "something changed". For each bumped PR thread, run a GraphQL fetch (reviews, review threads, commits, `statusCheckRollup`, timeline) and diff it against the stored snapshot. Slow reconcile polls cover what notifications miss (below). | Observed 2026-10-14 ([R4](../research/github.md)): every comment or review by someone else on the user's own PRs bumped the thread (784 of 784 PRs). The `reason` is **sticky per thread**, so it can't say what happened: `comment` means *you* commented and `state_change` means *you* changed state. `review_requested` and `mention` are reliable only until a later reason overwrites them. The payload has no review state. No `ci_activity` or `CheckSuite` notifications ever arrived. 304s don't count against the rate limit (docs). Needs a classic token (`repo` scope); fine-grained and App tokens don't work. |
@@ -53,7 +53,7 @@ Normalized `kind` values. The payload keeps the raw source fields.
 
 | Group | Kinds |
 |---|---|
-| Agent | `session.started`, `prompt.submitted`, `file.edited`, `command.ran` (with exit code), `todo.updated`, `session.waiting`, `session.stopped`, `session.compacted` |
+| Agent (keyed by Claude Code `session_id` and `prompt_id`) | `session.started`, `prompt.submitted`, `file.edited`, `command.ran` (with exit code), `todo.updated`, `session.waiting`, `session.stopped`, `session.compacted`, `session.ended`. `command.ran` comes from `PostToolUse` (success) and `PostToolUseFailure` (failure); `session.waiting` from `PermissionRequest` and `Notification` (`permission_prompt`, `idle_prompt`, `elicitation_dialog`) |
 | git | `commit.created`, `branch.checked_out`, `merge.completed`, `revert.created`, `worktree.scanned` (dirty files) |
 | Review | `pr.opened`, `pr.updated`, `review.submitted`, `review.requested`, `thread.commented`, `thread.resolved`, `pr.merged`, `pr.closed` |
 | Ship | `deploy.started`, `deploy.succeeded`, `deploy.failed`, `check.passed`, `check.failed`, `alert.fired`, `alert.resolved`, `incident.opened` |
