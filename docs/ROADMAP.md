@@ -32,7 +32,7 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 | Surfaces | `vantage-8nb2` (Stop gate), `vantage-p9at` (status line), `vantage-olgf` (Track page) | stage machine |
 | Delivery | `vantage-p9x2` (install with a prompt, `vantage add`, `doctor`) | capture and surfaces |
 
-- [ ] Hook collector writing to the spool; daemon ingesting it into SQLite; transcript backfill.
+- [x] Hook collector writing to the spool; daemon ingesting it into SQLite; transcript backfill.
 - [ ] git scanner for registered repos and worktrees.
 - [ ] Linker with branch or worktree and issue-key anchors only.
 - [ ] Stage machine for Asked, Built, Proven, with proof at L1 and proof expiry.
