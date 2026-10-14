@@ -80,6 +80,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 | [D64](#d64-oxc-tools-for-lint-and-format) | 2026-10-14 | Oxc tools for lint and format |
 | [D65](#d65-shadcn-svelte-for-ui-components) | 2026-10-14 | shadcn-svelte for UI components |
 | [D66](#d66-pnpm-workspaces-on-node) | 2026-10-14 | pnpm workspaces on Node |
+| [D67](#d67-one-settings-view-for-engines-budgets-and-data-policy) | 2026-10-14 | One Settings view for engines, budgets and data policy |
 
 ---
 
@@ -637,6 +638,14 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Why:** The user's choice. First-class workspaces and filters, strict dependencies (no undeclared imports), a shared store, install scripts blocked unless allowed, and a delay on brand-new releases as a supply-chain guard.
 - **Alternatives:** npm workspaces (works, but flat `node_modules` hides missing dependencies and every install script runs); Bun (fastest installs and about 10 ms startup, but as runtime it conflicts with `npx` install (D63) and has more Windows edge cases).
 - **Impact:** Contributors need pnpm (corepack). Revisit Bun for a compiled hook binary only if Node hooks miss the 100 ms budget.
+
+### D67. One Settings view for engines, budgets and data policy
+
+- **Context:** The design chose no model and had no place to see or control one. Explain layer 4 (D46), the judgment layer (Q4) and embeddings (Q25) all depend on engine choices, and the company data policy (`vantage-h8fv`) is undecided. UX listed settings without model fields.
+- **Decision:** Add a Settings tab on the Sources page, specified in [settings](specs/settings.md). It holds Engines (one row per AI-assisted job), Budgets (daily runs and fallback order) and a Data policy (a master switch for outside calls plus one switch per kind of content: code, transcripts, chat, tickets). Everything that leaves the machine defaults to off. Values live in `~/.vantage/config.toml`, edited through `GET` and `POST /api/settings`.
+- **Why:** The user decides what may leave the machine, in one place, before any engine runs. It keeps D10 (scores in code) and the privacy rules visible instead of buried in specs, and it lets the open model choices (Q4, Q25) land as a setting later without a redesign.
+- **Alternatives:** A config file only (works, but hides what is on and what is sent); a per-feature toggle on each page (scatters privacy controls); hard-coding Haiku or one vendor (breaks the official-CLI rule and the user-chosen order in D46).
+- **Impact:** New spec and API rows, with links from UX, operations and the README. No code yet. Revisit when Q4 or Q25 is answered, when `vantage-h8fv` records the company policy (its answer may change the defaults), or if the file and the `settings` table in [data schema](specs/data-schema.md) must be reconciled.
 
 ---
 
