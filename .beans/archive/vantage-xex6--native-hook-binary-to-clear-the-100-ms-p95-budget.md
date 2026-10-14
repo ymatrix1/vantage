@@ -1,11 +1,11 @@
 ---
 # vantage-xex6
 title: Native hook binary to clear the 100 ms p95 budget
-status: in-progress
+status: completed
 type: task
 priority: low
 created_at: 2026-10-14T18:07:08Z
-updated_at: 2026-10-14T18:31:09Z
+updated_at: 2026-10-14T18:51:02Z
 parent: vantage-fmfh
 ---
 
@@ -22,7 +22,7 @@ Never slow an agent down.
 - [x] Rust spike measured next to the Go spike (median and p95, 40 interleaved runs, same machine and setup), binary size recorded
 - [x] Distribution question answered: npm per-OS optional packages (D63 stays) vs a download on first run vs building from source; code signing and antivirus effects on Windows noted (antivirus behavior listed as untested)
 - [x] Decision proposed (D72, Rust in per-OS npm packages with a Node fallback). **Ship decision not yet confirmed by the user:** the box that records it stays open until they confirm.
-- [ ] Ship decision confirmed by the user
+- [x] Ship decision confirmed by the user (2026-10-14; follow-up bean created)
 - [ ] If shipped: build, per-OS distribution and installer registration; test asserts exit 0 with daemon down
 
 ## Out of Scope
