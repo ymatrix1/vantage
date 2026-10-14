@@ -175,7 +175,7 @@ export function computeStats(db: DatabaseSync, opts: StatsOptions, now: Date, db
         ...is.params,
       )
     : [];
-  const counts = perItem.map((r) => n(r, "sc")).sort((a, b) => a - b);
+  const counts = perItem.map((r) => n(r, "sc")).toSorted((a, b) => a - b);
   const sessions = counts.reduce((a, b) => a + b, 0);
   const derived = perItem.reduce((a, r) => a + n(r, "dc"), 0);
   const subagents = perItem.reduce((a, r) => a + n(r, "ac"), 0);
