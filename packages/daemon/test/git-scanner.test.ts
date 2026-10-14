@@ -16,7 +16,7 @@ let root: string;
 let env: NodeJS.ProcessEnv;
 
 beforeAll(() => {
-  root = realpathSync(mkdtempSync(join(tmpdir(), "vantage-git-"))).replaceAll("\\", "/");
+  root = realpathSync.native(mkdtempSync(join(tmpdir(), "vantage-git-"))).replaceAll("\\", "/");
   const home = join(root, "home");
   mkdirSync(home);
   env = {
