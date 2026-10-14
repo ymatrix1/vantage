@@ -60,6 +60,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 | [D44](#d44-a-daemon-plus-one-claude-code-plugin) | 2026-10-14 | A daemon plus one Claude Code plugin |
 | [D45](#d45-local-only-telemetry) | 2026-10-14 | Local-only telemetry |
 | [D46](#d46-explain-runs-in-layers-headless-is-opt-in) | 2026-10-14 | Explain runs in layers; headless is opt-in |
+| [D47](#d47-diff-comments-become-prompts) | 2026-10-14 | Diff comments become prompts |
+| [D48](#d48-a-vantage-mcp-server) | 2026-10-14 | A Vantage MCP server |
+| [D49](#d49-visual-proof-by-screenshot) | 2026-10-14 | Visual proof by screenshot |
 
 ---
 
@@ -414,7 +417,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Decision:** The core is a local daemon with a web UI. Claude Code integration ships as one plugin: hooks for capture and the proof gate, a status line, skills that teach the A2V method, and MCP config for agents to cooperate. Explain runs in layers, with headless `claude -p` only as an opt-in fallback (D46).
 - **Why:** Skills and MCP are passive; they act only when an agent chooses to, and agents forget. Hooks and a daemon are deterministic, which is what evidence over claims needs.
 - **Alternatives:** Skills only (advisory, easy to ignore); an MCP server only (no always-on capture); a desktop app with no Claude Code integration (misses live events).
-- **Impact:** Two deliverables to install (plugin and daemon) via `vantage init`; MCP stays proposal V2 until Phase 3b.
+- **Impact:** Two deliverables to install (plugin and daemon) via `vantage init`; the MCP server (D48) arrives in Phase 3b.
 
 ### D45. Local-only telemetry
 
@@ -431,11 +434,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Why:** Most daily needs (status, what's missing, what needs you) come straight from evidence; narrative can come from sessions already running. No separate AI calls by default protects the user's limits and avoids billing risk.
 - **Alternatives:** Headless on every Explain (D37 as written; costs and limits); no AI at all (loses diagrams, examples and the why tree draft).
 - **Impact:** Explain spec rewritten around layers; the web UI shows layer 1 instantly and hands off to a session; R2 checks prompt-type hooks, R13 checks the in-session flow and vendor policy.
----
+### D47. Diff comments become prompts
 
-## Proposed (pending confirmation)
-
-### V1. Diff comments become prompts
+- **Status:** accepted 2026-10-14 (was proposal V1); details confirmed by research R12.
 
 - **Context:** Giving feedback on agent work means switching to the right terminal and explaining where. Vibe Kanban lets users comment on a diff and sends it to the agent.
 - **Decision:** From the Item page, the user comments on a diff hunk and Vantage turns it into a prompt for the session that owns the item.
@@ -443,7 +444,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Alternatives:** No feedback path from Vantage (user copies context by hand).
 - **Impact:** Needs a way to reach or resume the owning session; waits on research R12.
 
-### V2. A Vantage MCP server
+### D48. A Vantage MCP server
+
+- **Status:** accepted 2026-10-14 (was proposal V2); details confirmed by research R12.
 
 - **Context:** Agents could help structure work (behaviors, proof references, decisions) if they had a channel to Vantage.
 - **Decision:** An MCP server where agents register behaviors, reference captured proof runs, propose items and ask the user for decisions. Agents can never move a stage.
@@ -451,10 +454,18 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Alternatives:** No agent channel; or let agents update status (breaks D3).
 - **Impact:** New interface to secure and test; waits on research R12.
 
-### V3. Visual proof by screenshot
+### D49. Visual proof by screenshot
+
+- **Status:** accepted 2026-10-14 (was proposal V3); details confirmed by research R12.
 
 - **Context:** UI changes are often best proven by looking. Vibe Kanban has a built-in preview browser.
 - **Decision:** A `visual` proof type: a screenshot of the running app after the last edit, stored by Vantage. No browser inside Vantage.
 - **Why:** Gives UI work real evidence without building a browser.
 - **Alternatives:** A built-in preview browser (large scope); no visual proof.
 - **Impact:** Screenshot capture method to choose; storage in `~/.vantage/`; waits on research R12.
+
+---
+
+## Proposed (pending confirmation)
+
+None right now.

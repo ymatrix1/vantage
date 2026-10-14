@@ -10,7 +10,7 @@ A behavior is one short expected outcome on a work item. Proof level L3 needs be
 |---|---|---|
 | **Ticket** | Acceptance criteria from Jira or Linear, split into rows | High; marked `origin = ticket` |
 | **User** | Typed or edited on the Item page | Highest |
-| **Agent** | Proposed through the MCP server (proposal V2) or extracted from a prompt | Suggested until the user approves |
+| **Agent** | Proposed through the MCP server (D48) or extracted from a prompt | Suggested until the user approves |
 | **AI decided** | Found by the detector below | Always needs approve or change |
 
 - Each behavior is one line, about 140 characters at most.

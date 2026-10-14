@@ -122,7 +122,7 @@ Vantage must observe all the time, even when no agent is asking it anything. Ski
 | Proof gate | `Stop` **hook** (warn, optionally block) | Only hooks can stop an agent from finishing | 1 |
 | Ambient status | Claude Code **status line** command | Always visible | 1 |
 | Teach the method | **Skills** such as `a2v-proof` and `a2v-decide` | Shape how agents prove changes and record decisions | 1–3b |
-| Agents talk to Vantage | **MCP server** (proposal V2) | Read status, register behaviors, reference proof, propose decisions; never move a stage | 3b |
+| Agents talk to Vantage | **MCP server** (D48) | Read status, register behaviors, reference proof, propose decisions; never move a stage | 3b |
 | Explain | Four layers: evidence-only by default; byproduct capture and an in-session slash command via skills and MCP; headless `claude -p` or `codex exec` only as an opt-in fallback | No separate AI call by default (D46) | 3b |
 | Codex | Session file tailing, an `AGENTS.md` snippet, the same MCP server | Codex has no Claude-style hooks (research R3) | 1 |
 | Install | One plugin (hooks, status line, skills, MCP config) plus `vantage init` for the daemon | One-step setup and uninstall | 1 |

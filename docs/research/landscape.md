@@ -37,9 +37,9 @@ Vibe Kanban is Apache-2.0, so ideas and, where useful, code can be reused with a
 
 | Idea | Fit for Vantage |
 |---|---|
-| Inline comments on a diff, sent to the agent | **Yes** (proposal V1) |
-| MCP server so agents create and update cards | **Partly:** agents may add intent and proof references, never move stages (proposal V2) |
-| Built-in preview browser with devtools and click-to-component | **Partly:** as screenshots for `visual` proof (proposal V3), not a browser in Vantage |
+| Inline comments on a diff, sent to the agent | **Yes** (accepted as D47) |
+| MCP server so agents create and update cards | **Partly:** agents may add intent and proof references, never move stages (accepted as D48) |
+| Built-in preview browser with devtools and click-to-component | **Partly:** as screenshots for `visual` proof (accepted as D49), not a browser in Vantage |
 | Worktree per task with setup and cleanup scripts | **No:** orchestration is out of scope; Vantage reads worktrees others create |
 | PR creation from the card | **Later, maybe:** a hand-off action, if it stays explicit |
 | Kanban board | **Toggle only:** Track rows are the default (D15) |

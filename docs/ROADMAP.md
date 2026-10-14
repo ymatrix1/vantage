@@ -31,13 +31,6 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 - [ ] A minimal Track page (attention grouping, six-dot rows) on a secured localhost server.
 - **Exit:** used every day for a week, and the morning catch-up happens on the Track page instead of in terminals.
 
-## Phase 1 (old outline, kept for reference): event spine and proof gate
-
-- Hook collector writing events to the local store; transcript backfill.
-- `Stop` hook proof gate in warn mode.
-- Status line showing edits vs. proof and sessions waiting.
-- **Exit:** used daily for a week; warnings judged useful more often than noisy.
-
 ## Phase 2: work items and board
 
 - Linker with deterministic anchors (branch or worktree, issue key in branch, todos).
