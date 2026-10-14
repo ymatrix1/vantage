@@ -136,7 +136,7 @@ Scenes need their own palettes; meaning colors (dots, arcs, badges) stay the sam
 | Dusk | `#26215C` | `#E8E2D3` | `#DCD4C2` | `#CFC5AF` | Evening landing starts here |
 | Night and dark mode | `#15132E` | `#24262B` | `#1E2024` | `#18191C` | Dot bodies keep their tint; labels switch to light text |
 
-These are first proposals; research bean R14 (``) validates contrast for every meaning color on every scene.
+These are first proposals; research bean R14 (`vantage-700a`) validates contrast for every meaning color on every scene.
 
 ## Quiet mode and accessibility
 
