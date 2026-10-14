@@ -69,7 +69,7 @@ HTTP on `127.0.0.1`, token required on every `/api/*` call as `Authorization: Be
 | `GET /api/items/:id/trace` | Why this item changed: events, rules fired, resulting changes |
 | `GET /api/live` (WebSocket) | Pushes `item.changed`, `flag.raised`, `source.health` events |
 
-Phase 1 ships only `GET /api/track`, `GET /api/items/:id/trace` and `GET /api/diagnostics`; the item id is the URL-encoded `item_key` (for example `issue%3AFTK-2`). The page polls `/api/track` every 5 seconds until `/api/live` exists.
+Phase 1 ships only `GET /api/track`, `GET /api/items/:id/trace`, `GET /api/diagnostics` and `GET /api/live`; the item id is the URL-encoded `item_key` (for example `issue%3AFTK-2`). `/api/live` (proposed D81) passes the same Host, Origin and token checks as every route before the upgrade; the token rides in the `Sec-WebSocket-Protocol` header (`vantage.v1, <token>`), never the URL. It pushes `item.changed` (id and changed fields), `flag.raised` (id, kind, severity), `source.health` and `resync` after each stage pass, with no transcript or command text, and caps at 8 connections with a 15 s ping. The page refetches `/api/track` on every connect and polls it every 5 seconds only while the socket is down, reconnecting with backoff from 1 s to 30 s.
 
 Rules: no state change on GET; every POST is recorded in `user_actions` (see [data schema](data-schema.md)).
 

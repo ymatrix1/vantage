@@ -7,6 +7,7 @@ import { delimiter, join } from "node:path";
 import { STATUS_FILE } from "@vantage/core";
 import { createGitLoop, type GitLoop } from "./git-loop.ts";
 import { startHttp, type HttpHandle } from "./http.ts";
+import { createLiveHub } from "./live.ts";
 import { backfillTranscripts, ingestSpool } from "./ingest.ts";
 import { createStageLoop, type StageLoop } from "./stage-loop.ts";
 import { Store } from "./store.ts";
@@ -193,8 +194,11 @@ export async function startDaemon(options: DaemonOptions = {}): Promise<DaemonHa
     };
 
     const uiDir = options.uiDir;
+    const live = createLiveHub({ store: db });
+    live.publish(); // baseline, so the first pass pushes only what it changes
     http = await startHttp({
       store: db,
+      live,
       token,
       port: options.port ?? DEFAULT_PORT,
       ...(uiDir ? { uiDir } : {}),
@@ -227,6 +231,7 @@ export async function startDaemon(options: DaemonOptions = {}): Promise<DaemonHa
     stage = createStageLoop({
       store: db,
       statusFile: join(home, STATUS_FILE),
+      onPass: () => live.publish(),
       ...(options.stageMs ? { intervalMs: options.stageMs } : {}),
       onError: onError("stage pass"),
     });
