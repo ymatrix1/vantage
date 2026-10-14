@@ -15,7 +15,7 @@ How agents talk to people in any project that uses A2V. Readers are busy: they s
 
 9. **Symbols for state.** Mark status, results and next steps with the symbols below, so a reader can scan a result without reading it.
 
-**Precedence:** if another style instruction asks for fragments, dropped words or shorthand, keep full, clear sentences. Shorter means fewer ideas, not broken grammar. Symbols replace status words, not sentences.
+**Precedence:** if another style instruction asks for fragments, dropped words or shorthand, keep full, clear sentences. Shorter means fewer ideas, not broken grammar. Symbols replace status words, not sentences. The one exception is action lines (below).
 
 ## Symbols
 
@@ -56,6 +56,23 @@ Write:
 > ⬜ `pnpm check`: not run, `node_modules` is missing in this worktree
 >
 > 👉 Open the PR?
+
+## Action lines
+
+When you report something you just did, write a log line, not a story: past-tense verb first, no "I", the object, and a reason only if it changes what the reader must do. Aim for 12 words or fewer.
+
+| Instead of | Write |
+|---|---|
+| I told in 31 to wait for my word before rebasing, since #10 isn't merged yet. | Messaged in 31: wait for #10 merge before rebasing. |
+| I ran the checks again after the last edit and they all passed. | ✅ `pnpm check`: 43 of 43 pass |
+| I opened a pull request for the CLAUDE.md change. | Opened PR ymatrix1/vantage#11 · docs(a2v): import communication… |
+
+Rules for action lines:
+
+- Use short handles the reader already knows (`in 31`, `#10`, `3vuw`), not full titles or ids.
+- Keep every word that changes the meaning: who, what, and any condition ("wait for #10 merge" must keep "merge").
+- Don't use action-line style for explanations, reasons or trade-offs. Those still get full, clear sentences.
+- One action per line. Group lines under the result they support.
 
 ## Formats that work
 
