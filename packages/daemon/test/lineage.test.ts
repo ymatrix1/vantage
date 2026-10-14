@@ -5,7 +5,14 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { Store, backfillTranscripts, itemSessionCounts, linkStoredEvents, undoLink } from "../src/index.ts";
+import {
+  Store,
+  backfillTranscripts,
+  itemSessionCounts,
+  linkStoredEvents,
+  loadMigrations,
+  undoLink,
+} from "../src/index.ts";
 
 const NOW = new Date("2026-10-14T12:00:00Z");
 let dir = "";
@@ -135,7 +142,9 @@ describe("migration 4", () => {
     old.close();
     const upgraded = new Store(path);
     try {
-      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(5);
+      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(
+        loadMigrations().length,
+      );
       expect(upgraded.countEvents()).toBe(1);
       expect(itemSessionCounts(upgraded).get("issue:FTK-9")).toMatchObject({
         sessionCount: 1,

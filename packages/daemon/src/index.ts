@@ -1,5 +1,14 @@
 export type { VantageEvent } from "@vantage/core";
 export { Store } from "./store.ts";
+export {
+  MigrationError,
+  MIGRATIONS_DIR,
+  buildMigrations,
+  checksum,
+  loadMigrations,
+  migrate,
+} from "./migrations.ts";
+export type { Migration, MigrationErrorCode } from "./migrations.ts";
 export { BACKFILL_DAYS, backfillTranscripts, ingestSpool } from "./ingest.ts";
 export type { IngestResult } from "./ingest.ts";
 export { runOnce } from "./run.ts";

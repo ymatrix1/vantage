@@ -8,6 +8,7 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { parseTrackQuery, type TrackView, type VantageEvent } from "@vantage/core";
 import {
+  loadMigrations,
   BIND_HOST,
   Store,
   readFlagWindowHours,
@@ -511,7 +512,9 @@ describe("migration 5", () => {
     old.close();
     const upgraded = new Store(path);
     try {
-      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(5);
+      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(
+        loadMigrations().length,
+      );
       const idx = upgraded.db
         .prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'work_items'")
         .all()

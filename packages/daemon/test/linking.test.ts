@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { VantageEvent } from "@vantage/core";
-import { Store, linkStoredEvents, linksForItem, undoLink } from "../src/index.ts";
+import { Store, linkStoredEvents, linksForItem, loadMigrations, undoLink } from "../src/index.ts";
 
 let dir = "";
 let store: Store;
@@ -87,7 +87,9 @@ describe("migration 2", () => {
     const upgraded = new Store(path);
     try {
       expect(upgraded.countEvents()).toBe(1);
-      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(5);
+      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(
+        loadMigrations().length,
+      );
       linkStoredEvents(upgraded);
       expect(linksForItem(upgraded, "issue:FTK-9")).toHaveLength(1);
     } finally {
