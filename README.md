@@ -23,9 +23,27 @@ A card moves only on evidence: a git diff, a test or data check that ran after t
 
 Tested in CI on Windows and Ubuntu. Developed and run by hand on Windows first.
 
-## Quick start (from a checkout)
+## Install
 
-**You need:** Node.js 22.5 or newer (Vantage uses the built-in `node:sqlite`), [pnpm](https://pnpm.io), git, and Claude Code.
+**Recommended: let Claude Code do it.** Open Claude Code in the repo you want to track and paste this:
+
+```text
+Install Vantage for this repo. Follow https://github.com/ymatrix1/vantage/blob/main/docs/install-for-agents.md exactly: check the prerequisites, get and build Vantage if it is not already on this machine, show me the dry run first and wait for my OK, then install, start it, verify with vantage doctor, and tell me what changed and how to undo it.
+```
+
+The agent follows [the install guide](docs/install-for-agents.md) and stops at anything that fails. You stay in control at two points:
+
+1. **Before anything changes**, it shows you `vantage add --dry-run`: the exact files it would touch, nothing written. It waits for your explicit yes.
+2. **After the yes**, it installs (with a backup of your Claude Code `settings.json`), starts the daemon, runs `vantage doctor`, and tells you how to open the Track page.
+
+It never adds tokens or credentials, never commits anything, and never edits your settings by hand: only `vantage add` writes, and every entry it writes can be removed exactly (see [Undo](#undo)).
+
+**You need:** Node.js 22.5 or newer (Vantage uses the built-in `node:sqlite`), [pnpm](https://pnpm.io), git and Claude Code. The agent checks these first and tells you what to install.
+
+Then use Claude Code as usual. Open the Track page with `vantage open` (it opens `http://127.0.0.1:<port>` in your browser; `--print` only prints the URL). Items appear after the daemon's next pass, about 30 seconds.
+
+<details>
+<summary><strong>Prefer to do it by hand?</strong> The same steps, from a checkout.</summary>
 
 ```bash
 git clone https://github.com/ymatrix1/vantage.git
@@ -34,40 +52,25 @@ pnpm install
 pnpm build
 ```
 
-Until the npm package exists, run the CLI as `node <checkout>/packages/cli/dist/src/main.js`. The steps below call it `vantage`; an alias keeps it short:
+Until the npm package exists, run the CLI as `node <checkout>/packages/cli/dist/src/main.js`; an alias keeps it short:
 
 ```bash
 alias vantage='node /path/to/vantage/packages/cli/dist/src/main.js'
 ```
 
-1. **See what an install would change.** From the repo you want to track:
+Then, from the repo you want to track:
 
-   ```bash
-   vantage add --dry-run
-   ```
+| Step | Command | What it does |
+|---|---|---|
+| 1. Preview | `vantage add --dry-run` | Prints every file it would change; writes nothing |
+| 2. Install | `vantage add --yes` | Backs up `settings.json`, adds the hooks, registers the repo |
+| 3. Start | `vantage start` | Runs the daemon (leave it running in a terminal) |
+| 4. Check | `vantage doctor` | PASS, WARN or FAIL with a fix line for each |
+| 5. Open | `vantage open` | Opens the Track page |
 
-   It prints every file it would touch and writes nothing.
-2. **Install.** Read the plan, then:
+</details>
 
-   ```bash
-   vantage add --yes
-   ```
-
-   It backs up your Claude Code `settings.json` first, adds the hooks, and registers the repo.
-3. **Start the daemon** (leave it running in a terminal):
-
-   ```bash
-   vantage start
-   ```
-4. **Check it.** In another terminal: `vantage doctor`. A FAIL names what to fix; a WARN is informational (for example, "daemon not running").
-5. **Open the Track page:** `vantage open` (use `--print` to only print the URL).
-6. **Use Claude Code as usual.** Items appear after the daemon's next pass (about 30 seconds).
-
-Or hand the whole thing to an agent. Paste this into Claude Code in your repo:
-
-```text
-Install Vantage in this repo. Follow https://github.com/ymatrix1/vantage/blob/main/docs/install-for-agents.md exactly: show me the dry run first, wait for my OK, then install, verify with vantage doctor, and tell me what changed.
-```
+## After you install
 
 ### Slash commands in Claude Code
 
