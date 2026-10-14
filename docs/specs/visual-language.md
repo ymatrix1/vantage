@@ -111,7 +111,7 @@ Dragging never changes a stage; only evidence does (D3).
 
 Reward good practice, never volume or speed:
 
-- **Rewards:** proof shine, stars for verified work, gentle streaks (for example "clean landings this week"), rare badges for A2V practices (first L3 proof, a week without `claimed_fixed`, every mention answered, parking honestly).
+- **Rewards:** proof arcs (more arcs for stronger proof), stars for verified work, gentle streaks (for example "clean landings this week"), rare badges for A2V practices (first L3 proof, a week without `claimed_fixed`, every mention answered, parking honestly).
 - **Streaks pause, never break.** Missing a day pauses; nothing resets with a red mark.
 - **Avoided on purpose:** leaderboards, points for commits or lines, breaking streaks, random rewards, urgency colors on things that aren't red.
 
