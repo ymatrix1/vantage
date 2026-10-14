@@ -1,6 +1,6 @@
 # Spec: web UI
 
-Pages and layouts are in [UX](../UX.md). This spec covers what the UX doc doesn't: navigation, screen states, keyboard, and the API between UI and daemon. Static mockups: [docs/mockups/](../mockups/index.html). Framework: open question Q17.
+Pages and layouts are in [UX](../UX.md). This spec covers what the UX doc doesn't: navigation, screen states, keyboard, and the API between UI and daemon. Static mockups: [docs/mockups/](../mockups/index.html). Framework: Svelte ([D62](../DECISIONS.md#d62-svelte-for-the-web-ui)).
 
 ## Navigation
 
@@ -18,7 +18,7 @@ Every page and panel handles all five states.
 | **Loading** | Skeleton rows in the final layout; no spinners longer than 300 ms without a skeleton |
 | **Empty** | An invitation, not an apology: "No work yet. Run `vantage init` in a repo to start." Focus when calm: "Nothing needs you. 9 items safe to ignore." |
 | **Error** | One line saying what happened and what to do: "Can't reach the Vantage daemon. Start it with `vantage start`." |
-| **Stale source** | A thin banner on affected rows or pages: "GitHub not synced for 20 min" with a link to Sources |
+| **Stale source** | A thin banner on affected rows or pages: "GitHub not synced for 20 min" with a link to Sources. Phase 1: "Rows not refreshed since N min ago. Is the daemon running?" when the last stage pass is over 5 minutes old |
 | **Partial** | Data from healthy sources shows normally; missing parts are hollow, never guessed |
 
 ## Keyboard map
@@ -41,12 +41,12 @@ Every page and panel handles all five states.
 
 ## API (daemon to UI)
 
-HTTP on `127.0.0.1`, token required on every call (D32). JSON throughout.
+HTTP on `127.0.0.1`, token required on every `/api/*` call as `Authorization: Bearer` (D32; never in the query string). Requests need an allowed `Host` and `Origin`, only GET and HEAD are accepted in Phase 1, and no CORS headers are sent. Rules in [D75](../DECISIONS.md#d75-phase-1-track-page-and-local-server-rules-the-specs-left-open) (proposed). JSON throughout.
 
 | Method and path | Purpose |
 |---|---|
 | `GET /api/focus` | Top 3 items plus digest groups |
-| `GET /api/items?group=&filter=` | Track rows |
+| `GET /api/track` | Track rows grouped by attention, with `lastPassAt`, `stale` and per-source health (Phase 1; `group` and `filter` parameters arrive with project and stage grouping) |
 | `GET /api/items/:id` | Item detail: stage, behaviors, proofs, review, after-ship, history, links |
 | `GET /api/journal?since=` | Timeline entries |
 | `GET /api/inbox` | Mentions, review requests, commitments by person |
@@ -68,6 +68,8 @@ HTTP on `127.0.0.1`, token required on every call (D32). JSON throughout.
 | `GET /api/diagnostics` | Source health, budgets with current values, recent errors |
 | `GET /api/items/:id/trace` | Why this item changed: events, rules fired, resulting changes |
 | `GET /api/live` (WebSocket) | Pushes `item.changed`, `flag.raised`, `source.health` events |
+
+Phase 1 ships only `GET /api/track`, `GET /api/items/:id/trace` and `GET /api/diagnostics`; the item id is the URL-encoded `item_key` (for example `issue%3AFTK-2`). The page polls `/api/track` every 5 seconds until `/api/live` exists.
 
 Rules: no state change on GET; every POST is recorded in `user_actions` (see [data schema](data-schema.md)).
 

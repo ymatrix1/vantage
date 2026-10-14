@@ -102,7 +102,7 @@ Candidates: a fast decision model (for example Jev from TypeSafe AI) or a small 
 A localhost page can be reached by other local programs and, through the browser, by malicious websites. So:
 
 - The daemon binds to `127.0.0.1` only, never `0.0.0.0`.
-- Every API and WebSocket request needs a per-install token. The token is stored in the OS credential store and handed to the UI through the URL fragment on launch, never in a query string.
+- Every API and WebSocket request needs a per-install token. The token is stored in a user-only file in Phase 1 (proposed D75) and moves to the OS credential store later; it is handed to the UI through the URL fragment on launch, never in a query string.
 - The server checks `Origin` and `Host` headers to block cross-site requests and DNS rebinding.
 - No CORS headers. No endpoint changes data on a GET.
 - The spool file and database are readable only by the user.

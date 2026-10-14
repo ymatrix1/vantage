@@ -38,7 +38,7 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 - [x] Stage machine for Asked, Built, Proven, with proof at L1 and proof expiry (`vantage-lxud`, D71). Delivered: pure machine in core, scheduled pass, `work_items`, `proofs`, `flags` and `stage_changes` tables, read functions. Output capture for zero-test detection is a follow-up bean.
 - [x] `Stop` hook proof gate in warn mode (`vantage-8nb2`, `vantage-cji5`, D73). Delivered: `session.stopped` capture, the gate command with modes off and warn, silence when the daemon is down, docs-only sessions skipped. Block mode is parsed but not wired (Q11). Registering the hook command in Claude Code settings arrives with the install bean (`vantage-p9x2`).
 - [ ] Status line: edits vs. proof, sessions waiting.
-- [ ] A minimal Track page (attention grouping, six-dot rows) on a secured localhost server.
+- [x] A minimal Track page (attention grouping, six-dot rows) on a secured localhost server (`vantage-olgf`, D75 proposed). Delivered: daemon server with token, Host and Origin checks, read-only `/api/track`, `/api/items/:id/trace`, `/api/diagnostics`, and the page with loading, empty, error, stale and partial states and `j`, `k`, `Enter`, `Esc`, `?`. Remaining, as follow-up beans: live updates over WebSocket, starting the server and `vantage open`, component tests.
 - [ ] Install with a prompt: `docs/install-for-agents.md` works end to end in Claude Code and Codex on a fresh machine.
 - [ ] **Exit:** used every day for a week, and the morning catch-up happens on the Track page instead of in terminals.
 

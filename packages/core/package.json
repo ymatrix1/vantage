@@ -7,6 +7,10 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./dist/index.js"
+    },
+    "./track": {
+      "types": "./src/track.ts",
+      "default": "./dist/src/track.js"
     }
   }
 }

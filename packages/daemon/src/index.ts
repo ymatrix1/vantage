@@ -19,3 +19,7 @@ export type {
   StoredTransition,
 } from "./stages.ts";
 export * from "./stage-loop.ts";
+export { diagnosticsView, traceView, trackView } from "./api.ts";
+export { BIND_HOST, startHttp } from "./http.ts";
+export type { HttpHandle, HttpOptions } from "./http.ts";
+export { loadOrCreateToken, tokenMatches } from "./token.ts";
