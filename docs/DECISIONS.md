@@ -542,3 +542,29 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Why:** Waiting about a minute on a click is too slow. Isolation keeps the user's settings, hooks and MCP servers out of the run and sends only the facts. Vantage-side validation covers the silent schema case.
 - **Alternatives:** Synchronous click-and-wait (slow); `--bare` with an API key (separate billing, setup); trusting the CLI's schema check (it didn't catch an invalid schema).
 - **Impact:** Explain spec engine and failure-mode sections; a job queue and a "ready" notification in the web UI. Revisit if latency drops below about 10 s.
+
+From research [R2](research/claude-code-hooks.md), 2026-10-14.
+
+### P7. Claude Code spool hooks run async
+
+- **Context:** Hooks must finish in under 100 ms (D21). On the user's Windows laptop a Node append hook takes 97 ms median and 115 ms max before any real work, and the user's existing hooks already add seconds to `SessionStart`.
+- **Decision:** Register every Vantage spool hook (`SessionStart`, `PostToolUse`, `PostToolUseFailure`, `PermissionRequest`, `Notification`, `PreCompact`, `SessionEnd`) as a command hook with `"async": true`. Only the `Stop` gate runs synchronously.
+- **Why:** Claude Code runs async hooks in the background, so the session never waits on Vantage, whatever the runtime costs. The spool append doesn't need to return anything.
+- **Alternatives:** A native binary hook (faster but a second build target); a persistent helper process (more moving parts); synchronous Node hooks (no headroom on Windows).
+- **Impact:** Ingestion and operations specs; the hook latency test measures the sync `Stop` hook only. Revisit if async hooks drop events or reorder them in a way the spool can't fix (Q28).
+
+### P8. Stop gate output contract
+
+- **Context:** The proof gate spec said "warn adds a message" and "block returns exit 2" without saying how Claude Code reads each. R2 found exit 1 is a hook error, `additionalContext` continues the turn, and a blocking hook can loop.
+- **Decision:** Warn = exit 0 with JSON `{"systemMessage": "..."}`. Block = exit 2 with the message on stderr, only when `stop_hook_active` is false. Never exit 1.
+- **Why:** `systemMessage` shows the user the gap without forcing more agent work, matching warn-by-default (Q11). Exit 2 is the documented block; checking `stop_hook_active` prevents loops.
+- **Alternatives:** `hookSpecificOutput.additionalContext` for warn (continues the turn, so it acts like a soft block); `decision: "block"` JSON (same effect as exit 2, but exit 2 wins if both appear).
+- **Impact:** Proof spec. Needs an observed test in follow-up bean `vantage-2vdj` before Phase 1 ships the gate.
+
+### P9. Claude Code OpenTelemetry as an optional local source
+
+- **Context:** Operations listed Claude Code's OTel export as "to be verified". R2 confirmed OTLP/HTTP JSON reaches a receiver on `127.0.0.1:4318`, with `session.id` and `prompt.id` on every record, and identity attributes (`user.email`, account ids) too.
+- **Decision:** An opt-in local OTLP receiver adds token and cost, tool result and Claude Code hook timing data. It binds to `127.0.0.1`, drops identity attributes on ingest, and keeps Claude Code's default redaction. It is a supplement; hooks and transcripts stay the spine.
+- **Why:** It gives cost and hook latency that hooks don't carry, at no polling cost. It is off by default in Claude Code and redacts commands and paths, so it can't replace hooks.
+- **Alternatives:** Parse token usage from transcripts only (no hook timings); require OTel (extra setup for every user).
+- **Impact:** Operations spec; `vantage init` writes user settings `env`; Code tab may need managed settings (Q29).

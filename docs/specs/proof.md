@@ -75,7 +75,9 @@ These never count as passing, even with exit 0:
 
 On the Claude Code `Stop` hook, when the session edited linked files:
 
-- If there's no fresh proof at L1 or more: **warn mode** adds a message to the session and raises `unproven_claim`. **Block mode** returns exit 2 with a message listing which behaviors lack proof.
+- If there's no fresh proof at L1 or more: **warn mode** exits 0 with JSON `{"systemMessage": "..."}`, which the user sees and Claude doesn't, and raises `unproven_claim`. **Block mode** exits 2 with the message on stderr, which Claude receives as its next instruction.
+- Block only when the input's `stop_hook_active` is false, so the gate never loops; Claude Code also caps Stop-hook continuations at 8 in a row.
+- Never exit 1: Claude Code treats it as a hook error, not a decision. Semantics from research [R2](../research/claude-code-hooks.md) (proposal P8).
 - The message is specific: "You changed `billing.ts`. Behaviors 2 and 3 have no proof after this edit. Run a test or data check that covers them."
 
 ## UX
