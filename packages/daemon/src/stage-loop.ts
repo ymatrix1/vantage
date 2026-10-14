@@ -1,5 +1,6 @@
 // Scheduled link and stage pass. Ingest, the git scanner and the hooks only append events; this
 // loop turns them into links, stages, proofs and flags on a fixed cadence.
+import { writeStatusFile } from "./status-file.ts";
 import { runStagePass, type StagePassOptions, type StagePassResult } from "./stages.ts";
 import type { Store } from "./store.ts";
 
@@ -9,6 +10,8 @@ export interface StageLoopOptions {
   store: Store;
   pass?: StagePassOptions;
   intervalMs?: number;
+  /** When set, the status line summary is rewritten after every pass (docs/specs/status-line.md). */
+  statusFile?: string;
   /** Test seam; defaults to the wall clock. */
   now?: () => Date;
   /** Receives errors from a pass; the loop keeps running. */
@@ -25,7 +28,18 @@ export interface StageLoop {
 export function createStageLoop(options: StageLoopOptions): StageLoop {
   const now = options.now ?? (() => new Date());
   let timer: ReturnType<typeof setInterval> | null = null;
-  const tick = (): StagePassResult => runStagePass(options.store, options.pass ?? {}, now());
+  const tick = (): StagePassResult => {
+    const at = now();
+    const result = runStagePass(options.store, options.pass ?? {}, at);
+    if (options.statusFile) {
+      try {
+        writeStatusFile(options.store, options.statusFile, at);
+      } catch (e) {
+        options.onError?.(e); // a failed write must not hide the pass result
+      }
+    }
+    return result;
+  };
   const safe = (): void => {
     try {
       tick();

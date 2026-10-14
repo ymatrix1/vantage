@@ -29,3 +29,13 @@ export function hooksSettings(command: string): Record<string, { hooks: HookComm
   ]);
   return Object.fromEntries([...spool, ["Stop", [{ hooks: [{ type: "command", command }] }]]]);
 }
+
+/** Refresh every 30 s so an idle session still updates (research R2). */
+export const STATUS_LINE_REFRESH_SECONDS = 30;
+
+/** The settings.json `statusLine` block. `command` runs statusline.js, for example `node /path/to/statusline.js`. */
+export function statusLineSettings(command: string): {
+  statusLine: { type: "command"; command: string; refreshInterval: number };
+} {
+  return { statusLine: { type: "command", command, refreshInterval: STATUS_LINE_REFRESH_SECONDS } };
+}
