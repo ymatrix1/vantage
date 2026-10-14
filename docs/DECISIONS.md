@@ -873,6 +873,7 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Why:** The `cwd` is known at ingest and later layers can't recover it. A payload field keeps every write on record and adds no event kind, so the stage machine and linker need no change to ignore scratch output.
 - **Alternatives:** A new `file.written_outside` event kind (clearer, but changes the 38-kind catalog and every consumer); a flag on `file.edited` (consumers that count edits would have to remember to filter); a path-suffix deny list (`.log`, `.txt`; misses real scratch scripts and wrongly drops real `.txt` docs); resolving symlinks (needs filesystem access in a pure function).
 - **Impact:** `file.edited` shrinks to in-repo work. New `outsidePaths` and `opaqueOutsideRepo` fields on `command.ran`. The daemon should pass the git root as `repoRoot` (follow-up bean), else a subdirectory session misclassifies `../sibling` writes as outside. Revisit if lexical matching misses symlinked repos in practice.
+
 ### D71. Phase 1 stage machine rules the specs left open
 
 - **Status:** proposed

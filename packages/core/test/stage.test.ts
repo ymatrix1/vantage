@@ -1,6 +1,6 @@
 // Synthetic events only: no real transcripts or paths (docs/../privacy-boundary.md).
 import { describe, expect, it } from "vitest";
-import { computeStages, linkEvents } from "../src/index.ts";
+import { computeStages, linkEvents, toolCallEvents } from "../src/index.ts";
 import type { ItemState, VantageEvent } from "../src/index.ts";
 
 let n = 0;
@@ -291,5 +291,30 @@ describe("linking edge cases", () => {
     const s = one([edit(1), cmd(2, "pnpm test"), edit(3)]);
     for (const t of s.transitions) expect(t.evidence.sourceId).toMatch(/^e\d+$/);
     expect(s.transitions.at(-1)?.reason).toContain("expired");
+  });
+});
+
+describe("shell writes outside the repo (ingest of PR 19)", () => {
+  const shell = (m: number, command: string): VantageEvent[] =>
+    toolCallEvents({
+      toolUseId: `t${++n}`,
+      name: "Bash",
+      input: { command },
+      timestamp: at(m),
+      sessionId: "s1",
+      ok: true,
+      cwd: "/w/repo",
+      repoRoot: "/w/repo",
+    }).map((e) => ({ ...e, payload: { ...e.payload, branch: BRANCH } }));
+
+  it("a write outside the repo is not a code edit, so the card stays Asked", () => {
+    const events = [ev("prompt.submitted", 0), ...shell(1, "pnpm build > /tmp/build.log")];
+    expect(events.some((e) => e.kind === "file.edited")).toBe(false);
+    expect(one(events).stage).toBe("asked");
+  });
+
+  it("an in-repo shell write is a code edit", () => {
+    const events = [ev("prompt.submitted", 0), ...shell(1, "echo x > /w/repo/src/a.ts")];
+    expect(one(events).stage).toBe("built");
   });
 });
