@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: read
-  pull-requests: read
+  pull-requests: read  # gitleaks-action lists PR commits on pull_request events
 
 jobs:
   checks:

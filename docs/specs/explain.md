@@ -40,7 +40,8 @@ The web UI's Explain button always shows layer 1 immediately. With an open sessi
 - **Official CLIs only** (`claude`, `codex`). Never reuse their tokens to call private APIs.
 - **User-chosen order:** for example Claude first, Codex as fallback, or per task. If one hits its limit, fall back to the other, then to layer 1.
 - **Daily budget** for layer 4 (default: 10 runs a day), small fast models by default, results cached until the evidence changes. The Diagnostics tab shows Vantage's own usage.
-- **Policy check:** vendors may bill headless use separately (a planned separate billing for `claude -p` was reported and then paused). Research R13 tracks the current state.
+- **Policy check (R13, 2026-10-14):** Anthropic paused the planned separate billing; `claude -p` logged in with a plan draws from plan limits. Codex `exec` with a ChatGPT login uses ChatGPT/Codex rate limits. Behavior at a limit is undocumented, so any error falls back. See [Explain engine research](../research/explain-engine.md#vendor-policy-as-of-2026-10-14).
+- **Measured (R13):** `claude -p --json-schema` with Haiku was schema-valid in 20 of 20 runs, with a median of 52.5 s and a p95 of 76.2 s. Layer 4 therefore runs as a background job (proposal P6), and Vantage sets status and tree shape while the model writes text only (proposal P5). Both proposals are in [DECISIONS](../DECISIONS.md#proposed-pending-confirmation).
 - Gated by the data policy setting (decision bean `vantage-h8fv`): Slack and tracker content are off by default.
 
 ## Input
@@ -122,5 +123,6 @@ The same pattern works at every level: item, project, week (an executive summary
 | No session open and layer 4 off | Show layer 1 and offer "Explain in session" |
 | Agent not available or over budget | Fall back in the user's order, then to layer 1 |
 | Invalid JSON or schema | Retry once, then show the plain tree |
+| Agent error (nonzero exit, `is_error: true`, not logged in) or 120 s timeout | No retry; next agent in the user's order, then layer 1 |
 | MECE check fails twice | Show the evidence-only status tree (MECE by construction) and keep the why tree as the user wrote it |
 | Unsupported claims | Dropped and marked |
