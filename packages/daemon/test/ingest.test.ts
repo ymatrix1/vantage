@@ -11,7 +11,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { Store, backfillTranscripts, ingestSpool, runOnce } from "../src/index.ts";
+import { Store, backfillTranscripts, getItem, ingestSpool, runOnce, runStagePass } from "../src/index.ts";
 
 const NOW = new Date("2026-10-14T12:00:00Z");
 const fixture = fileURLToPath(new URL("./fixtures/transcript.jsonl", import.meta.url));
@@ -42,6 +42,40 @@ const place = (mtime: Date) => {
 };
 const projectsRoot = () => join(dir, "projects");
 const projectDir = () => join(projectsRoot(), "demo");
+
+describe("Stop hook to unproven_claim", () => {
+  it("a spooled Stop after a code edit raises the flag; a passing check clears it", () => {
+    const spool = join(dir, "spool");
+    mkdirSync(spool);
+    const h = { session_id: "s-9", cwd: "/w/repo" };
+    const post = (id: string, tool: string, input: object) => ({
+      hook_event_name: "PostToolUse",
+      tool_use_id: id,
+      tool_name: tool,
+      tool_input: input,
+      ...h,
+    });
+    const edit = spoolLine(post("t1", "Edit", { file_path: "/w/repo/a.ts" }), "2026-10-14T10:00:00.000Z");
+    const stop = spoolLine(
+      { hook_event_name: "Stop", stop_hook_active: false, ...h },
+      "2026-10-14T10:01:00.000Z",
+    );
+    const file = join(spool, "2026-10-14.jsonl");
+    writeFileSync(file, edit + stop);
+    expect(ingestSpool(store, spool, NOW).inserted).toBeGreaterThanOrEqual(2);
+    expect(store.db.prepare("SELECT kind FROM events WHERE kind = 'session.stopped'").all()).toHaveLength(1);
+    runStagePass(store, {}, NOW);
+    const key = String(store.db.prepare("SELECT item_key FROM work_items").get()?.["item_key"]);
+    expect(getItem(store, key)?.flags.map((f) => f.kind)).toEqual(["unproven_claim"]);
+    appendFileSync(
+      file,
+      spoolLine(post("t2", "Bash", { command: "pnpm vitest run" }), "2026-10-14T10:02:00.000Z"),
+    );
+    ingestSpool(store, spool, NOW);
+    runStagePass(store, {}, NOW);
+    expect(getItem(store, key)?.flags).toEqual([]);
+  });
+});
 
 describe("spool ingest", () => {
   it("ingests new lines, resumes by offset and leaves a partial trailing line", () => {

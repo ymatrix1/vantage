@@ -46,6 +46,10 @@ importers:
       '@vantage/core':
         specifier: workspace:*
         version: link:../core
+    devDependencies:
+      '@vantage/daemon':
+        specifier: workspace:*
+        version: link:../daemon
 
   packages/ui:
     dependencies:

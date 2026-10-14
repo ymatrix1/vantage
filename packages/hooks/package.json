@@ -11,5 +11,8 @@
   },
   "dependencies": {
     "@vantage/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@vantage/daemon": "workspace:*"
   }
 }

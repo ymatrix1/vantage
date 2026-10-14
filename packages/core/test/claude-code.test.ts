@@ -90,7 +90,20 @@ describe("hookEvents", () => {
     expect(kind("PreCompact", { trigger: "auto" })).toEqual(["session.compacted"]);
     expect(kind("PermissionRequest", { tool_name: "Bash" })).toEqual(["session.waiting"]);
     expect(kind("Notification", { notification_type: "idle_prompt" })).toEqual(["session.waiting"]);
-    expect(kind("Stop")).toEqual([]);
+    expect(kind("Stop", { stop_hook_active: false })).toEqual(["session.stopped"]);
+  });
+
+  it("keeps stop_hook_active, the session and the cwd on session.stopped", () => {
+    const [e] = hookEvents(
+      rec({ hook_event_name: "Stop", session_id: "s-1", cwd: "/w", stop_hook_active: true }),
+    );
+    expect(e).toMatchObject({
+      kind: "session.stopped",
+      sessionId: "s-1",
+      payload: { hook: "Stop", cwd: "/w", stopHookActive: true },
+    });
+    const r = rec({ hook_event_name: "Stop", session_id: "s-1" });
+    expect(hookEvents(r)[0]?.sourceId).toBe(hookEvents(r)[0]?.sourceId);
   });
 
   it("gives a replayed spool line the same source id", () => {

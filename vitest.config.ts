@@ -9,6 +9,7 @@ export default defineConfig({
         new URL("./packages/core/src/status-line.ts", import.meta.url),
       ),
       "@vantage/core": fileURLToPath(new URL("./packages/core/src/index.ts", import.meta.url)),
+      "@vantage/daemon": fileURLToPath(new URL("./packages/daemon/src/index.ts", import.meta.url)),
     },
   },
   test: { include: ["packages/*/test/**/*.test.ts", "tools/test/**/*.test.ts"] },
