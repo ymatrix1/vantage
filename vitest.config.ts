@@ -12,5 +12,11 @@ export default defineConfig({
       "@vantage/daemon": fileURLToPath(new URL("./packages/daemon/src/index.ts", import.meta.url)),
     },
   },
-  test: { include: ["packages/*/test/**/*.test.ts", "tools/test/**/*.test.ts"] },
+  test: {
+    include: ["packages/*/test/**/*.test.ts", "tools/test/**/*.test.ts"],
+    // Tests that open SQLite files and spawn processes ran past the 5 s default on shared Windows
+    // runners (stages.test.ts "migration 3" timed out once on windows-latest, then passed on rerun).
+    testTimeout: 20_000,
+    hookTimeout: 20_000,
+  },
 });

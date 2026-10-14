@@ -11,6 +11,10 @@
     "./status-line": {
       "types": "./src/status-line.ts",
       "default": "./dist/src/status-line.js"
+    },
+    "./track": {
+      "types": "./src/track.ts",
+      "default": "./dist/src/track.js"
     }
   }
 }
