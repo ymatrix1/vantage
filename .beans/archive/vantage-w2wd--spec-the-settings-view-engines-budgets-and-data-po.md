@@ -21,7 +21,7 @@ The user sees and controls what Vantage may send to a model, and which engine an
 
 - [x] docs/specs/settings.md defines engines, budgets and data policy keys, defaults and the Settings view
 - [x] UX, operations, web-ui (API) and README link to it
-- [x] Decision D67 recorded with all five fields, and indexed
+- [x] Decision D68 recorded with all five fields, and indexed
 - [x] python tools/check_docs.py passes
 
 ## Out of Scope
@@ -32,4 +32,4 @@ Choosing the judgment model (Q4, vantage-ibuz). Deciding the company data policy
 
 - New `docs/specs/settings.md`: Settings tab on Sources with Engines, Budgets and Data policy, all outside calls off by default.
 - Links added in UX, operations, web-ui (`GET` and `POST /api/settings`) and README.
-- Decision D67 recorded and indexed. No model chosen: Q4, Q25 and vantage-h8fv stay open.
+- Decision D68 recorded and indexed. No model chosen: Q4, Q25 and vantage-h8fv stay open.
