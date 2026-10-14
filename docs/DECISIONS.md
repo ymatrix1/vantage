@@ -102,6 +102,7 @@ Rules:
 | [D73](#d73-how-the-phase-1-stop-gate-reads-state-and-takes-its-mode) | 2026-10-14 | How the Phase 1 Stop gate reads state and takes its mode |
 | [D74](#d74-status-line-reads-a-daemon-written-summary-file-phase-1-glyph-and-fallback-rules) | 2026-10-14 | Status line reads a daemon-written summary file; Phase 1 glyph and fallback rules |
 | [D75](#d75-phase-1-track-page-and-local-server-rules-the-specs-left-open) | 2026-10-14 | Phase 1 Track page and local server rules the specs left open |
+| [D76](#d76-the-native-hook-hands-stop-to-the-node-entry-and-spools-every-other-event-itself) | 2026-10-14 | The native hook hands Stop to the Node entry and spools every other event itself |
 | [D77](#d77-capture-accuracy-repo-root-from-scanned-worktrees-test-counts-from-runner-summaries) | 2026-10-14 | Capture accuracy: repo root from scanned worktrees, test counts from runner summaries |
 | [D78](#d78-phase-1-daemon-runtime-one-process-lock-and-health-files-vantage-start-and-vantage-open) | 2026-10-14 | Phase 1 daemon runtime: one process, lock and health files, `vantage start` and `vantage open` |
 | [D79](#d79-how-vantage-add-edits-machine-settings-marker-manifest-backup-opt-in-git-hooks) | 2026-10-14 | How `vantage add` edits machine settings: marker, manifest, backup, opt-in git hooks |
@@ -995,15 +996,18 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** Match by command path instead of a marker (breaks when the install moves); a `_vantage` key inside hook objects (Claude Code may reject unknown keys); git hooks on by default (global change, no consumer); restore the backup on uninstall (drops later edits); wrap Husky by editing `.husky/` (changes the repo, against D50).
 - **Impact:** Updates [first-run](specs/first-run.md), [operations](specs/operations.md), [status line](specs/status-line.md) and the [install guide](install-for-agents.md). The `--vantage-managed` marker becomes part of the contract with every future hook command, including the native one. Revisit git hooks when a source reads hook-written git events, and the doctor policy after real installs.
 
----
-
-## Proposed (pending confirmation)
-
 ### D76. The native hook hands Stop to the Node entry and spools every other event itself
 
-- **Status:** proposed
+- **Status:** accepted 2026-10-14
+- **Decided by:** user (delegated to the parent session on 2026-10-14; checked against measured data and the standards: consistent with earlier decisions, alternatives recorded, reversible, nothing leaves the machine)
 - **Context:** D72 ships the spool hook as a Rust binary, and D73 made `Stop` synchronous: the same command spools `session.stopped`, then runs the proof gate, which is Node code reading the SQLite store. The specs don't say how a native binary covers `Stop`.
 - **Decision:** The binary appends the spool line itself for every event except `Stop`. For `Stop`, when its first non-flag argument names an existing Node entry (flags such as the installer's `--vantage-managed` marker are skipped) (`dist/src/bin.js`), it passes the untouched payload to `node <entry>` and exits 0 after it returns; that entry spools the line and runs the gate, so the gate stays in one place and the line is written once. Without the argument, or when `node` can't start, `Stop` is spooled natively and the gate is skipped, which fails open like D73's silence when the daemon is down. The installer registers `<binary> <absolute path to dist/src/bin.js>`. The binary reads no SQLite.
 - **Why:** It keeps one implementation of the gate (D73) and keeps seven of eight events at the native cost: median 29 ms, p95 36 ms, 40 runs interleaved after 3 warm-ups, against 101 and 134 ms for `node dist/src/bin.js`. `Stop` runs once per agent turn and already needs Node, so it pays Node's start-up either way: 123 ms median and 148 ms p95 through the binary, against 103 and 130 ms for Node alone.
 - **Alternatives:** The gate in Rust (a second copy of the D73 logic and a SQLite dependency in a 0.25 MB binary). Spool natively, then start Node only for the gate (needs a flag so Node doesn't spool again, and two processes for the same event). Run the gate in the background (breaks the synchronous answer D73 needs).
 - **Impact:** `Stop` costs about 20 ms more than Node alone, and the binary spawns `node`, so a machine without Node on `PATH` loses the gate but keeps the spool. The install bean (`vantage-p9x2`) registers the two-argument command and `vantage doctor` reports it. Revisit if the gate moves out of Node or if `Stop` latency shows up as a real cost.
+
+---
+
+## Proposed (pending confirmation)
+
+None right now.
