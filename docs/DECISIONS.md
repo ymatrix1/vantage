@@ -15,3 +15,15 @@
 | D11 | 2026-10-13 | **Local-first**; remote sources read-only unless the user acts. | Company data and trust. |
 | D12 | 2026-10-13 | Build order: local sources → GitHub → CI/CD and monitoring → issue tracker (Jira or Linear) and Slack. | Each layer is useful alone; most reliable data first. |
 | D13 | 2026-10-13 | Issue tracker is pluggable: **Jira or Linear** behind one adapter interface. | Different teams and projects use different trackers; nothing else in the model should depend on which. |
+
+## Proposed (pending confirmation)
+
+| # | Proposal | Why |
+|---|---|---|
+| P1 | **Pull is the backbone, push only speeds things up.** Every source supports catch-up from a stored cursor. | Laptops sleep; nothing should be lost. |
+| P2 | **No public endpoint by default.** Webhooks only through an optional relay, later. | Local-first and company data. |
+| P3 | **Hooks only append to a local spool file** and return in under 100 ms. | Never slow down or break an agent. |
+| P4 | **GitHub Notifications API is the primary GitHub trigger.** | It's already filtered to what's relevant to the user, has read state, and conditional polling is free. |
+| P5 | **Slack via Socket Mode** if a Slack app is approved; search polling otherwise. | Real-time without a public URL. |
+| P6 | **Item kinds:** `own_work`, `review_request`, `commitment`, `follow_up`. | Reviews and promises need attention too, with shorter tracks. |
+| P7 | **Boundary rules:** issue key wins, then branch or worktree, then provisional per-session items; user Split and Merge always win. | Deterministic for most work; correctable for the rest. |

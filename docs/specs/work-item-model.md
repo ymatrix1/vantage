@@ -1,6 +1,28 @@
 # Spec: work item model
 
-> **Status:** draft. The linker design is the most important open decision. See [open questions](../OPEN-QUESTIONS.md).
+> **Status:** draft. Boundary rules below are a proposal to close open question Q1.
+
+## Item kinds
+
+Not everything that needs attention is the user's own code.
+
+| Kind | What it is | Track |
+|---|---|---|
+| `own_work` | Something the user is building | Full: Asked → Built → Proven → Reviewed → Shipped → Verified |
+| `review_request` | Someone else's PR waiting on the user's review | Short: Asked → Reviewed (done when the review is submitted; re-review requests reopen it) |
+| `commitment` | Something the user promised in Slack, Jira, Linear or a PR ("I'll check", "will fix") | Asked → done when linked to an `own_work` item or marked done |
+| `follow_up` | Created by a regression after ship | Full track, `parent_id` set |
+
+## Boundary rules (proposal)
+
+Where one work item ends and another begins:
+
+1. **Issue key wins.** One item per Jira or Linear key. A key that spans several branches or PRs is still one item with several anchors.
+2. **No key: one item per non-default branch or worktree.**
+3. **Several keys on one branch:** one item per key. Each event goes to the key named nearest to it (commit message, PR title, prompt); otherwise to the branch's first key.
+4. **Work on the default branch with no key:** each session with edits becomes a provisional item. Vantage suggests merging provisional items that share files within the same day.
+5. **Users can Split and Merge items.** These actions are recorded and always win over the rules.
+6. **Renames:** a branch rename or a key added later re-anchors the item instead of creating a new one.
 
 ## Entities
 

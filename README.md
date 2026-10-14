@@ -22,6 +22,8 @@ A card moves only on evidence: a git diff, a test or data check that ran after t
 | [Spec: lifecycle](docs/specs/lifecycle.md) | Stage gates, backward moves, flags, proof rules |
 | [Spec: work item model](docs/specs/work-item-model.md) | Entities, anchors, linking rules |
 | [Spec: scoring](docs/specs/scoring.md) | Priority, difficulty, spread, staleness |
+| [Spec: ingestion](docs/specs/ingestion.md) | How each source is listened to: push, polling, cursors, relay |
+| [Spec: operations](docs/specs/operations.md) | Identity, config, secrets, seen state, daemon, health, quality |
 | [Roadmap](docs/ROADMAP.md) | Build phases and exit criteria |
 | [Decisions](docs/DECISIONS.md) | Decision log |
 | [Open questions](docs/OPEN-QUESTIONS.md) | What still needs deciding |

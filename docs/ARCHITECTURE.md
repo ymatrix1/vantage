@@ -24,7 +24,7 @@ Everything runs locally. One background process (the daemon) ingests, links and 
 | Issue tracker: Jira or Linear | Jira: REST API or the Atlassian MCP. Linear: GraphQL API or the Linear MCP. Polled, behind one tracker adapter interface. | assigned issues, priority, due date, mentions, status transitions |
 | Slack | API or the Slack MCP, polled | mentions, user commitments, thread replies |
 
-Remote sources are polled at modest intervals. Nothing is pushed to them without an explicit user action.
+Remote sources are polled at modest intervals. Nothing is pushed to them without an explicit user action. How each source is listened to (push vs. pull, cursors, relay) is in [ingestion](specs/ingestion.md). Identity, config, secrets and daemon lifecycle are in [operations](specs/operations.md).
 
 ## Event store
 
