@@ -12,8 +12,9 @@ SQLite, WAL mode, in `~/.vantage/vantage.db`. Field lists come from the [work it
 | `sessions` | id, agent, cwd, repo, branch, started_at, last_activity | |
 | `contexts` | id, name, rules_json | |
 | `projects` | id, context_id, name, kind, external_id, repos_json | |
-| `work_items` | id, item_key (unique), kind, title, project_id, repo, stage, sub_state, proof_status, proof_level, docs_only, branch, has_edits, priority, difficulty_estimate, parked, parent_id, first_activity, last_activity, created_at, updated_at | Derived by the stage pass (D71). `item_key` is the linker's key, e.g. `issue:FTK-1`. |
+| `work_items` | id, item_key (unique), kind, title, project_id, repo, stage, sub_state, proof_status, proof_level, docs_only, branch, has_edits, title_source, priority, difficulty_estimate, parked, parent_id, first_activity, last_activity, created_at, updated_at | Derived by the stage pass (D71). `item_key` is the linker's key, e.g. `issue:FTK-1`. |
 | `anchors` | id, work_item_id, kind, value | Unique on (kind, value) |
+| `session_titles` | session_id (unique), title, captured_at | The cleaned first sentence of a session's first request (D93, migration 6), local only. Read by the stage pass and `vantage titles`; `vantage titles clear` empties it. `work_items.title_source` is `request`, `anchor` or `fallback`. |
 | `links` | event_id, item_key, method, anchor_kind, anchor_value, rule, confidence, created_at, undone_at | Keyed by `item_key`, not `work_items.id`, so the linker runs before items exist. Undo sets `undone_at`; the row stays as a tombstone. |
 | `item_sessions` (view) | item_key, session_count, derived_count, subagent_count | Per item, from live links and events (migration 4, D86): sessions with a live link, those that derive from another session (`session.derived`), and distinct sub-agent runs (`agentId`). Undone links don't count. Read it with `itemSessionCounts` in the daemon. |
 | `behaviors` | id, work_item_id, text, origin, approved, created_at | |

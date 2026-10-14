@@ -45,6 +45,10 @@ Not done: grouping by the same cwd and branch within a time gap (D87, proposed).
 
 Counts for the Track view come from the `item_sessions` view (see [data schema](data-schema.md)): `session_count`, `derived_count`, `subagent_count`.
 
+### Item titles
+
+A work item's title comes from, in order: its anchor (an issue key, branch name or worktree folder), else the first sentence of the session's first request when one was captured (cleaned, at most 80 characters, local only, switchable: [D93](../DECISIONS.md), proposed), else the repo, branch and first activity date (D84). `work_items.title_source` records which (`anchor`, `request`, `fallback`).
+
 ## Entities
 
 | Entity | Meaning | Key fields |

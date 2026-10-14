@@ -242,6 +242,7 @@ const toTrackItem = (i: ItemSummary): TrackItem => ({
   proofLevel: i.proofLevel,
   docsOnly: i.docsOnly,
   hasEdits: i.hasEdits,
+  titleSource: i.titleSource,
   flags: i.flags.map((f) => ({ kind: f.kind, severity: f.severity, reason: f.reason })),
   firstActivity: i.firstActivity,
   lastActivity: i.lastActivity,

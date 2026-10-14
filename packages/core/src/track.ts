@@ -32,6 +32,8 @@ export interface TrackItem {
   /** False for a session with no code edits: the UI folds these into "Conversations without code". */
   hasEdits?: boolean;
   firstActivity?: string;
+  /** `anchor` (named by its key), `request` (first sentence of the first request) or `fallback`. */
+  titleSource?: string;
   lastActivity: string;
 }
 

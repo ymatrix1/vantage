@@ -113,6 +113,15 @@ const MIGRATIONS: readonly string[] = [
    CREATE INDEX work_items_activity ON work_items (last_activity);
    CREATE INDEX work_items_repo ON work_items (repo, last_activity);
    CREATE INDEX work_items_stage ON work_items (stage, last_activity);`,
+  // Request titles (D93): where an item's title came from, and the locally stored first-request titles.
+  // `session_titles` is derived from transcripts, never read by anything but the stage pass and
+  // `vantage titles`; clearing it loses nothing that the transcripts do not still hold.
+  `ALTER TABLE work_items ADD COLUMN title_source TEXT NOT NULL DEFAULT 'fallback';
+   CREATE TABLE session_titles (
+     session_id TEXT PRIMARY KEY,
+     title TEXT NOT NULL,
+     captured_at TEXT NOT NULL
+   );`,
 ];
 
 /** Reads a numeric (or numeric-text) column from a row; 0 when the row or column is missing. */
