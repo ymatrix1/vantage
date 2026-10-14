@@ -90,7 +90,7 @@ The main "all work" view. A table, not a board, because it stays readable with m
 ### Sources
 
 - Per source: last successful sync, last error, rate-limit headroom, enabled or disabled.
-- Settings: contexts and projects, digest times, quiet hours, thresholds, proof gate mode.
+- Settings: contexts and projects, digest times, quiet hours, thresholds, proof gate mode, engines, budgets and the data policy for outside models (see [settings](specs/settings.md)).
 
 ### Ambient
 

@@ -81,6 +81,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 | [D65](#d65-shadcn-svelte-for-ui-components) | 2026-10-14 | shadcn-svelte for UI components |
 | [D66](#d66-pnpm-workspaces-on-node) | 2026-10-14 | pnpm workspaces on Node |
 | [D67](#d67-spool-hook-runs-built-javascript-native-binary-deferred) | 2026-10-14 | Spool hook runs built JavaScript; native binary deferred |
+| [D68](#d68-one-settings-view-for-engines-budgets-and-data-policy) | 2026-10-14 | One Settings view for engines, budgets and data policy |
 
 ---
 
@@ -646,6 +647,14 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Why:** It is the only lever that needs no new toolchain or per-platform release: median 95 to 99 ms, p95 130 ms, a 30 to 35 ms cut. Node's own start-up is the floor, and only a non-Node binary gets clearly below 100 ms.
 - **Alternatives:** A single hand-written CJS file (median 92 ms, p95 119 to 129 ms; 3 to 7 ms better, but needs a bundler or duplicated code). A Bun-compiled binary (median 114 to 117 ms; slower than built Node). `bun src/bin.ts` (224 ms). A Go binary spike (median 32 to 33 ms, p95 41 to 47 ms, 2 MB; the only option clearly under budget, but it adds a Go toolchain and per-OS builds, and conflicts with the npm install of D63).
 - **Impact:** The hook command now needs a build before use (`tsc -b`, which `pnpm test` runs); the installer (`vantage-p9x2`) must register the `dist` path. The budget is met at the median only marginally and not at p95 on this machine. Revisit with a native binary if hook latency shows up as a real cost (Q28).
+
+### D68. One Settings view for engines, budgets and data policy
+
+- **Context:** The design chose no model and had no place to see or control one. Explain layer 4 (D46), the judgment layer (Q4) and embeddings (Q25) all depend on engine choices, and the company data policy (`vantage-h8fv`) is undecided. UX listed settings without model fields.
+- **Decision:** Add a Settings tab on the Sources page, specified in [settings](specs/settings.md). It holds Engines (one row per AI-assisted job), Budgets (daily runs and fallback order) and a Data policy (a master switch for outside calls plus one switch per kind of content: code, transcripts, chat, tickets). Everything that leaves the machine defaults to off. Values live in `~/.vantage/config.toml`, edited through `GET` and `POST /api/settings`.
+- **Why:** The user decides what may leave the machine, in one place, before any engine runs. It keeps D10 (scores in code) and the privacy rules visible instead of buried in specs, and it lets the open model choices (Q4, Q25) land as a setting later without a redesign.
+- **Alternatives:** A config file only (works, but hides what is on and what is sent); a per-feature toggle on each page (scatters privacy controls); hard-coding Haiku or one vendor (breaks the official-CLI rule and the user-chosen order in D46).
+- **Impact:** New spec and API rows, with links from UX, operations and the README. No code yet. Revisit when Q4 or Q25 is answered, when `vantage-h8fv` records the company policy (its answer may change the defaults), or if the file and the `settings` table in [data schema](specs/data-schema.md) must be reconciled.
 
 ---
 

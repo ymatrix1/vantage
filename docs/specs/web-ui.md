@@ -63,6 +63,8 @@ HTTP on `127.0.0.1`, token required on every call (D32). JSON throughout.
 | `GET /api/rewards` | Streaks and badges |
 | `GET /api/decisions?item=&project=&since=&who=&status=` | Decision log |
 | `POST /api/decisions/:id/actions` | Approve or change a proposed decision |
+| `GET /api/settings` | Engines, budgets and data policy with current values and availability ([settings](settings.md)) |
+| `POST /api/settings` | Change engines, budgets or data policy; recorded in `user_actions` |
 | `GET /api/diagnostics` | Source health, budgets with current values, recent errors |
 | `GET /api/items/:id/trace` | Why this item changed: events, rules fired, resulting changes |
 | `GET /api/live` (WebSocket) | Pushes `item.changed`, `flag.raised`, `source.health` events |

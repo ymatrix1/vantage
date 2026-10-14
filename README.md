@@ -48,6 +48,7 @@ Install Vantage in this repo. Follow https://github.com/ymatrix1/vantage/blob/ma
 | [Spec: first run](docs/specs/first-run.md) | `vantage init`, first view, one-time legend, demo mode |
 | [Spec: decision log](docs/specs/decision-log.md) | Every AI or person decision, with five fields, who and status |
 | [Spec: web UI](docs/specs/web-ui.md) | Navigation, screen states, keyboard map, API, performance budgets |
+| [Spec: settings](docs/specs/settings.md) | Engines, budgets and the data policy for outside models, all off by default |
 | [Spec: CI/CD](docs/specs/ci.md) | Docs checks now, code checks in Phase 1, releases later |
 | [Mockups](docs/mockups/index.html) | Static HTML mockups with synthetic data |
 | [Spec: scoring](docs/specs/scoring.md) | Priority, difficulty, spread, staleness |
