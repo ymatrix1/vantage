@@ -108,24 +108,90 @@ describe("vantage stats on a synthetic store", () => {
     expect(st.anchors).toEqual({ issue: 2, branch: 1, worktree: 0, session: 2, other: 0 });
   });
 
-  it("counts Needs you in total and over 48 h, with the top flag kinds", () => {
+  it("counts Needs you in total and over 48 h, split by flag kind", () => {
     const store = fixture();
     const st = json();
     store.close();
     expect(st.needsYou.total).toBe(3);
     expect(st.needsYou.recent48h).toBe(1);
-    expect(st.needsYou.topFlags).toEqual([
-      { kind: "forgotten", count: 2 },
-      { kind: "unproven_claim", count: 1 },
+    expect(st.needsYou.byKind).toEqual([
+      { kind: "forgotten", total: 2, recent48h: 0 },
+      { kind: "thrashing", total: 0, recent48h: 0 },
+      { kind: "unproven_claim", total: 1, recent48h: 1 },
     ]);
+    const text = run([]).out.join("\n");
+    expect(text).toMatch(/Needs you: forgotten\s+2 \(0 in 48 h\)/);
+    expect(text).toMatch(/Needs you: unproven_claim\s+1 \(1 in 48 h\)/);
+    expect(text).not.toContain("Needs you: thrashing");
+    expect(text).toContain("moved out of Needs you");
   });
 
-  it("reports stages and Built items with no fresh proof", () => {
+  it("reports stages, edited items that reached Proven, and Built items whose proof was lost", () => {
     const store = fixture();
     const st = json();
     store.close();
     expect(st.stages).toEqual({ asked: 0, built: 4, proven: 1, other: 0 });
-    expect(st.builtNoFreshProof).toEqual({ count: 4, of: 4, share: 1 });
+    expect(st.proven).toEqual({ count: 1, of: 5, share: 0.2 });
+    expect(st.builtProofLost).toEqual({ count: 0, of: 4, share: 0 });
+  });
+
+  it("counts a Built item whose proof expired, and leaves docs-only items out", () => {
+    const store = fixture();
+    // A code edit after B's passing check expires it: B drops from Proven to Built with an expired proof.
+    put(store, "sess-bbbb", "file.edited", ago(2 * D), {
+      cwd: "/w/acme-secret/app",
+      branch: "feat/ftk-2-other",
+      path: "/w/acme-secret/app/b.ts",
+    });
+    // A docs-only item needs no proof and is excluded from both sides.
+    put(store, "sess-docs", "file.edited", ago(H), {
+      cwd: "/w/acme-secret/app",
+      branch: "feat/ftk-3-docs",
+      path: "/w/acme-secret/app/README.md",
+    });
+    runStagePass(store, {}, NOW);
+    const st = json();
+    const text = run([]).out.join("\n");
+    store.close();
+    expect(st.proven).toEqual({ count: 0, of: 5, share: 0 });
+    expect(st.builtProofLost).toEqual({ count: 1, of: 5, share: 0.2 });
+    expect(text).toMatch(/Edited items Proven\s+0 of 5 \(0%\)/);
+    expect(text).toMatch(/Built, proof lost\s+1 of 5/);
+  });
+
+  it("counts checks by recognised family and the rest as one number, never as text", () => {
+    const store = fixture();
+    const acme = { cwd: "/w/acme-secret/app", branch: "feat/ftk-1-secret-title" };
+    for (const [i, command] of [
+      "pnpm exec vitest run",
+      "pytest -q",
+      "python -m pytest tests",
+      "go test ./...",
+      "dbt build --select tag:secret",
+      "npm test",
+      "duckdb secret.db",
+      "make secret-target-xyz",
+      "ls secret-folder",
+    ].entries()) {
+      put(store, "sess-aaaa", "command.ran", ago(H - i * 1000), { ...acme, command, ok: true });
+    }
+    const st = json();
+    const text = run([]).out.join("\n");
+    store.close();
+    // The fixture's own passing check ("vitest run b.test.ts") counts too.
+    expect(st.commands.total).toBe(10);
+    expect(st.commands.notRecognised).toBe(2);
+    expect(Object.fromEntries(st.commands.recognised.map((f) => [f.family, f.count]))).toEqual({
+      vitest: 2,
+      pytest: 2,
+      go_test: 1,
+      dbt: 1,
+      other_test_runner: 1,
+      data_tool: 1,
+    });
+    expect(text).toContain("ran but not recognised as a check: 2");
+    expect(text).not.toContain("make");
+    expect(text).not.toContain("secret");
   });
 
   it("reports events by source and per day, and the stage pass age", () => {
@@ -236,7 +302,7 @@ describe("vantage stats on a synthetic store", () => {
     const text = run([]).out.join("\n");
     store.close();
     expect(text).toMatch(/✅ Needs you, total\s+3/);
-    expect(text).toMatch(/❌ Built, no fresh proof\s+100%/);
+    expect(text).toMatch(/⚠️ Edited items Proven\s+1 of 5 \(20%\)/);
     expect(text).toMatch(/⚠️ Readable titles\s+60%/);
     expect(text).toContain("starting points");
   });
@@ -253,7 +319,6 @@ describe("vantage stats on a synthetic store", () => {
       "no-key",
       "ftk",
       "FTK",
-      "vitest",
       "sess-",
       "agent-1",
       "dddd",
@@ -286,7 +351,9 @@ describe("vantage stats edge cases", () => {
     const st = json();
     expect(st.items).toEqual({ total: 0, active24h: 0, active7d: 0, active30d: 0 });
     expect(st.titles.readableShare).toBeNull();
-    expect(st.builtNoFreshProof.share).toBeNull();
+    expect(st.proven.share).toBeNull();
+    expect(st.builtProofLost.share).toBeNull();
+    expect(st.commands).toEqual({ total: 0, recognised: [], notRecognised: 0 });
     expect(st.stagePass).toEqual({ lastAt: null, ageSeconds: null });
     expect(st.days.every((d) => d.events === 0 && d.active === 0)).toBe(true);
     const text = run([]).out.join("\n");

@@ -4,6 +4,7 @@
 import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import { proofFamily, type ProofFamily } from "@vantage/core";
 import { vantageHomeDir } from "@vantage/daemon";
 
 export interface StatsOptions {
@@ -36,7 +37,12 @@ export interface Stats {
   items: { total: number; active24h: number; active7d: number; active30d: number };
   titles: { readable: number; fallback: number; readableShare: number | null };
   anchors: { issue: number; branch: number; worktree: number; session: number; other: number };
-  needsYou: { total: number; recent48h: number; topFlags: { kind: string; count: number }[] };
+  /** Items with an open flag. `byKind` counts per flag kind, in the order forgotten, thrashing, unproven_claim. */
+  needsYou: {
+    total: number;
+    recent48h: number;
+    byKind: { kind: string; total: number; recent48h: number }[];
+  };
   /** Lineage numbers (D86). Null fields mean the store has no such data. */
   sessions: {
     total: number;
@@ -53,7 +59,16 @@ export interface Stats {
     anchoredShare: number | null;
   };
   stages: { asked: number; built: number; proven: number; other: number };
-  builtNoFreshProof: { count: number; of: number; share: number | null };
+  /** Items with a code edit (Built or Proven, docs-only excluded) and how many reached Proven. */
+  proven: { count: number; of: number; share: number | null };
+  /** Built items (docs-only excluded) whose proof is expired, failed or weak: a proof exists, it just does not count. */
+  builtProofLost: { count: number; of: number; share: number | null };
+  /** `command.ran` events by recognised check family; the rest is one number. Never any command text. */
+  commands: {
+    total: number;
+    recognised: { family: ProofFamily; count: number }[];
+    notRecognised: number;
+  };
   events: { total: number; bySource: { source: string; count: number }[] };
   db: { sizeBytes: number };
   stagePass: { lastAt: string | null; ageSeconds: number | null };
@@ -164,10 +179,20 @@ export function computeStats(db: DatabaseSync, opts: StatsOptions, now: Date, db
     q1(`SELECT COUNT(DISTINCT w.id) AS c ${flagBase} AND w.last_activity >= ?`, ...is.params, iso(48 * HOUR)),
     "c",
   );
-  const topFlags = q(
-    `SELECT f.kind AS k, COUNT(*) AS c ${flagBase} GROUP BY f.kind ORDER BY c DESC, k LIMIT 5`,
+  const kinds = ["forgotten", "thrashing", "unproven_claim"] as const;
+  const byKind = kinds.map((kind) => ({ kind: kind as string, total: 0, recent48h: 0 }));
+  const other = { kind: "other", total: 0, recent48h: 0 };
+  const recentFrom = iso(48 * HOUR);
+  for (const r of q(
+    `SELECT f.kind AS k, COUNT(*) AS c, SUM(CASE WHEN w.last_activity >= ? THEN 1 ELSE 0 END) AS r ${flagBase} GROUP BY f.kind`,
+    recentFrom,
     ...is.params,
-  ).map((r) => ({ kind: SAFE_WORD.test(s(r, "k")) ? s(r, "k") : "other", count: n(r, "c") }));
+  )) {
+    const row = byKind.find((b) => b.kind === s(r, "k")) ?? other;
+    row.total += n(r, "c");
+    row.recent48h += n(r, "r");
+  }
+  if (other.total > 0) byKind.push(other);
 
   // Per-item session counts come from the `item_sessions` view (D86), when the store has it.
   const hasView =
@@ -201,9 +226,34 @@ export function computeStats(db: DatabaseSync, opts: StatsOptions, now: Date, db
     if (st === "asked" || st === "built" || st === "proven") stages[st] += n(r, "c");
     else stages.other += n(r, "c");
   }
-  // Docs-only items need no proof (D71), so they are left out of both sides of the share.
-  const builtScored = count("w.stage = 'built' AND w.proof_status != 'not_required'");
-  const builtNoProof = count("w.stage = 'built' AND w.proof_status NOT IN ('fresh', 'not_required')");
+  // Docs-only items need no proof (D71), so they are left out. An item in Built has no fresh proof by
+  // definition, so the useful numbers are how many edited items reached Proven and how many Built items
+  // had a proof that expired, failed or never counted.
+  const edited = count("w.stage IN ('built', 'proven') AND w.docs_only = 0");
+  const provenCount = count("w.stage = 'proven' AND w.docs_only = 0");
+  const builtCode = count("w.stage = 'built' AND w.docs_only = 0");
+  const builtLost = count(
+    "w.stage = 'built' AND w.docs_only = 0 AND w.proof_status IN ('expired', 'failed', 'weak')",
+  );
+
+  // Command families: classified one row at a time with the stage machine's own allowlist; only counts are kept.
+  const fam = new Map<ProofFamily, number>();
+  let cmdTotal = 0;
+  let cmdUnrecognised = 0;
+  const cmdRows = db
+    .prepare(
+      `SELECT json_extract(e.payload_json, '$.command') AS c FROM events e
+         WHERE e.kind = 'command.ran' AND ${es.where}`,
+    )
+    .iterate(...es.params);
+  for (const r of cmdRows) {
+    const c = r["c"];
+    if (typeof c !== "string") continue;
+    cmdTotal++;
+    const f = proofFamily(c);
+    if (f === null) cmdUnrecognised++;
+    else fam.set(f, (fam.get(f) ?? 0) + 1);
+  }
 
   const bySource: { source: string; count: number }[] = [];
   let eventTotal = 0;
@@ -235,7 +285,7 @@ export function computeStats(db: DatabaseSync, opts: StatsOptions, now: Date, db
     },
     titles: { readable: total - fallback, fallback, readableShare: share(total - fallback, total) },
     anchors,
-    needsYou: { total: needsTotal, recent48h: needsRecent, topFlags },
+    needsYou: { total: needsTotal, recent48h: needsRecent, byKind },
     sessions: {
       total: sessions,
       derived: derived > 0 ? derived : null,
@@ -249,7 +299,15 @@ export function computeStats(db: DatabaseSync, opts: StatsOptions, now: Date, db
       anchoredShare: share(sessions - provisional, sessions),
     },
     stages,
-    builtNoFreshProof: { count: builtNoProof, of: builtScored, share: share(builtNoProof, builtScored) },
+    proven: { count: provenCount, of: edited, share: share(provenCount, edited) },
+    builtProofLost: { count: builtLost, of: builtCode, share: share(builtLost, builtCode) },
+    commands: {
+      total: cmdTotal,
+      recognised: [...fam]
+        .map(([family, n2]) => ({ family, count: n2 }))
+        .toSorted((a, b) => b.count - a.count || a.family.localeCompare(b.family)),
+      notRecognised: cmdUnrecognised,
+    },
     events: { total: eventTotal, bySource: bySource.slice(0, 8) },
     db: { sizeBytes: dbSizeBytes },
     stagePass: {
@@ -342,7 +400,7 @@ export const GOALS = {
   needsYouTotal: { good: 10, bad: 30 },
   needsYouRecent: { good: 5, bad: 15 },
   readableShare: { good: 0.8, bad: 0.5 },
-  builtNoProofShare: { good: 0.3, bad: 0.6 },
+  provenShare: { good: 0.5, bad: 0.2 },
   anchoredSessionShare: { good: 0.7, bad: 0.4 },
   stagePassAgeSeconds: { good: 5 * 60, bad: 30 * 60 },
   dbBytes: { good: 500 * 1024 * 1024, bad: 1024 * 1024 * 1024 },
@@ -374,6 +432,26 @@ interface Line {
   value: string;
   goal: string;
   meaning: string;
+}
+
+const KIND_MEANING: Record<string, string> = {
+  forgotten: "idle over 5 days; being moved out of Needs you in the API, so expect this to drop",
+  thrashing: "an agent looping on failing edits or checks",
+  unproven_claim: "an agent stopped after code edits with no passing check",
+  other: "flags of another kind",
+};
+
+/** Needs you split by flag kind, each with its total and its last-48-hour count. */
+function kindLines(st: Stats): Line[] {
+  return st.needsYou.byKind
+    .filter((k) => k.total > 0)
+    .map((k) => ({
+      verdict: null,
+      label: `Needs you: ${k.kind}`,
+      value: `${k.total} (${k.recent48h} in 48 h)`,
+      goal: "",
+      meaning: KIND_MEANING[k.kind] ?? "",
+    }));
 }
 
 /** Lineage lines, only when the store has sessions (and derived or sub-agent runs, when it has those). */
@@ -481,12 +559,20 @@ function lines(st: Stats): Line[] {
       goal: `>= ${pct(g.readableShare.good)}`,
       meaning: "items you can recognise, not a bare Session fallback",
     },
+    ...kindLines(st),
     {
-      verdict: lowIsGood(st.builtNoFreshProof.share, g.builtNoProofShare),
-      label: "Built, no fresh proof",
-      value: pct(st.builtNoFreshProof.share),
-      goal: `<= ${pct(g.builtNoProofShare.good)}`,
-      meaning: "Built items (docs-only excluded) with no passing check since the last edit",
+      verdict: highIsGood(st.proven.share, g.provenShare),
+      label: "Edited items Proven",
+      value: `${st.proven.count} of ${st.proven.of} (${pct(st.proven.share)})`,
+      goal: `>= ${pct(g.provenShare.good)}`,
+      meaning: "items with a code edit (docs-only excluded) that reached Proven",
+    },
+    {
+      verdict: null,
+      label: "Built, proof lost",
+      value: `${st.builtProofLost.count} of ${st.builtProofLost.of}`,
+      goal: "",
+      meaning: "Built items whose last proof expired, failed or was weak",
     },
     ...sessionLines(st),
     {
@@ -542,7 +628,7 @@ export function renderStats(st: Stats, trend: boolean): string[] {
       `Stages: asked ${st.stages.asked}, built ${st.stages.built}, proven ${st.stages.proven}${st.stages.other ? `, other ${st.stages.other}` : ""}`,
     );
     out.push(
-      `Top flags: ${st.needsYou.topFlags.length === 0 ? "none" : st.needsYou.topFlags.map((f) => `${f.kind} ${f.count}`).join(", ")}`,
+      `Checks run: ${st.commands.total} commands, ${st.commands.recognised.length === 0 ? "none recognised" : st.commands.recognised.map((f) => `${f.family} ${f.count}`).join(", ")}; ran but not recognised as a check: ${st.commands.notRecognised}`,
     );
     out.push(
       `Events by source: ${st.events.bySource.length === 0 ? "none" : st.events.bySource.map((b) => `${b.source} ${b.count}`).join(", ")}`,
