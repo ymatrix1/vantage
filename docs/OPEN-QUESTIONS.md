@@ -18,3 +18,7 @@
 | Q13 | **Webhook relay.** Is a hosted relay for GitHub, Jira, Linear and monitoring webhooks acceptable under company policy? | Off by default; polling alone works. |
 | Q14 | **Reviewing others' PRs.** Should `review_request` items appear on the main board or only in Focus and the digest? | Proposal: Focus and digest only, to keep the board about own work. |
 | Q15 | **Multiple machines.** Is one laptop enough, or is sync needed later? | Out of scope for now. |
+
+| Q17 | **UI framework.** React, Svelte, Solid, or plain web components? | Needs: fast, keyboard-first, theme tokens. Decide at Phase 1 start. |
+| Q18 | **Install method.** npm global package or a single binary? | npm is simplest for a personal tool; a binary helps if it becomes a product. |
+| Q19 | **Behavior extraction.** Should agents propose behaviors from prompts automatically, or only from tickets and the user? | See [behaviors spec](specs/behaviors-and-detectors.md). |

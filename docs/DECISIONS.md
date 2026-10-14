@@ -44,6 +44,9 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 | [D28](#d28-proof-is-first-class) | 2026-10-14 | Proof is first-class |
 | [D29](#d29-the-method-is-named-a2v) | 2026-10-14 | The method is named A2V |
 | [D30](#d30-decisions-record-context-why-alternatives-and-impact) | 2026-10-14 | Decisions record context, why, alternatives and impact |
+| [D31](#d31-phase-1-is-a-thin-usable-slice) | 2026-10-14 | Phase 1 is a thin usable slice |
+| [D32](#d32-local-server-is-locked-down) | 2026-10-14 | Local server is locked down |
+| [D33](#d33-events-are-the-source-of-truth) | 2026-10-14 | Events are the source of truth |
 
 ---
 
@@ -287,6 +290,30 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 - **Alternatives:** A short table (fast, but loses context).
 - **Impact:** Longer log; rules and the `update-spec` skill enforce the format.
 
+
+### D31. Phase 1 is a thin usable slice
+
+- **Context:** Only Phase 0 was broken into tasks; Phase 1 mixed infrastructure with UI and had no clear minimum.
+- **Decision:** Phase 1 covers only Claude Code and git, only Asked, Built and Proven, the warn-mode gate, the status line and a minimal Track page.
+- **Why:** Get to daily use fast; the kill rule (PRD) needs a usable version to judge.
+- **Alternatives:** Build infrastructure first and UI later (no feedback for weeks).
+- **Impact:** GitHub, reviews, ship stages, Focus and trackers move to later phases. Phase 1 beans come from this list.
+
+### D32. Local server is locked down
+
+- **Context:** A localhost web UI with work data can be reached by other local programs and, through the browser, by malicious sites.
+- **Decision:** Bind to 127.0.0.1, require a per-install token, check Origin and Host, no CORS, no state changes on GET, user-only file permissions.
+- **Why:** Vantage holds company data; a local page is not automatically private.
+- **Alternatives:** No auth because it's localhost (open to DNS rebinding and cross-site requests).
+- **Impact:** Token handling in the UI launch flow and in every request; tests for rejected origins.
+
+### D33. Events are the source of truth
+
+- **Context:** Bugs in the linker or scorers could corrupt derived state.
+- **Decision:** Events and user actions are immutable; every other table can be rebuilt by replaying them. Merges link through PR numbers and branches, not commit ids.
+- **Why:** Safe recovery and testable logic; squash merges and rebases change commit ids.
+- **Alternatives:** Mutable state only (no recovery); commit-id linking (breaks on squash).
+- **Impact:** Replay command and fixtures; schema in `docs/specs/data-schema.md`.
 ---
 
 ## Proposed (pending confirmation)

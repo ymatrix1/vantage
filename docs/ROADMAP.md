@@ -16,7 +16,20 @@ Built in layers. Local sources first, then GitHub, then CI/CD and monitoring, th
 | Judge | `vantage-ibuz` (R10 model comparison) | R1, data policy decision |
 | Your decisions | `vantage-h8fv` (data policy), `vantage-akld` (Slack admin) | none |
 
-## Phase 1: event spine and proof gate
+## Phase 1: first usable slice
+
+The smallest version worth using daily. Only Claude Code and git; only Asked, Built and Proven.
+
+- [ ] Hook collector writing to the spool; daemon ingesting it into SQLite; transcript backfill.
+- [ ] git scanner for registered repos and worktrees.
+- [ ] Linker with branch or worktree and issue-key anchors only.
+- [ ] Stage machine for Asked, Built, Proven, with proof at L1 and proof expiry.
+- [ ] `Stop` hook proof gate in warn mode.
+- [ ] Status line: edits vs. proof, sessions waiting.
+- [ ] A minimal Track page (attention grouping, six-dot rows) on a secured localhost server.
+- **Exit:** used every day for a week, and the morning catch-up happens on the Track page instead of in terminals.
+
+## Phase 1 (old outline, kept for reference): event spine and proof gate
 
 - Hook collector writing events to the local store; transcript backfill.
 - `Stop` hook proof gate in warn mode.

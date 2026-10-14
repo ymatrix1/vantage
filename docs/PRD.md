@@ -96,6 +96,8 @@ Measured on the author's own usage:
 - Fewer re-review rounds caused by unaddressed comments.
 - Regressions linked to their originating work item within a day.
 
+**Baseline first:** before Phase 1 ships, time the current morning catch-up for a week (start, end, number of terminals and tabs opened) so the target has something to compare against.
+
 **Kill rule:** if it isn't used daily two weeks after the first usable phase, stop or pivot.
 
 ## 9. Constraints and risks
@@ -105,3 +107,8 @@ Measured on the author's own usage:
 - **Notification fatigue.** Interrupt only for red items.
 - **Format drift.** Claude Code and Codex log formats change; ingestion must tolerate unknown fields.
 - **Scope.** Large. Build in layers (see [roadmap](ROADMAP.md)).
+
+## 10. Licensing (for later)
+
+- Code: the repo stays private. If opened, choose a license then.
+- The A2V method text (`docs/METHOD.md`) could be published under CC BY 4.0 while keeping the A2V name as a mark, so others can teach it while the name stays recognizable. Decide before publishing anything.

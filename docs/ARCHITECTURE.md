@@ -93,3 +93,20 @@ Candidates: a fast decision model (for example Jev from TypeSafe AI) or a small 
 - SQLite for the live store (`better-sqlite3`, or Node's built-in `node:sqlite` if stable enough by then).
 - DuckDB for analysis and Phase 0 measurement.
 - Vitest for tests, with recorded `.jsonl` fixtures.
+
+## Local security
+
+A localhost page can be reached by other local programs and, through the browser, by malicious websites. So:
+
+- The daemon binds to `127.0.0.1` only, never `0.0.0.0`.
+- Every API and WebSocket request needs a per-install token. The token is stored in the OS credential store and handed to the UI through the URL fragment on launch, never in a query string.
+- The server checks `Origin` and `Host` headers to block cross-site requests and DNS rebinding.
+- No CORS headers. No endpoint changes data on a GET.
+- The spool file and database are readable only by the user.
+
+## Runtime (proposed)
+
+- **Process model:** one daemon (ingest, link, score, serve) plus a browser UI. The status line is a tiny command that reads a small summary file the daemon writes, so it never waits on the daemon.
+- **UI to daemon:** HTTP for queries and actions; one WebSocket for live updates.
+- **UI framework:** to decide (open question Q17). Must be fast, keyboard-friendly and theme-token based.
+- **Install:** to decide (Q18): an npm global package or a single binary. `vantage init` installs hooks; `vantage uninstall` removes them.

@@ -23,6 +23,8 @@ A card moves only on evidence: a git diff, a test or data check that ran after t
 | [Spec: lifecycle](docs/specs/lifecycle.md) | Stage gates, backward moves, flags, proof rules |
 | [Spec: work item model](docs/specs/work-item-model.md) | Entities, anchors, linking rules |
 | [Spec: proof](docs/specs/proof.md) | Proof types, strength levels, freshness, fake proof detection, the gate |
+| [Spec: behaviors and detectors](docs/specs/behaviors-and-detectors.md) | Behavior sources, AI-decided and commitment detectors, resume with context |
+| [Spec: data schema](docs/specs/data-schema.md) | Tables, immutability, migrations, merge linking |
 | [Spec: scoring](docs/specs/scoring.md) | Priority, difficulty, spread, staleness |
 | [Spec: ingestion](docs/specs/ingestion.md) | How each source is listened to: push, polling, cursors, relay |
 | [Spec: operations](docs/specs/operations.md) | Identity, config, secrets, seen state, daemon, health, quality |

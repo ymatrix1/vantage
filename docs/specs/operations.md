@@ -79,3 +79,26 @@ A single file, `~/.vantage/config.toml` (*tentative*):
 - **Linker accuracy:** a small labeled set of "this event belongs to this item"; track precision before and after changes.
 - **Flag precision:** for each flag, track how often the user dismisses it as wrong. A flag above 30% dismissals gets fixed or turned off.
 - **Usage metrics:** local-only counters for the PRD success metrics (daily opens, morning catch-up time).
+
+## Edge cases
+
+| Case | Handling |
+|---|---|
+| Worktree deleted | Item keeps its history; the worktree anchor is marked gone. Uncommitted work lost is flagged once. |
+| Repo moved or renamed | Matched by remote URL and first commit id, not path. |
+| Branch renamed | Re-anchors the item (D25 rule 6). |
+| Squash merge or rebase | Merges matched by PR number and head branch, not commit id. |
+| Force push | Proof fingerprints still decide freshness; history keeps old events. |
+| Clock and time zones | Stored in UTC; "since yesterday" and digest times use local time and the user's working hours. |
+
+## Upgrades, backup and uninstall
+
+- Schema migrations run at daemon start after an automatic backup of the database (keep the last 5).
+- `vantage export` writes events and user actions; `vantage import` restores them.
+- `vantage uninstall` removes Claude Code and git hooks, restores any chained repo hooks, and asks before deleting `~/.vantage/`.
+
+## Accessibility and keyboard
+
+- Every action has a keyboard shortcut; a command palette lists them.
+- Meaning is never color-only: dots also differ by shape or fill (filled, ring, dashed, hollow).
+- Focus states are visible in every theme.
