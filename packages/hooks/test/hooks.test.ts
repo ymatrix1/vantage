@@ -5,7 +5,8 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import { collect } from "../src/collect.ts";
-import { SPOOL_HOOK_EVENTS, hooksSettings } from "../src/settings.ts";
+import { SPOOL_HOOK_EVENTS, hooksSettings, statusLineSettings } from "../src/settings.ts";
+import { statusLine } from "../src/statusline.ts";
 
 // The registered hook command runs the built JS (D67); `pnpm test` builds first, so dist exists.
 const bin = fileURLToPath(new URL("../dist/src/bin.js", import.meta.url));
@@ -90,5 +91,91 @@ describe("settings", () => {
     for (const entries of Object.values(s)) {
       expect(entries[0]?.hooks[0]).toMatchObject({ async: true });
     }
+  });
+});
+
+const summary = (writtenAt: string) =>
+  JSON.stringify({
+    v: 1,
+    writtenAt,
+    needsYou: 2,
+    pings: 0,
+    sessions: {
+      s1: {
+        stage: "built",
+        proofStatus: "none",
+        proofLevel: 0,
+        docsOnly: false,
+        repo: "billing-api",
+        title: "Checkout fixes",
+        flags: [],
+      },
+    },
+  });
+
+describe("status line command", () => {
+  const statusBin = fileURLToPath(new URL("../dist/src/statusline-bin.js", import.meta.url));
+  const runStatus = (input: string, env: Record<string, string>) => {
+    const t0 = performance.now();
+    const r = spawnSync(process.execPath, [statusBin], {
+      input,
+      env: { ...process.env, NO_COLOR: "1", ...env },
+      encoding: "utf8",
+    });
+    return { status: r.status, out: r.stdout, ms: performance.now() - t0 };
+  };
+
+  it("registers the command with a 30 s refresh", () => {
+    expect(statusLineSettings("node statusline-bin.js")).toEqual({
+      statusLine: { type: "command", command: "node statusline-bin.js", refreshInterval: 30 },
+    });
+  });
+
+  it("prints the session's line from the summary file, using COLUMNS", () => {
+    home = mkdtempSync(join(tmpdir(), "vantage-status-"));
+    writeFileSync(join(home, "status.json"), summary(new Date().toISOString()));
+    const env = { VANTAGE_HOME: home, COLUMNS: "80" };
+    const r = runStatus('{"session_id":"s1"}', env);
+    expect(r.status).toBe(0);
+    expect(r.out).toBe("vantage · billing-api · ●●◐○○○ Checkout fixes · 2 need you\n");
+    expect(runStatus('{"session_id":"s1"}', { ...env, COLUMNS: "40" }).out).toBe(
+      "vantage · billing-api · 2 need you\n",
+    );
+  });
+
+  it("prints a calm line and exits 0 with the daemon down, on garbage input, and on a stale file", () => {
+    home = mkdtempSync(join(tmpdir(), "vantage-status-"));
+    const r = runStatus("garbage", { VANTAGE_HOME: home });
+    expect(r.status).toBe(0);
+    expect(r.out).toBe("vantage · offline\n");
+    writeFileSync(join(home, "status.json"), "{ half a file");
+    expect(runStatus("{}", { VANTAGE_HOME: home }).out).toBe("vantage · offline\n");
+    writeFileSync(join(home, "status.json"), summary("2020-01-01T00:00:00Z"));
+    expect(runStatus('{"session_id":"s1"}', { VANTAGE_HOME: home }).out).toBe("vantage · stale\n");
+  });
+
+  it("falls back to the stdin repo name for an unknown session", () => {
+    home = mkdtempSync(join(tmpdir(), "vantage-status-"));
+    writeFileSync(join(home, "status.json"), summary(new Date().toISOString()));
+    const out = statusLine('{"session_id":"x","workspace":{"repo":{"name":"web"}}}', {
+      VANTAGE_HOME: home,
+      NO_COLOR: "1",
+    });
+    expect(out).toBe("vantage · web · 2 need you");
+  });
+
+  it("renders in well under 100 ms in process, and under a CI ceiling as a real command", () => {
+    home = mkdtempSync(join(tmpdir(), "vantage-status-"));
+    writeFileSync(join(home, "status.json"), summary(new Date().toISOString()));
+    const env = { VANTAGE_HOME: home, NO_COLOR: "1" };
+    statusLine('{"session_id":"s1"}', env);
+    const t0 = performance.now();
+    for (let i = 0; i < 20; i++) statusLine('{"session_id":"s1"}', env);
+    expect((performance.now() - t0) / 20).toBeLessThan(10);
+    runStatus('{"session_id":"s1"}', { VANTAGE_HOME: home }); // warm the disk cache
+    const times = [1, 2, 3, 4, 5].map(() => runStatus('{"session_id":"s1"}', { VANTAGE_HOME: home }).ms);
+    times.sort((a, b) => a - b);
+    // CI ceiling only; the warm local figure is recorded in docs/specs/status-line.md.
+    expect(times[2]).toBeLessThan(750);
   });
 });

@@ -19,3 +19,4 @@ export type {
   StoredTransition,
 } from "./stages.ts";
 export * from "./stage-loop.ts";
+export * from "./status-file.ts";

@@ -5,3 +5,4 @@ export * from "./shell.ts";
 export * from "./git.ts";
 export * from "./linker.ts";
 export * from "./stage.ts";
+export * from "./status-line.ts";

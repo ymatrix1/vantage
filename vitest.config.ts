@@ -5,6 +5,9 @@ export default defineConfig({
   resolve: {
     // Workspace packages point at dist; tests run against source.
     alias: {
+      "@vantage/core/status-line": fileURLToPath(
+        new URL("./packages/core/src/status-line.ts", import.meta.url),
+      ),
       "@vantage/core": fileURLToPath(new URL("./packages/core/src/index.ts", import.meta.url)),
     },
   },

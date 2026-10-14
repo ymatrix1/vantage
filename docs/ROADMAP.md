@@ -37,7 +37,7 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 - [x] Linker with branch or worktree and issue-key anchors only (`vantage-9xbi`). Delivered: pure linker in core, `links` table, undo. The scheduled link pass arrived with the stage machine (`vantage-lxud`). Remaining: the item-view undo control (Track page).
 - [x] Stage machine for Asked, Built, Proven, with proof at L1 and proof expiry (`vantage-lxud`, D71). Delivered: pure machine in core, scheduled pass, `work_items`, `proofs`, `flags` and `stage_changes` tables, read functions. Output capture for zero-test detection is a follow-up bean.
 - [ ] `Stop` hook proof gate in warn mode.
-- [ ] Status line: edits vs. proof, sessions waiting.
+- [x] Status line: edits vs. proof (`vantage-p9at`). Delivered: pure renderer in core, daemon summary writer on the stage loop, `statusline-bin.js` command and settings snippet. Remaining: the running daemon must start the stage loop with `statusFile` (follow-up bean), and "sessions waiting" needs the pings source.
 - [ ] A minimal Track page (attention grouping, six-dot rows) on a secured localhost server.
 - [ ] Install with a prompt: `docs/install-for-agents.md` works end to end in Claude Code and Codex on a fresh machine.
 - [ ] **Exit:** used every day for a week, and the morning catch-up happens on the Track page instead of in terminals.

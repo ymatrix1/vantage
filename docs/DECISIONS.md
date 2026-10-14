@@ -907,4 +907,11 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 
 ## Proposed (pending confirmation)
 
-None right now.
+### D72. Status line reads a daemon-written summary file; Phase 1 glyph and fallback rules
+
+- **Status:** proposed
+- **Context:** The status line must be fast, must never break a session, and must work with the daemon down. The spec fixes the glyphs and layout but leaves open how a session finds its item, what the line shows with no data, what counts as "needs you" in Phase 1, and how the six-step track maps onto the three stages that exist.
+- **Decision:** The daemon rewrites `~/.vantage/status.json` after every stage pass, and the command reads only that file (no SQLite, no network). The file maps each session active in the last 7 days to the linked item with its latest event. `needsYou` counts items with any open, undismissed flag. The track shows `●◉○○○○` (Asked), `●●◐○○○` (Built without fresh proof), `●●●¹○○○` or `●●●²○○○` (Proven), `●●◌○○○` (docs only), and an item with an open flag shows `◍!` on its current step. No file or an unreadable one prints `vantage · offline`, a file older than 5 minutes prints `vantage · stale`, and the command always exits 0. The command imports `@vantage/core/status-line`, a subpath export, so start-up stays near bare node.
+- **Why:** A file read keeps the line independent of the daemon and its database lock, and meets the 100 ms budget. Counting any flag as needs-you matches the spec's single count and the three Phase 1 flags all want the user's attention. Distinct `offline` and `stale` lines tell the user whether the daemon never ran or stopped.
+- **Alternatives:** Query SQLite from the command (slow start-up, lock contention, fails with the daemon mid-write); call the daemon over a socket (blocks when it is down); count only `unproven_claim` and `thrashing` as needs-you (hides forgotten work, which the user should see); show nothing when the daemon is down (looks like Vantage is not installed).
+- **Impact:** Adds `status.json` as a derived file (safe to delete). The running daemon must start the stage loop with `statusFile` (follow-up bean). `docs/specs/status-line.md` records the mapping and install snippet. Revisit when Reviewed, Shipped and Verified exist (the track grows), when pings have a source, or if 30 s staleness feels slow.

@@ -6,7 +6,11 @@
   "exports": {
     ".": {
       "types": "./src/index.ts",
-      "default": "./dist/index.js"
+      "default": "./dist/src/index.js"
+    },
+    "./status-line": {
+      "types": "./src/status-line.ts",
+      "default": "./dist/src/status-line.js"
     }
   }
 }
