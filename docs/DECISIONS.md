@@ -96,6 +96,8 @@ Rules:
 | [D67](#d67-spool-hook-runs-built-javascript-native-binary-deferred) | 2026-10-14 | Spool hook runs built JavaScript; native binary deferred |
 | [D68](#d68-one-settings-view-for-engines-budgets-and-data-policy) | 2026-10-14 | One Settings view for engines, budgets and data policy |
 | [D69](#d69-decisions-have-a-status-an-owner-and-are-frozen-once-accepted) | 2026-10-14 | Decisions have a status and an owner, and are frozen once accepted |
+| [D70](#d70-shell-writes-count-as-edits-only-inside-the-repo) | 2026-10-14 | Shell writes count as edits only inside the repo |
+| [D71](#d71-phase-1-stage-machine-rules-the-specs-left-open) | 2026-10-14 | Phase 1 stage machine rules the specs left open |
 
 ---
 
@@ -861,22 +863,21 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** One file per decision in `docs/adr/` with a numbered template, as Prosper does (cleaner diffs, but a migration of 68 entries and more ceremony; revisit if the file becomes hard to review); status only with no freeze (leaves the overwrite problem); keeping the convention without a check (already drifting).
 - **Impact:** All 68 existing decisions are marked accepted by the user, as D67 and D68 are (their PRs were merged on the user's instruction). New decisions from agents need a `Status: proposed` line and a place under Proposed until accepted. `.agents/rules/docs-and-specs.md`, `AGENTS.md` and the `update-spec` skill name the new fields. Revisit if accepted decisions need small corrections often (the freeze would then need an erratum line) or if the single file outgrows review.
 
----
-
-## Proposed (pending confirmation)
-
 ### D70. Shell writes count as edits only inside the repo
 
-- **Status:** proposed
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
 - **Context:** About half of flagged shell `writes` only named log, output or data files, and some `sed -i` runs hit helper scripts outside the repo ([research](research/shell-edit-precision.md)). Counted as `file.edited`, they would move work items (Built, expired proof) on scratch output, against "cards move only on evidence".
 - **Decision:** At ingest, classify each named write target against the session `cwd` (or `repoRoot` when known). Only targets inside the repo reach `file.edited`; outside targets are recorded on `command.ran.outsidePaths`. Opaque writes keep counting unless a known `repoRoot` shows the `cwd` is outside it (`opaqueOutsideRepo`). Matching is lexical, no symlink resolution. Unresolvable targets, a missing `cwd` and commands with `cd` count as before.
 - **Why:** The `cwd` is known at ingest and later layers can't recover it. A payload field keeps every write on record and adds no event kind, so the stage machine and linker need no change to ignore scratch output.
 - **Alternatives:** A new `file.written_outside` event kind (clearer, but changes the 38-kind catalog and every consumer); a flag on `file.edited` (consumers that count edits would have to remember to filter); a path-suffix deny list (`.log`, `.txt`; misses real scratch scripts and wrongly drops real `.txt` docs); resolving symlinks (needs filesystem access in a pure function).
 - **Impact:** `file.edited` shrinks to in-repo work. New `outsidePaths` and `opaqueOutsideRepo` fields on `command.ran`. The daemon should pass the git root as `repoRoot` (follow-up bean), else a subdirectory session misclassifies `../sibling` writes as outside. Revisit if lexical matching misses symlinked repos in practice.
 
+
 ### D71. Phase 1 stage machine rules the specs left open
 
-- **Status:** proposed
+- **Status:** accepted 2026-10-14
+- **Decided by:** user
 
 - **Context:** Implementing the stage machine (`vantage-lxud`) hit rules the lifecycle and proof specs leave open, and limits of what the hooks capture today. Hook events carry the command and a pass or fail flag (`ok`), but no output, no exit code and no file content.
 - **Decision:**
@@ -891,3 +892,8 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** Treat any exit 0 as proof (accepts `echo`); expire proof on docs edits (punishes README fixes after a test run); capture output now (bigger hook, deferred to a follow-up bean).
 - **Impact:** Updates the [proof spec](specs/proof.md#freshness) and the [data schema](specs/data-schema.md). The Stop hook must emit `session.stopped` for `unproven_claim` to fire. Revisit once hooks record output summaries, and when R1 data shows how many real checks the allowlist misses.
 
+---
+
+## Proposed (pending confirmation)
+
+None right now.
