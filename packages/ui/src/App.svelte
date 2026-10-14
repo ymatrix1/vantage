@@ -4,6 +4,8 @@
   import { describeError, fetchTrace, fetchTrack } from "$lib/api";
   import { COLLAPSED_BY_DEFAULT, GROUP_VALUES, type GroupBy, type TrackRow, type TrackView } from "$lib/contract";
   import Dots from "$lib/Dots.svelte";
+  import Legend from "$lib/Legend.svelte";
+  import { stageLabel } from "$lib/stage-label";
   import { applyPush, mergeCounts, startLive } from "$lib/live";
   import Pagination from "$lib/Pagination.svelte";
   import Toolbar from "$lib/Toolbar.svelte";
@@ -61,6 +63,7 @@
   let open = $state<string | null>(null);
   let trace = $state<TraceResponse | null>(null);
   let showKeys = $state(false);
+  let showLegend = $state(false);
   // True while the socket is open: pushes replace polling (D81).
   let live = $state(false);
   // Groups the user opened or closed; anything else follows COLLAPSED_BY_DEFAULT.
@@ -187,12 +190,18 @@
     else if (e.key === "[") turn(-1);
     else if (group && group !== view.group) go({ group, page: 1 });
     else if (e.key === "Escape") {
-      if (showKeys) showKeys = false;
-      else {
+      if (showKeys || showLegend) {
+        showKeys = false;
+        showLegend = false;
+      } else {
         open = null;
         trace = null;
       }
-    } else if (e.key === "?") showKeys = !showKeys;
+    } else if (e.key === "?") {
+      const next = !(showKeys || showLegend);
+      showKeys = next;
+      showLegend = next;
+    }
   }
 
   function relax(filter: string): void {
@@ -252,8 +261,21 @@
   <main class="mx-auto max-w-4xl p-6">
     <header class="mb-4 flex items-baseline justify-between">
       <h1 class="text-xl font-semibold">Track</h1>
-      <button class="text-sm text-muted-foreground underline" onclick={() => (showKeys = !showKeys)}>? keys</button>
+      <span class="flex gap-3 text-sm">
+        <button
+          type="button"
+          class="text-muted-foreground underline"
+          aria-expanded={showLegend}
+          aria-controls="dot-legend"
+          onclick={() => (showLegend = !showLegend)}
+        >
+          What the dots mean
+        </button>
+        <button type="button" class="text-muted-foreground underline" onclick={() => (showKeys = !showKeys)}>? keys</button>
+      </span>
     </header>
+
+    {#if showLegend}<Legend onclose={() => (showLegend = false)} />{/if}
 
     {#if data?.stale}
       <p class="mb-3 rounded-lg border border-border bg-muted px-3 py-2 text-sm" role="status">
@@ -332,9 +354,10 @@
                     >
                       <span class="min-w-0 flex-1">
                         <span class="block truncate font-medium">{item.title}</span>
-                        <span class="block truncate text-xs text-muted-foreground">{item.repo ?? item.id}</span>
+                        <span class="block truncate text-xs text-muted-foreground">{item.repo ?? item.id}<span class="md:hidden"> · {stageLabel(item)}</span></span>
                       </span>
                       <Dots {item} />
+                      <span class="hidden w-44 shrink-0 text-xs md:block">{stageLabel(item)}</span>
                       <span class="hidden w-56 sm:block">
                         {#each item.flags as f (f.kind)}
                           <span class="block truncate text-xs text-muted-foreground" title={f.reason}>{f.reason}</span>

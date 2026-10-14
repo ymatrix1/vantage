@@ -38,7 +38,7 @@ Every page and panel handles all five states.
 | `a` | Ask for proof |
 | `e` | Explain the selected item, project or week |
 | `1` / `2` / `3` / `4` | Group Track by attention / repo / stage / no grouping (proposed D85; no `g` chords, since `g s` is Sources) |
-| `?` | Show this map |
+| `?` | Show this map and the dot legend |
 
 ## Track controls
 
@@ -52,6 +52,8 @@ Built in `packages/ui` (`vantage-4ty4`, proposed D85). The request mirrors the `
 | Groups | Real headings with the group total; "(N on this page)" when paging splits a group. Each collapses; "Conversations without code" (`no_edits`) and "Older" (`older`) start collapsed |
 | Pagination | First, previous, next, last, "26 to 50 of 312", and 25, 50 or 100 per page. Any filter, sort or group change returns to page 1; a page past the end lands on the last page |
 | Flags | Each flag shows its `reason` text on the row |
+
+**Dots, label and legend.** Each row shows the six dots and, beside them, a short label from the item's own fields: "Asked", "Built · no proof yet" (or expired, failed, weak), "Built · needs you", "Built · docs only, proof not required", "Proven · L1". Below the `md` breakpoint the label moves next to the repo line; the dots never hide. "What the dots mean" in the page header (and `?`) opens a non-modal legend: the six stages with their question, the six states drawn with the same dot component, and the rule that the shape carries the meaning and an agent saying "done" never moves a dot. `Esc` or its Close button closes it. The skipped state is a short dash with no ring, so it cannot be mistaken for the thin "not yet" ring (proposed D86); in forced-colours mode every dot shape takes the system text colour. Each dot keeps its tooltip (stage and state) on hover; the dots sit inside the row button, so they take no focus of their own and the row's accessible name lists all six.
 
 Default view: group by attention, since 7 days, sorted by recent activity, 25 per page.
 

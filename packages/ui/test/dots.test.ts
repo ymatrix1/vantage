@@ -4,6 +4,16 @@ import { cleanup, item, render } from "./helpers";
 
 afterEach(cleanup);
 
+// Skipped is a short horizontal dash, 6 units plus round caps, and has no ring at all.
+function expectDash(svg: Element | undefined): void {
+  expect(svg?.querySelector("circle")).toBeNull();
+  const dash = svg?.querySelector("path");
+  expect(dash?.getAttribute("d")).toBe("M5 8h6");
+  expect(dash?.getAttribute("stroke-width")).toBe("2");
+  expect(dash?.getAttribute("stroke-linecap")).toBe("round");
+  expect(dash?.getAttribute("stroke")).toBe("var(--dot-gray)");
+}
+
 const states = (root: ParentNode): (string | null)[] =>
   [...root.querySelectorAll("svg")].map((s) => s.getAttribute("data-state"));
 
@@ -12,21 +22,17 @@ describe("honest dots (visual-language)", () => {
     expect(states(render(Dots, { item: item() }))).toHaveLength(6);
   });
 
-  it("shipped and verified are dashed hollow: no configured source can evidence them", () => {
+  it("shipped and verified are a short dash with no ring: no configured source can evidence them", () => {
     const root = render(Dots, { item: item({ stage: "proven", proofStatus: "fresh" }) });
     const all = [...root.querySelectorAll("svg")];
     expect(states(root).slice(4)).toEqual(["skipped", "skipped"]);
-    for (const svg of all.slice(4)) {
-      const c = svg.querySelector("circle");
-      expect(c?.getAttribute("fill")).toBe("none");
-      expect(c?.getAttribute("stroke-dasharray")).toBeTruthy();
-    }
+    for (const svg of all.slice(4)) expectDash(svg);
   });
 
-  it("a docs-only item leaves Proven hollow, never green", () => {
+  it("a docs-only item leaves Proven as a dash, never green", () => {
     const root = render(Dots, { item: item({ stage: "built", docsOnly: true }) });
     expect(states(root)[2]).toBe("skipped");
-    expect(root.querySelectorAll("svg")[2]?.querySelector("circle")?.getAttribute("fill")).toBe("none");
+    expectDash(root.querySelectorAll("svg")[2]);
   });
 
   it("built without proof shows Proven as amber half-filled, not hollow and not green", () => {
@@ -43,6 +49,8 @@ describe("honest dots (visual-language)", () => {
     expect(built?.getAttribute("data-state")).toBe("not_yet");
     expect(built?.querySelector("circle")?.getAttribute("fill")).toBe("none");
     expect(built?.querySelector("circle")?.getAttribute("stroke-dasharray")).toBeNull();
+    expect(built?.querySelector("circle")?.getAttribute("stroke-width")).toBe("1");
+    expect(built?.querySelector("path")).toBeNull();
   });
 
   it("a red flag marks the current stage as needing you", () => {
@@ -53,7 +61,7 @@ describe("honest dots (visual-language)", () => {
   it("the accessible label spells each stage's state in words", () => {
     const root = render(Dots, { item: item({ stage: "built" }) });
     const label = root.querySelector("[role='img']")?.getAttribute("aria-label") ?? "";
-    expect(label).toContain("shipped: skipped or not set up");
+    expect(label).toContain("shipped: no source can measure this yet");
     expect(label).toContain("proven: no proof");
   });
 });
