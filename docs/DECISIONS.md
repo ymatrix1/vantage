@@ -907,7 +907,7 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 
 ## Proposed (pending confirmation)
 
-### D72. Status line reads a daemon-written summary file; Phase 1 glyph and fallback rules
+### D73. Status line reads a daemon-written summary file; Phase 1 glyph and fallback rules
 
 - **Status:** proposed
 - **Context:** The status line must be fast, must never break a session, and must work with the daemon down. The spec fixes the glyphs and layout but leaves open how a session finds its item, what the line shows with no data, what counts as "needs you" in Phase 1, and how the six-step track maps onto the three stages that exist.

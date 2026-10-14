@@ -1,6 +1,6 @@
 # Spec: status line
 
-> **Status:** draft. Phase 1 implementation: `packages/core/src/status-line.ts` (renderer), `packages/daemon/src/status-file.ts` (writer), `packages/hooks/src/statusline.ts` (command). Open choices are in D72 (proposed).
+> **Status:** draft. Phase 1 implementation: `packages/core/src/status-line.ts` (renderer), `packages/daemon/src/status-file.ts` (writer), `packages/hooks/src/statusline.ts` (command). Open choices are in D73 (proposed).
 
 The status line is the always-visible ambient surface inside every Claude Code session. A terminal can't draw the dot alphabet, so this spec maps it to text.
 
