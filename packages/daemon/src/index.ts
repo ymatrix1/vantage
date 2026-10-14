@@ -6,3 +6,5 @@ export { runOnce } from "./run.ts";
 export type { RunOptions } from "./run.ts";
 export * from "./git-scanner.ts";
 export * from "./git-loop.ts";
+export { linkStoredEvents, linksForItem, undoLink } from "./linking.ts";
+export type { StoredLink } from "./linking.ts";

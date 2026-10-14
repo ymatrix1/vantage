@@ -1,0 +1,17 @@
+{"_fixture": "synthetic", "note": "Hand-written events for linker replay tests; no real data."}
+{"sourceId": "g1", "source": "git", "kind": "worktree.scanned", "timestamp": "2026-01-05T09:00:00Z", "payload": {"worktree": "/work/demo-a", "branch": "feat/ftk-101-login"}}
+{"sourceId": "g2", "source": "git", "kind": "worktree.scanned", "timestamp": "2026-01-05T09:00:01Z", "payload": {"worktree": "/work/demo-b", "branch": "feat/FTK-7-and-FTK-8"}}
+{"sourceId": "g3", "source": "git", "kind": "worktree.scanned", "timestamp": "2026-01-05T09:00:02Z", "payload": {"worktree": "/work/wt-c", "branch": null}}
+{"sourceId": "g4", "source": "git", "kind": "worktree.scanned", "timestamp": "2026-01-05T09:00:03Z", "payload": {"worktree": "/work/main", "branch": "main"}}
+{"sourceId": "g5", "source": "git", "kind": "worktree.scanned", "timestamp": "2026-01-05T09:00:04Z", "payload": {"worktree": "/work/demo-d", "branch": "fix/utf-8-bug"}}
+{"sourceId": "a1", "source": "claude_code", "kind": "file.edited", "timestamp": "2026-01-05T09:01:00Z", "payload": {"cwd": "/work/demo-a", "tool": "Edit"}, "sessionId": "s1"}
+{"sourceId": "a2", "source": "claude_code", "kind": "prompt.submitted", "timestamp": "2026-01-05T09:02:00Z", "payload": {"cwd": "/work/demo-a", "branch": "feat/new-thing"}, "sessionId": "s1"}
+{"sourceId": "a3", "source": "claude_code", "kind": "file.edited", "timestamp": "2026-01-05T09:03:00Z", "payload": {"cwd": "/work/demo-a", "tool": "Edit", "branch": "feat/new-thing"}, "sessionId": "s1"}
+{"sourceId": "b1", "source": "claude_code", "kind": "file.edited", "timestamp": "2026-01-05T09:04:00Z", "payload": {"cwd": "/work/main", "tool": "Edit"}, "sessionId": "s2"}
+{"sourceId": "b2", "source": "claude_code", "kind": "command.ran", "timestamp": "2026-01-05T09:05:00Z", "payload": {"cwd": "/work/main", "command": "pnpm test"}, "sessionId": "s2"}
+{"sourceId": "c1", "source": "claude_code", "kind": "prompt.submitted", "timestamp": "2026-01-05T09:06:00Z", "payload": {"cwd": "/work/main"}, "sessionId": "s3"}
+{"sourceId": "d1", "source": "claude_code", "kind": "file.edited", "timestamp": "2026-01-05T09:07:00Z", "payload": {"cwd": "/work/demo-b/src", "tool": "Edit"}, "sessionId": "s4"}
+{"sourceId": "d2", "source": "git", "kind": "commit.created", "timestamp": "2026-01-05T09:08:00Z", "payload": {"subject": "FTK-8: fix parser", "branch": "feat/FTK-7-and-FTK-8", "worktree": "/work/demo-b", "sha": "0001"}}
+{"sourceId": "e1", "source": "claude_code", "kind": "file.edited", "timestamp": "2026-01-05T09:09:00Z", "payload": {"cwd": "/work/wt-c", "tool": "Edit"}, "sessionId": "s5"}
+{"sourceId": "f1", "source": "claude_code", "kind": "file.edited", "timestamp": "2026-01-05T09:10:00Z", "payload": {"cwd": "/work/demo-d", "tool": "Edit"}, "sessionId": "s6"}
+{"sourceId": "h1", "source": "claude_code", "kind": "prompt.submitted", "timestamp": "2026-01-05T09:11:00Z", "payload": {}, "sessionId": "s7"}
