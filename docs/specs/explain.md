@@ -19,7 +19,7 @@ Explain works without any separate AI call by default. Richer output comes from 
 
 | Layer | How | Extra AI call | Default |
 |---|---|---|---|
-| **1. Evidence-only** | Status tree, MECE grouping by A2V step, what's missing, and a templated headline and SCR ("Dedupe: built, 1 of 3 proven, review waiting on you"), all built from Vantage data | None | On |
+| **1. Evidence-only** | The task's status tree (its steps, then behaviors and proofs), what's missing, and a templated headline and SCR ("Dedupe: built, 1 of 3 proven, review waiting on you"), all built from Vantage data | None | On |
 | **2. Byproduct capture** | While agents work normally, a skill and Vantage's MCP tools let them record decisions, a one-line why and short summaries. A `SessionStart` hook adds a brief reminder to the session context. | None (small extra tokens in a running session) | On, with the plugin |
 | **3. In-session Explain** | A slash command such as `/vantage-explain <target>` in an open Claude Code or Codex session. The agent reads facts through MCP and returns the typed blocks through MCP. | None beyond normal interactive use | On, with the plugin |
 | **4. Headless fallback** | `claude -p` or `codex exec` with a JSON schema, for one-click Explain from the web UI when no session is open | Yes | **Off**; opt in |
@@ -75,7 +75,16 @@ Explain is built around an expandable issue tree, read left to right like a cons
 
 - **Starts collapsed:** the question and its first branches only. Click a node to open one level; click a leaf to see its evidence. Collapsed nodes show how many children they hold ("+3").
 - **Status stripes roll up:** each node carries the worst status of its children, so a collapsed tree still shows where the problem is.
-- **MECE is enforced silently:** Vantage checks that children don't overlap and that, together, they cover everything under their parent (for status trees, every open item appears exactly once). If the check fails, Vantage asks the model to regroup. The user never sees the check.
+- **MECE is enforced silently:** Vantage checks that children don't overlap and that, together, they cover everything under their parent. If the check fails, Vantage asks the model to regroup. The user never sees the check.
+
+**MECE at each level**
+
+| Level | What gets broken down | Example branches |
+|---|---|---|
+| **Task (main use)** | The task's question | *Why:* problem, impact, goal, options considered. *Status:* each A2V step, then its behaviors and proofs. |
+| Project or week | The set of open items | Grouped by A2V step or by workstream; every open item appears exactly once |
+
+The task-level *status* tree is MECE by construction (each behavior and proof belongs to one step), so it needs no model. The task-level *why* tree needs the user's words or an agent (layers 2–4) to split the question well.
 
 Two trees per target:
 
@@ -113,5 +122,5 @@ The same pattern works at every level: item, project, week (an executive summary
 | No session open and layer 4 off | Show layer 1 and offer "Explain in session" |
 | Agent not available or over budget | Fall back in the user's order, then to layer 1 |
 | Invalid JSON or schema | Retry once, then show the plain tree |
-| MECE check fails twice | Show the status tree grouped by A2V step (always MECE by construction) |
+| MECE check fails twice | Show the evidence-only status tree (MECE by construction) and keep the why tree as the user wrote it |
 | Unsupported claims | Dropped and marked |
