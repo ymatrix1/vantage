@@ -8,20 +8,20 @@ Built JS leaves the spool hook at a median 95 to 99 ms and p95 130 ms (D67), ove
 
 ## Answer
 
-**Yes, a native hook is the only option that clears the budget, and Rust is the better fit: same speed as Go, 13 times smaller.** Both are about 3 times faster than built JS at the median and under 50 ms at p95 in all three runs.
+**Yes, a native hook is the only option that clears the budget, and Rust is the better fit: same speed as Go, 13 times smaller.** Both are about 3 times faster than built JS at the median and at p95 52 ms or less in all four runs.
 
 ## Measurement
 
-Setup: 3 warm-ups, then 40 runs per launcher, interleaved (every round runs all four), 1 spawn per run with a 4-field JSON object on stdin, spool on local disk (`VANTAGE_HOME` in the temp dir), release flags. Three full runs; ranges below. Run 3 had a busier machine (control median rose to 100 ms), so read it as a bound, not as the typical case.
+Setup: 3 warm-ups, then 40 runs per launcher, interleaved (every round runs all four), 1 spawn per run with a 4-field JSON object on stdin, spool on local disk (`VANTAGE_HOME` in the temp dir), release flags. Four full runs; ranges below. Run 3 had a busier machine (control median rose to 100 ms), so read it as a bound, not as the typical case.
 
-| Launcher | Median (3 runs) | p95 (3 runs) | Size |
+| Launcher | Median (4 runs) | p95 (4 runs) | Size |
 |---|---|---|---|
-| `node -e ''` (floor) | 77.5, 83.3, 100.4 ms | 97.1, 106.1, 123.7 ms | n/a |
-| `node dist/src/bin.js` (control) | 91.2, 98.2, 118.8 ms | 122.1, 133.9, 146.9 ms | n/a |
-| Go (`-ldflags="-s -w"`) | 27.2, 28.7, 37.0 ms | 39.5, 38.8, 48.1 ms | 2.14 MB |
-| Rust (`opt-level=s`, LTO, `panic=abort`, `strip`, `serde_json`) | 26.1, 28.3, 32.7 ms | 43.8, 46.8, 44.8 ms | 0.16 MB |
+| `node -e ''` (floor) | 77.5, 83.3, 100.4, 80.8 ms | 97.1, 106.1, 123.7, 107.8 ms | n/a |
+| `node dist/src/bin.js` (control) | 91.2, 98.2, 118.8, 100.8 ms | 122.1, 133.9, 146.9, 118.4 ms | n/a |
+| Go (`-ldflags="-s -w"`) | 27.2, 28.7, 37.0, 30.3 ms | 39.5, 38.8, 48.1, 46.8 ms | 2.14 MB |
+| Rust (`opt-level=s`, LTO, `panic=abort`, `strip`, `serde_json`) | 26.1, 28.3, 32.7, 29.1 ms | 43.8, 46.8, 44.8, 51.9 ms | 0.16 MB |
 
-Go and Rust are within noise of each other (median gap 0.3 to 4.3 ms, p95 gap under 5 ms either way). Both match the Go spike recorded in D67 (median 32 to 33 ms, p95 41 to 47 ms).
+Go and Rust are within noise of each other (median gap 0.3 to 4.3 ms, p95 gap 7 ms or less either way). Both match the Go spike recorded in D67 (median 32 to 33 ms, p95 41 to 47 ms).
 
 Contract check (all four launchers, 129 spooled lines): every line parses with `v` 1, an ISO `receivedAt` and the hook object; the inputs `not json`, `[1]` and empty stdin exit 0 and write nothing; an unwritable spool directory exits 0.
 

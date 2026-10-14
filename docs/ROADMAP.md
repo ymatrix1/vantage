@@ -31,7 +31,7 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 | Core | `vantage-9xbi` (linker), then `vantage-lxud` (stage machine and proof) | capture |
 | Surfaces | `vantage-8nb2` (Stop gate), `vantage-p9at` (status line), `vantage-olgf` (Track page) | stage machine |
 | Delivery | `vantage-p9x2` (install with a prompt, `vantage add`, `doctor`) | capture and surfaces |
- Hook cold start cut from a median 126 to 133 ms to 95 to 99 ms by running built JS; a native binary is the open next step (`vantage-of25`, D67). Measured next: Rust and Go median 26 to 33 ms, p95 39 to 48 ms; Rust per-OS npm packages proposed in D69, awaiting confirmation (`vantage-xex6`).
+ Hook cold start cut from a median 126 to 133 ms to 95 to 99 ms by running built JS; a native binary is the open next step (`vantage-of25`, D67). Measured next: Rust and Go median 26 to 33 ms, p95 39 to 52 ms; Rust per-OS npm packages proposed in D69, awaiting confirmation (`vantage-xex6`).
 - [x] Hook collector writing to the spool; daemon ingesting it into SQLite; transcript backfill.
 - [x] git scanner for registered repos and worktrees: discovery, events, repo identity, cadence helper (`vantage-in31`), scheduling loop and cursor persistence (`vantage-0k45`).
 - [x] Linker with branch or worktree and issue-key anchors only (`vantage-9xbi`). Delivered: pure linker in core, `links` table, undo. The scheduled link pass arrived with the stage machine (`vantage-lxud`). Remaining: the item-view undo control (Track page).
