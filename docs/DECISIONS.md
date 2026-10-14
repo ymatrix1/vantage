@@ -873,3 +873,20 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Why:** The `cwd` is known at ingest and later layers can't recover it. A payload field keeps every write on record and adds no event kind, so the stage machine and linker need no change to ignore scratch output.
 - **Alternatives:** A new `file.written_outside` event kind (clearer, but changes the 38-kind catalog and every consumer); a flag on `file.edited` (consumers that count edits would have to remember to filter); a path-suffix deny list (`.log`, `.txt`; misses real scratch scripts and wrongly drops real `.txt` docs); resolving symlinks (needs filesystem access in a pure function).
 - **Impact:** `file.edited` shrinks to in-repo work. New `outsidePaths` and `opaqueOutsideRepo` fields on `command.ran`. The daemon should pass the git root as `repoRoot` (follow-up bean), else a subdirectory session misclassifies `../sibling` writes as outside. Revisit if lexical matching misses symlinked repos in practice.
+### D71. Phase 1 stage machine rules the specs left open
+
+- **Status:** proposed
+
+- **Context:** Implementing the stage machine (`vantage-lxud`) hit rules the lifecycle and proof specs leave open, and limits of what the hooks capture today. Hook events carry the command and a pass or fail flag (`ok`), but no output, no exit code and no file content.
+- **Decision:**
+  1. **A proof is a `command.ran` with a known `ok`** whose command matches a short allowlist: test runners (`vitest`, `jest`, `pytest`, `dotnet test`, `dbt test` or `build`, `go test`, `cargo test`, `npm test` and kin) or data tools (`duckdb`, `bq query`, `psql`, `sqlcmd`). `pnpm check` is not on it, because it can be lint only. Compound commands count when one segment matches.
+  2. **Weak proof never counts and is recorded:** `|| true` or `; exit 0` (cannot fail), `--passWithNoTests`, a reported `result.run` of 0 or all skipped, and any check that ran before the item had a code change. Zero-test and all-skipped detection needs the output summary, which hooks do not capture yet; until they do, only an optional `result: {run, skipped}` on the event triggers it (follow-up bean).
+  3. **The code fingerprint is a hash of the item's code-edit event ids** up to the check, because file content is not captured. Proof expires when a later linked code edit lands, and the stage drops from Proven to Built with that edit as evidence.
+  4. **Documentation edits** (`.md`, `.mdx`, `.txt`, `.rst`) do not expire proof, and a docs-only item stays Built with proof status `not_required` (D53).
+  5. **Built** is the first linked edit, or a linked commit when no edit event exists (work done outside the agent). A commit through the shell is not an edit, and a commit never expires proof.
+  6. **L2** when the command names an edited file, or a test named after it (`billing.test.ts` for `billing.ts`, stems of 5 or more characters). L3 and L4 wait for behaviors and deploys.
+  7. **Phase 1 flags:** `unproven_claim` (a `session.stopped` after the last code edit with no fresh proof), `thrashing` (D55, cleared by a later passing check) and `forgotten` (Asked or Built, idle more than 5 days). `collision` and `waiting_on_you` need other sources.
+- **Why:** Every rule can be computed from events already captured, so a card never moves on an agent's say-so (D3), and each transition names its evidence (D45).
+- **Alternatives:** Treat any exit 0 as proof (accepts `echo`); expire proof on docs edits (punishes README fixes after a test run); capture output now (bigger hook, deferred to a follow-up bean).
+- **Impact:** Updates the [proof spec](specs/proof.md#freshness) and the [data schema](specs/data-schema.md). The Stop hook must emit `session.stopped` for `unproven_claim` to fire. Revisit once hooks record output summaries, and when R1 data shows how many real checks the allowlist misses.
+
