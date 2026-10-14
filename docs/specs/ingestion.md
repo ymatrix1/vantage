@@ -16,7 +16,7 @@ How Vantage hears about things happening in each source.
 
 ### Hook latency
 
-The registered command is the native binary built from `packages/hooks-native` (D72), or the built `packages/hooks/dist/src/bin.js` run by `node` (D67) when no native package resolves. The binary hands `Stop` to that Node entry (D76). Measured on the dev laptop (Windows 11, Node 24.6, 40 runs interleaved after 3 warm-ups, spool on local disk; numbers only):
+The registered command is the native binary built from `packages/hooks-native` (D72), or the built `packages/hooks/dist/src/bin.js` run by `node` (D67) when no native binary is found (the installer looks for the per-OS package, then a local cargo build, then falls back to Node: D80). The binary hands `Stop` to that Node entry (D76). Measured on the dev laptop (Windows 11, Node 24.6, 40 runs interleaved after 3 warm-ups, spool on local disk; numbers only):
 
 | Launcher | Median | p95 |
 |---|---|---|

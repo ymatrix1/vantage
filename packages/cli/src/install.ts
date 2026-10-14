@@ -14,6 +14,7 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
+import { createRequire } from "node:module";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -68,24 +69,76 @@ export interface HookCommands {
   statusLine: string;
   /** Files the commands run, for `vantage doctor`. */
   files: string[];
-  kind: "node-js";
+  kind: "node-js" | "native-package" | "native-local";
+  /** One line for `vantage add --dry-run`: which hook was chosen and why. */
+  reason: string;
 }
 
 const fwd = (p: string): string => p.replaceAll("\\", "/");
 
+const exe = process.platform === "win32" ? ".exe" : "";
+
+export interface NativeBinary {
+  path: string;
+  source: "package" | "local";
+}
+
 /**
- * The only place that decides which command the hooks run. Today it is the built JavaScript (D67);
- * the native binary and its fallback (D72) are added here and nowhere else.
+ * Finds the native spool hook (D72): the per-OS npm package first, then a binary built in this checkout.
+ * Both are plain lookups that return null when nothing is there. `VANTAGE_NATIVE_PACKAGES_DIR` (a
+ * node_modules-style root) and `VANTAGE_NATIVE_BUILD_DIR` (a cargo `release` directory) replace the
+ * defaults, so tests never see the real machine.
+ */
+export function findNativeBinary(env: NodeJS.ProcessEnv): NativeBinary | null {
+  const pkg = `hook-${process.platform}-${process.arch}`;
+  const packages = env["VANTAGE_NATIVE_PACKAGES_DIR"];
+  let fromPackage: string | null = null;
+  if (packages) {
+    fromPackage = join(packages, "@vantage", pkg, "bin", `vantage-hook${exe}`);
+  } else {
+    try {
+      const manifest = createRequire(import.meta.url).resolve(`@vantage/${pkg}/package.json`);
+      fromPackage = join(dirname(manifest), "bin", `vantage-hook${exe}`);
+    } catch {
+      // Not installed: the packages are optional dependencies.
+    }
+  }
+  if (fromPackage && existsSync(fromPackage)) return { path: fwd(fromPackage), source: "package" };
+  const build =
+    env["VANTAGE_NATIVE_BUILD_DIR"] ||
+    fileURLToPath(new URL("../../../hooks-native/target/release", import.meta.url));
+  const local = join(build, `vantage-hook${exe}`);
+  return existsSync(local) ? { path: fwd(local), source: "local" } : null;
+}
+
+/**
+ * The only place that decides which command the hooks run: the native binary (package, then local build)
+ * with the Node entry as its first argument for `Stop` (D76), else `node <entry>` (D67). The status line
+ * stays on Node: it is not on the hot path.
  */
 export function resolveHookCommands(env: NodeJS.ProcessEnv): HookCommands {
   const dir = env["VANTAGE_HOOKS_DIR"] || fileURLToPath(new URL("../../../hooks/dist/src", import.meta.url));
   const bin = fwd(join(dir, "bin.js"));
   const line = fwd(join(dir, "statusline-bin.js"));
+  const native = findNativeBinary(env);
+  if (native) {
+    return {
+      hook: `"${native.path}" "${bin}" ${MANAGED}`,
+      statusLine: `node "${line}" ${MANAGED}`,
+      files: [native.path, bin, line],
+      kind: native.source === "package" ? "native-package" : "native-local",
+      reason:
+        native.source === "package"
+          ? `native binary from the installed package ${native.path}`
+          : `native binary built in this checkout ${native.path}`,
+    };
+  }
   return {
     hook: `node "${bin}" ${MANAGED}`,
     statusLine: `node "${line}" ${MANAGED}`,
     files: [bin, line],
     kind: "node-js",
+    reason: "no native binary found (no @vantage/hook package, no cargo build); using node",
   };
 }
 
@@ -412,6 +465,7 @@ export async function runAdd(args: string[], io: InstallIo, now = new Date()): P
     }
   }
   lines.push(`4. ${p.manifest}: records what was changed, for \`vantage remove\``);
+  lines.push(`Hook: ${cmds.reason}`);
   lines.push(`Hook command: ${cmds.hook}`);
   for (const l of lines) io.out(l);
   if (dry) {
