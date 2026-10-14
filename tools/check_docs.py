@@ -2,19 +2,22 @@
 
 Checks:
 1. Relative Markdown links point to files that exist.
-2. Every decision and proposal in docs/DECISIONS.md has the five required fields (D30).
+2. Every decision and proposal in docs/DECISIONS.md has the five required fields (D30), a valid status
+   and owner, and an accepted decision is never edited or removed relative to the base branch (D69).
 3. No secrets or personal identifiers slipped into tracked text files (privacy boundary).
 
 Exits non-zero with a list of problems. Standard library only.
 """
 
+import os
 import pathlib
 import re
 import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-FIELDS = ["Context", "Decision", "Why", "Alternatives", "Impact"]
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import decisions_check  # noqa: E402
 LINK = re.compile(r"\]\(([^)\s]+)\)")
 PRIVACY = [
     (re.compile(r"\bgh[opsu]_[A-Za-z0-9]{20,}"), "GitHub token"),
@@ -86,16 +89,25 @@ def check_tables(files):
     return problems
 
 
+def base_decisions_text():
+    """DECISIONS.md on the base branch, or None when it cannot be read (for example a shallow clone)."""
+    base = os.environ.get("GITHUB_BASE_REF") or "main"
+    out = subprocess.run(
+        ["git", "show", f"origin/{base}:docs/DECISIONS.md"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    return out.stdout if out.returncode == 0 else None
+
+
 def check_decisions():
-    text = (ROOT / "docs" / "DECISIONS.md").read_text(encoding="utf-8")
-    problems = []
-    for block in re.split(r"(?m)^### ", text)[1:]:
-        title = block.splitlines()[0].strip()
-        if not re.match(r"^[DV]\d+\.", title):
-            continue
-        for field in FIELDS:
-            if f"**{field}:**" not in block:
-                problems.append(f"docs/DECISIONS.md: {title} is missing '{field}'")
+    head = (ROOT / "docs" / "DECISIONS.md").read_text(encoding="utf-8")
+    problems = decisions_check.check_decision_text(head)
+    base = base_decisions_text()
+    if base is not None:
+        problems += decisions_check.check_freeze(base, head)
     return problems
 
 
