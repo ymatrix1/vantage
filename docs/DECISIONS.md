@@ -323,8 +323,8 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 ### D34. Visual first with a dot alphabet
 
 - **Context:** The user wants to read less: colors, drawings and visuals instead of text. A first attempt removed titles and used emoji, which made items unidentifiable and rendered inconsistently.
-- **Decision:** Shape, color, size and position carry state; 2–4 word titles carry identity; about 30 words per screen. Six dot states differ by shape first, then color. Proof level shows as dot shine. Flags use one line-icon set, never emoji.
-- **Why:** Glanceable without losing identity; works for colorblind users and any theme; ties the reward (shine) to the A2V method.
+- **Decision:** Shape, color, size and position carry state; 2–4 word titles carry identity; about 30 words per screen. Six dot states differ by shape first, then color. Proof level shows as 1 to 4 green arcs around the Proven dot (count, not shine, which blurred at small sizes). Flags use one line-icon set, never emoji.
+- **Why:** Glanceable without losing identity; works for colorblind users and any theme; ties the reward (more arcs) to the A2V method.
 - **Alternatives:** No text at all (items can't be told apart); text-heavy cards (the original pain).
 - **Impact:** A shared component set used by every page and the status line; [visual language spec](specs/visual-language.md).
 
@@ -339,7 +339,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 ### D36. Calm gamification rules
 
 - **Context:** The user wants a more gamified, less stressful app.
-- **Decision:** Reward good practice, never volume or speed: proof shine, stars for verified work, gentle streaks that pause instead of breaking, rare badges for A2V practices, an evening landing that closes open loops. No leaderboards, points for commits or lines, breaking streaks or random rewards. Quiet mode turns it off.
+- **Decision:** Reward good practice, never volume or speed: proof arcs, stars for verified work, gentle streaks that pause instead of breaking, rare badges for A2V practices, an evening landing that closes open loops. No leaderboards, points for commits or lines, breaking streaks or random rewards. Quiet mode turns it off.
 - **Why:** Visible small wins and closure lower stress; loss mechanics and comparison raise it.
 - **Alternatives:** Classic points and leaderboards (stressful, rewards the wrong thing).
 - **Impact:** Moments (verified, regression, landing, morning) become UI features in Phase 3.

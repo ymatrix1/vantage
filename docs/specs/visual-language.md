@@ -24,16 +24,22 @@ The dot is the atom of the UI. Meaning is carried by **shape first**, then color
 | Skipped or not set up | Dashed ring | Gray |
 | Not yet | Thin ring | Light gray |
 
-## Proof shine
+## Proof level ring
 
-A stronger proof makes a done dot shinier, so the A2V method itself becomes the reward.
+Proof strength is shown by **counting green arcs** around a solid green core. Counting 1 to 4 works at a glance, even at 15 px and in grayscale. An earlier "shine" design (highlights and thin rings) was dropped because the levels blurred together at real sizes.
 
 | Level | Look |
 |---|---|
-| L1 ran | Matte |
-| L2 linked | Highlight |
-| L3 behavior | Highlight and an outer ring |
-| L4 production | Highlight, ring and small rays |
+| L1 ran | Solid core, 1 arc |
+| L2 linked | Solid core, 2 arcs |
+| L3 behavior | Solid core, 3 arcs |
+| L4 production | Solid core, full ring of 4 arcs |
+
+Rules:
+
+- Arcs are green only, with no background track ring behind them.
+- **Only the Proven dot carries arcs.** Asked, Built, Reviewed and Shipped stay plain filled dots when done; Verified implies L4.
+- The solid core keeps it distinct from the half-filled amber "no proof" dot, which has no core.
 
 ## Flag icons
 
