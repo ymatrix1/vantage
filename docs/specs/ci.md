@@ -44,7 +44,7 @@ Runs on every push to `main` and every PR. Run locally with `pnpm check`.
 
 `.github/workflows/release-native.yml` builds `packages/hooks-native` for `win32-x64`, `darwin-arm64`, `darwin-x64`, `linux-x64` and `linux-arm64`, then `tools/assemble-native-packages.mjs` writes one npm package per target (`@vantage/hook-<target>`, with `os` and `cpu`) plus the `optionalDependencies` map the main package adds. It runs on pull requests that touch the crate and on manual dispatch, and always ends in `npm publish --dry-run`.
 
-A real publish exists only as the `publish` job: manual dispatch, `publish=true`, `confirm=publish`, environment `npm-publish`, secret `NPM_TOKEN` in that environment. **The environment, the secret and the npm scope are not configured**; the job fails at the token check until the user sets them up (`vantage-d28s`).
+A real publish exists only as the `publish` job: manual dispatch, `publish=true`, `confirm=publish`, environment `npm-publish`, the npm publish credential stored as a secret in that environment. **The environment, the secret and the npm scope are not configured**; the job fails at the token check until the user sets them up (`vantage-d28s`).
 
 ## Rules
 

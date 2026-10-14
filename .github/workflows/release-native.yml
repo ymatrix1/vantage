@@ -3,7 +3,7 @@ name: release-native
 # Builds the native spool hook for the 5 D72 targets and assembles one npm package per target.
 # It never publishes on its own: pull requests and plain dispatches stop at `npm publish --dry-run`.
 # A real publish needs a manual dispatch with publish=true AND confirm=publish, runs in the
-# `npm-publish` environment, and reads the NPM_TOKEN secret of that environment. Neither the
+# `npm-publish` environment, and reads the npm publish credential stored in that environment. Neither the
 # environment nor the secret is configured (docs/specs/ci.md); until they are, the
 # publish job fails at the token check.
 
@@ -110,7 +110,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          test -n "$NODE_AUTH_TOKEN" || { echo "NPM_TOKEN is not configured in the npm-publish environment"; exit 1; }
+          test -n "$NODE_AUTH_TOKEN" || { echo "npm publish credential is not configured in the npm-publish environment"; exit 1; }
           for d in npm-out/hook-*; do
             chmod +x "$d"/bin/* || true
             (cd "$d" && npm publish --access public)

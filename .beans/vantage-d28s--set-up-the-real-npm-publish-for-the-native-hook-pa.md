@@ -12,7 +12,7 @@ blocked_by:
 
 ## Context
 
-Split from vantage-bfr1. Needs the user: the npm scope that owns the @vantage/hook-* names, an npm-publish GitHub environment with required reviewers, and an NPM_TOKEN secret. Blocked by: vantage-bfr1. Left unconfigured on purpose.
+Split from vantage-bfr1. Needs the user: the npm scope that owns the @vantage/hook-* names, an npm-publish GitHub environment with required reviewers, and an npm publish credential stored as an environment secret. Blocked by vantage-bfr1. Left unconfigured on purpose.
 
 ## Higher Goal
 
@@ -21,7 +21,7 @@ Never slow an agent down.
 ## Acceptance Criteria
 
 - [ ] npm scope and package names confirmed
-- [ ] npm-publish environment and NPM_TOKEN configured by the user
+- [ ] npm-publish environment and publish credential configured by the user
 - [ ] First real publish via manual dispatch of release-native
 
 ## Out of Scope
