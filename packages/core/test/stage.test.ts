@@ -318,3 +318,73 @@ describe("shell writes outside the repo (ingest of PR 19)", () => {
     expect(one(events).stage).toBe("built");
   });
 });
+
+// Three failing edit cycles on one file, then the session stops: thrashing plus unproven_claim.
+const stuck = (): VantageEvent[] => [
+  edit(1, "/w/src/deep/foo.ts"),
+  cmd(2, "pnpm vitest run", false),
+  edit(3, "/w/src/deep/foo.ts"),
+  cmd(4, "pnpm vitest run", false),
+  edit(5, "/w/src/deep/foo.ts"),
+  cmd(6, "pnpm vitest run", false),
+  ev("session.stopped", 7),
+];
+const hoursAfterLast = (h: number): Date => new Date(Date.parse(at(7)) + h * 3_600_000);
+const kinds = (s: ItemState): string[] => s.flags.map((f) => f.kind).toSorted();
+
+describe("flag window (proposed D84)", () => {
+  it("raises thrashing and unproven_claim while the last activity is inside the window", () => {
+    expect(kinds(one(stuck(), { now: hoursAfterLast(47) }))).toEqual(["thrashing", "unproven_claim"]);
+    expect(kinds(one(stuck(), { now: hoursAfterLast(48) }))).toEqual(["thrashing", "unproven_claim"]);
+  });
+
+  it("raises neither flag once the last activity is older than the window, but keeps stage and proof", () => {
+    const s = one(stuck(), { now: hoursAfterLast(49) });
+    expect(kinds(s)).toEqual([]);
+    expect(s.stage).toBe("built");
+    expect(s.proofStatus).toBe("failed");
+    expect(s.codeEdits).toBe(3);
+  });
+
+  it("keeps the proven stage and fresh proof of an old item", () => {
+    const s = one([edit(1), cmd(2, "pnpm vitest run")], { now: hoursAfterLast(24 * 14) });
+    expect([s.stage, s.proofStatus, s.proofLevel]).toEqual(["proven", "fresh", 1]);
+  });
+
+  it("is configurable with flagWindowHours", () => {
+    expect(kinds(one(stuck(), { now: hoursAfterLast(10), flagWindowHours: 6 }))).toEqual([]);
+    expect(kinds(one(stuck(), { now: hoursAfterLast(100), flagWindowHours: 200 }))).toEqual([
+      "thrashing",
+      "unproven_claim",
+    ]);
+  });
+
+  it("leaves forgotten unchanged: it is raised for an old idle item", () => {
+    expect(kinds(one([edit(1)], { now: hoursAfterLast(24 * 30) }))).toEqual(["forgotten"]);
+  });
+
+  it("without a clock the window cannot apply, so flags are raised as before", () => {
+    expect(kinds(one(stuck()))).toEqual(["thrashing", "unproven_claim"]);
+  });
+
+  it("names files by base name only, never folders or commands", () => {
+    const s = one(stuck(), { now: hoursAfterLast(1) });
+    const reasons = s.flags.map((f) => f.reason).join(" | ");
+    expect(reasons).toContain("3 failing edit cycles on foo.ts");
+    expect(reasons).toContain("editing foo.ts");
+    expect(reasons).not.toContain("deep");
+    expect(reasons).not.toContain("vitest");
+  });
+});
+
+describe("item origin", () => {
+  it("reads repo from the cwd folder and branch from the events", () => {
+    const s = one([edit(1, "/w/src/a.ts", { cwd: "/home/u/code/claude-code" })]);
+    expect([s.repo, s.branch]).toEqual(["claude-code", BRANCH]);
+  });
+  it("is null when the events name neither", () => {
+    const e: VantageEvent = { ...edit(1), payload: { path: "/w/a.ts" }, sessionId: "s9" };
+    const [s] = run([e]);
+    expect([s?.repo, s?.branch]).toEqual([null, null]);
+  });
+});
