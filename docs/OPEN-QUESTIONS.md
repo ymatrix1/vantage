@@ -4,7 +4,7 @@
 |---|---|---|
 | Q1 | **Work item boundaries.** When does one session's work become two items, or two sessions' work become one? | Rules accepted (D25) in [work item model](specs/work-item-model.md#boundary-rules); validate against Phase 0 data. |
 | Q2 | **Ghost detection quality.** How to propose ghosts from chat without flooding the board? | Probably an LLM proposal with user confirmation, capped per day. |
-| Q3 | **Proof strength.** Is "test runner exited 0 after the last edit" enough for v1, or must proof reference changed code? | Start weak, measure false "proven" in Phase 0 data. |
+| Q3 | **Proof strength.** Is L1 (a qualifying check passed after the last edit) enough for Proven, or should the default be L2 (the check touches the changed code)? | Levels defined in the [proof spec](specs/proof.md#strength-levels). Start at L1; measure in R1 how often L2 is achievable. |
 | Q4 | **Judgment model.** Jev, a small LLM, or rules only? | Compare on ~100 labeled examples. Check company data policy first. |
 | Q5 | **Monitoring source.** Which tools are actually in use (Datadog, Sentry, PagerDuty, Grafana, dbt Cloud alerts)? | Determines the first monitoring adapter. |
 | Q6 | **Deploy signal.** Do the main repos use GitHub deployments, Actions environments, or something else? | Needed for Shipped. |

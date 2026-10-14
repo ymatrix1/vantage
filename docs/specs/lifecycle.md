@@ -77,11 +77,6 @@ Flags sit on any card, whatever the stage.
 | `claimed_fixed` | A reply says fixed or done on a review thread, but no later commit touches the commented lines | amber |
 | `shipped_unverified` | Deployed, but no post-deploy check ran within N hours (default 24) | amber |
 
-## What counts as proof (v1)
+## What counts as proof
 
-Qualifying if it ran after the last linked edit and exited 0:
-
-- Test runners: `vitest`, `jest`, `pytest`, `go test`, `cargo test`, `dotnet test`, `dbt test`, `dbt build`.
-- Data checks: `psql`, `sqlite3`, `duckdb`, `bq query`, `sqlcmd`, and `curl` with a non-empty response.
-
-Stronger proof (later): the command references a changed path, or a test imports a changed module. A judgment model may answer "does this command exercise the changed code?" See [open questions](../OPEN-QUESTIONS.md).
+See the [proof spec](proof.md): proof types, strength levels (L0 claimed to L4 production), freshness and expiry, weak or fake proof detection, and the `Stop` hook gate. Proven needs a fresh proof at level L1 or higher.

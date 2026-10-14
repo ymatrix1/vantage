@@ -31,6 +31,21 @@ Only do-it-yourself pieces exist: Stop-hook "done" gates shared on Reddit and bl
 
 Jev from TypeSafe AI (launched September 2026): returns typed decisions with calibrated probabilities, roughly 70–500 ms, $0.042 per million input tokens, no text generation. Available through OpenRouter and Vercel AI Gateway. Fits fuzzy yes/no checks; can still pick a wrong valid answer.
 
+## Ideas worth borrowing from Vibe Kanban
+
+Vibe Kanban is Apache-2.0, so ideas and, where useful, code can be reused with attribution. It's a dispatcher (it runs agents), which Vantage isn't, so only some ideas fit.
+
+| Idea | Fit for Vantage |
+|---|---|
+| Inline comments on a diff, sent to the agent | **Yes** (proposal V1) |
+| MCP server so agents create and update cards | **Partly:** agents may add intent and proof references, never move stages (proposal V2) |
+| Built-in preview browser with devtools and click-to-component | **Partly:** as screenshots for `visual` proof (proposal V3), not a browser in Vantage |
+| Worktree per task with setup and cleanup scripts | **No:** orchestration is out of scope; Vantage reads worktrees others create |
+| PR creation from the card | **Later, maybe:** a hand-off action, if it stays explicit |
+| Kanban board | **Toggle only:** Track rows are the default (D15) |
+
+Details to verify in research bean R12.
+
 ## Conclusion
 
 Session visibility is solved. Evidence-based work state, proof, ghosts, review loop, post-ship verification and a calm personal focus view are not.

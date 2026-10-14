@@ -12,7 +12,7 @@ Built in layers. Local sources first, then GitHub, then CI/CD and monitoring, th
 |---|---|---|
 | Agent data | `vantage-mmum` (R1 baseline), `vantage-o3sq` (R2 hooks), `vantage-ab70` (R3 Codex), `vantage-r43j` (R8 reuse) | none |
 | Remote sources | `vantage-ql2e` (R4 GitHub), `vantage-wok9` (R5 deploy and monitoring), `vantage-i3ku` (R6 Slack), `vantage-vncu` (R7 Jira and Linear) | none |
-| Platform and look | `vantage-aveh` (R9 Windows), `vantage-i3pu` (R11 theme) | none |
+| Platform and look | `vantage-aveh` (R9 Windows), `vantage-i3pu` (R11 theme), `vantage-lnws` (R12 Vibe Kanban) | none |
 | Judge | `vantage-ibuz` (R10 model comparison) | R1, data policy decision |
 | Your decisions | `vantage-h8fv` (data policy), `vantage-akld` (Slack admin) | none |
 

@@ -51,19 +51,20 @@ The main "all work" view. A table, not a board, because it stays readable with m
   - **Attention** (default): Needs you, In progress, Waiting on others, Done this week (collapsed).
   - **Project:** one collapsible header per project with a stage health bar (share of items per stage) and a one-word summary ("2 need you", "1 at risk", "calm").
   - **Stage:** rows grouped by current stage.
-- **Filters:** context, project, flag, agent, item kind.
+- **Filters:** context, project, flag, agent, item kind, and proof state (`unproven`, `expired proof`, `failed proof`, `weak proof`).
 - **"Moved since yesterday"** marker on rows whose stage changed.
 - **Board toggle:** an optional kanban rendering (six columns) of the same data, for people who prefer it. Not the default.
 
 ### Item
 
 - Title, project, ticket and PR links, the stage track.
-- **Behaviors:** one row each with a proof badge (proven, no proof, failed). AI-decided behaviors are marked with Approve or Change.
+- **Behaviors:** one row each. AI-decided behaviors are marked with Approve or Change.
+- **Proof:** one row per behavior with a badge showing type and level (L1 ran, L2 linked, L3 behavior, L4 production), last run time and command. Expand a row for the result summary, output excerpt or screenshot. Expired and failed proofs stay visible in a history list. See the [proof spec](specs/proof.md).
 - **Review:** threads with status, including `claimed_fixed`.
 - **After ship:** deploy, post-deploy checks, monitoring window, any regression and its follow-up item.
 - **History:** a horizontal strip of events by day, agent and session ("Mon · Claude · discussed → Tue · Codex · built 3 files → Wed · Claude · 1 of 3 proven").
 - **Links:** a small relationship graph (item ↔ sessions ↔ PRs ↔ tickets ↔ Slack threads ↔ follow-ups). This is the only place a graph is used; graphs are hard to scan as a main view.
-- **Actions:** Resume with context, Ask for proof, Park, Split, Merge, Unlink.
+- **Actions:** Resume with context, Ask for proof, Mark verified by hand, Park, Split, Merge, Unlink.
 
 ### Journal
 

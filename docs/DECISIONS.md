@@ -29,7 +29,12 @@
 | D25 | 2026-10-14 | **Boundary rules:** issue key wins, then branch or worktree, then provisional per-session items; user Split and Merge always win. | Deterministic for most work; correctable for the rest. |
 | D26 | 2026-10-14 | **Agent setup ported from PortPS5:** `AGENTS.md` as the canonical instructions, shared `.agents/rules` and `.agents/skills`, beans for task tracking. No Ouroboros. | One setup across projects and agents. |
 | D27 | 2026-10-14 | **Calm default look inspired by Pane's Folio theme; token-based themes with user custom themes** that may change style but not meaning (contrast and distinguishability checked). | The user likes Pane's calm look and wants personalization; meaning colors carry status. |
+| D28 | 2026-10-14 | **Proof is first-class:** its own spec, types, strength levels L0–L4, freshness by code fingerprint, fake proof detection. Agents can only *reference* proof Vantage captured; they can't create it from text. | Proof is the core of evidence over claims; it must be hard to fake and visible when weak. |
 
 ## Proposed (pending confirmation)
 
-None right now.
+| # | Proposal | Why |
+|---|---|---|
+| V1 | **Comment on a diff hunk from the Item page, and Vantage turns it into a prompt for the session that owns the item** (idea from Vibe Kanban). | Fast feedback without switching terminals; keeps Vantage a viewer that hands off, not an agent runner. |
+| V2 | **A Vantage MCP server** that lets agents register behaviors, reference captured proof runs, propose items and ask the user for decisions. Agents can never move a stage. | Agents can help structure work, while status stays evidence-based. |
+| V3 | **Visual proof:** screenshot of the running app after the last edit as a `visual` proof type (inspired by Vibe Kanban's built-in preview). Vantage stores the screenshot; it doesn't ship its own browser. | UI work is often best proven by looking. |
