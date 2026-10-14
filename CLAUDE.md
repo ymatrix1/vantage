@@ -1,6 +1,12 @@
-# Vantage: notes for Claude
+# CLAUDE.md
 
-- Project is in the **planning phase**. Don't write application code until the user approves starting a roadmap phase.
-- `docs/` is the source of truth. Update the relevant doc, `docs/DECISIONS.md` and `docs/OPEN-QUESTIONS.md` when a decision changes.
-- Core rule: cards move only on evidence (see `docs/specs/lifecycle.md`). Don't introduce features that move status based on agent claims.
-- GitHub repo: `ymatrix1/vantage` (private).
+Claude Code entry point. The canonical instructions are shared with other agents, so edit those, not this file.
+
+@AGENTS.md
+@.agents/rules/privacy-boundary.md
+@.agents/rules/evidence-over-claims.md
+@.agents/rules/docs-and-specs.md
+@.agents/rules/testing.md
+@.agents/rules/git-workflow.md
+
+Skills: `.claude/skills` is a symlink to `.agents/skills`. On Windows, clone with `git -c core.symlinks=true clone ...` and have Developer Mode enabled, or the link checks out as a plain text file.

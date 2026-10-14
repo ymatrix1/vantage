@@ -6,6 +6,15 @@ Built in layers. Local sources first, then GitHub, then CI/CD and monitoring, th
 
 - Use DuckDB to mine existing Claude Code and Codex transcripts (queried directly as `.jsonl`) plus `gh` data to get baselines: share of sessions ending with unproven edits, thrash loops, abandoned dirty work, review rounds per PR, time to first review.
 - **Exit:** a short baseline report in `docs/research/baseline.md` that ranks the pains by real numbers.
+- Epic bean: `vantage-pdgc`.
+
+| Lane | Beans | Blocked by |
+|---|---|---|
+| Agent data | `vantage-mmum` (R1 baseline), `vantage-o3sq` (R2 hooks), `vantage-ab70` (R3 Codex), `vantage-r43j` (R8 reuse) | none |
+| Remote sources | `vantage-ql2e` (R4 GitHub), `vantage-wok9` (R5 deploy and monitoring), `vantage-i3ku` (R6 Slack), `vantage-vncu` (R7 Jira and Linear) | none |
+| Platform and look | `vantage-aveh` (R9 Windows), `vantage-i3pu` (R11 theme) | none |
+| Judge | `vantage-ibuz` (R10 model comparison) | R1, data policy decision |
+| Your decisions | `vantage-h8fv` (data policy), `vantage-akld` (Slack admin) | none |
 
 ## Phase 1: event spine and proof gate
 

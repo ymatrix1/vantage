@@ -28,3 +28,5 @@ A card moves only on evidence: a git diff, a test or data check that ran after t
 | [Decisions](docs/DECISIONS.md) | Decision log |
 | [Open questions](docs/OPEN-QUESTIONS.md) | What still needs deciding |
 | [Landscape](docs/research/landscape.md) | Existing tools and why they don't cover this |
+
+Agent instructions: [AGENTS.md](AGENTS.md) (canonical), rules in `.agents/rules/`, skills in `.agents/skills/`. Tasks are tracked with [beans](https://github.com/hmans/beans) in `.beans/`.

@@ -1,6 +1,6 @@
 # Spec: work item model
 
-> **Status:** draft. Boundary rules below are a proposal to close open question Q1.
+> **Status:** draft. Boundary rules accepted (D25); validate them against Phase 0 data.
 
 ## Item kinds
 
@@ -13,7 +13,7 @@ Not everything that needs attention is the user's own code.
 | `commitment` | Something the user promised in Slack, Jira, Linear or a PR ("I'll check", "will fix") | Asked → done when linked to an `own_work` item or marked done |
 | `follow_up` | Created by a regression after ship | Full track, `parent_id` set |
 
-## Boundary rules (proposal)
+## Boundary rules
 
 Where one work item ends and another begins:
 

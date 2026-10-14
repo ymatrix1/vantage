@@ -19,15 +19,17 @@
 | D15 | 2026-10-14 | **Track is a table of rows with an inline stage track**, not a kanban board. Board is an optional toggle; graph only inside Item. | Scales past 15 items, keeps priority visible, easy to scan. |
 | D16 | 2026-10-14 | **Group by attention by default**; group by project or stage is a toggle. Projects are Jira epics, Linear projects or repo groups; contexts (Work, Personal) sit above. | Stress comes from cross-project attention; projects still matter for overview. |
 | D17 | 2026-10-14 | **SQLite (WAL) for the live store; DuckDB for analysis.** | The live workload is small transactional writes; DuckDB shines at scans and can read SQLite and `.jsonl` directly. |
+| D18 | 2026-10-14 | **Personal tool first.** Built for one user; nothing should block a product later. | Keeps setup, OS support and polish minimal while the idea is proven. |
+| D19 | 2026-10-14 | **Pull is the backbone, push only speeds things up.** Every source supports catch-up from a stored cursor. | Laptops sleep; nothing should be lost. |
+| D20 | 2026-10-14 | **No public endpoint by default.** Webhooks only through an optional relay, later. | Local-first and company data. |
+| D21 | 2026-10-14 | **Hooks only append to a local spool file** and return in under 100 ms. | Never slow down or break an agent. |
+| D22 | 2026-10-14 | **GitHub Notifications API is the primary GitHub trigger.** | Already filtered to what's relevant, has read state, conditional polling is free. |
+| D23 | 2026-10-14 | **Slack via Socket Mode** if a Slack app is approved; search polling otherwise. | Real time without a public URL. |
+| D24 | 2026-10-14 | **Item kinds:** `own_work`, `review_request`, `commitment`, `follow_up`. | Reviews and promises need attention too, with shorter tracks. |
+| D25 | 2026-10-14 | **Boundary rules:** issue key wins, then branch or worktree, then provisional per-session items; user Split and Merge always win. | Deterministic for most work; correctable for the rest. |
+| D26 | 2026-10-14 | **Agent setup ported from PortPS5:** `AGENTS.md` as the canonical instructions, shared `.agents/rules` and `.agents/skills`, beans for task tracking. No Ouroboros. | One setup across projects and agents. |
+| D27 | 2026-10-14 | **Calm default look inspired by Pane's Folio theme; token-based themes with user custom themes** that may change style but not meaning (contrast and distinguishability checked). | The user likes Pane's calm look and wants personalization; meaning colors carry status. |
 
 ## Proposed (pending confirmation)
 
-| # | Proposal | Why |
-|---|---|---|
-| P1 | **Pull is the backbone, push only speeds things up.** Every source supports catch-up from a stored cursor. | Laptops sleep; nothing should be lost. |
-| P2 | **No public endpoint by default.** Webhooks only through an optional relay, later. | Local-first and company data. |
-| P3 | **Hooks only append to a local spool file** and return in under 100 ms. | Never slow down or break an agent. |
-| P4 | **GitHub Notifications API is the primary GitHub trigger.** | It's already filtered to what's relevant to the user, has read state, and conditional polling is free. |
-| P5 | **Slack via Socket Mode** if a Slack app is approved; search polling otherwise. | Real-time without a public URL. |
-| P6 | **Item kinds:** `own_work`, `review_request`, `commitment`, `follow_up`. | Reviews and promises need attention too, with shorter tracks. |
-| P7 | **Boundary rules:** issue key wins, then branch or worktree, then provisional per-session items; user Split and Merge always win. | Deterministic for most work; correctable for the rest. |
+None right now.

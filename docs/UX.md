@@ -89,6 +89,21 @@ The main "all work" view. A table, not a board, because it stays readable with m
 - **Toasts** only for red items, respecting quiet hours.
 - **Badge count** of red items.
 
+## Look and themes
+
+**Default look: calm, in the spirit of Pane's "Folio" theme** ([runpane.com](https://runpane.com/)): quiet surfaces, low contrast chrome, color reserved for meaning. Pane is AGPL-licensed, so Vantage takes visual inspiration only, never its code or assets. The exact palette and type are defined when the UI phase starts (bean: Folio theme study).
+
+**Themes are token-based:**
+
+- Every color, font and radius in the UI comes from named design tokens, never hard-coded values.
+- Token groups:
+  - **Surfaces and text:** page, panel, card, primary, secondary and muted text, borders.
+  - **Meaning:** stage dots (done, current, at risk, needs you, skipped) and flag severities (red, amber), plus agent colors for the spread bar.
+  - **Type and shape:** font families and sizes, radius, density.
+- **Built-in themes:** the calm default (light and dark), plus a few alternatives.
+- **Custom themes:** a user theme is a small file in `~/.vantage/themes/` that overrides any subset of tokens. It can be switched live from the Sources page.
+- **Guardrails for custom themes:** meaning colors must stay distinguishable from each other and meet WCAG AA contrast against their surface. Vantage checks this when loading a theme and warns, then falls back to the default for any failing token. A theme can restyle the calm, never break the meaning.
+
 ## View choices considered
 
 | Option | Verdict |

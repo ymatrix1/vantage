@@ -2,7 +2,7 @@
 
 | # | Question | Notes |
 |---|---|---|
-| Q1 | **Work item boundaries.** When does one session's work become two items, or two sessions' work become one? | Proposal written in [work item model](specs/work-item-model.md#boundary-rules-proposal); validate against Phase 0 data. |
+| Q1 | **Work item boundaries.** When does one session's work become two items, or two sessions' work become one? | Rules accepted (D25) in [work item model](specs/work-item-model.md#boundary-rules); validate against Phase 0 data. |
 | Q2 | **Ghost detection quality.** How to propose ghosts from chat without flooding the board? | Probably an LLM proposal with user confirmation, capped per day. |
 | Q3 | **Proof strength.** Is "test runner exited 0 after the last edit" enough for v1, or must proof reference changed code? | Start weak, measure false "proven" in Phase 0 data. |
 | Q4 | **Judgment model.** Jev, a small LLM, or rules only? | Compare on ~100 labeled examples. Check company data policy first. |
