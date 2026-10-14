@@ -100,6 +100,8 @@ Rules:
 | [D71](#d71-phase-1-stage-machine-rules-the-specs-left-open) | 2026-10-14 | Phase 1 stage machine rules the specs left open |
 | [D72](#d72-ship-the-spool-hook-as-a-rust-binary-in-per-os-npm-packages-with-a-node-fallback) | 2026-10-14 | Ship the spool hook as a Rust binary in per-OS npm packages, with a Node fallback |
 | [D73](#d73-how-the-phase-1-stop-gate-reads-state-and-takes-its-mode) | 2026-10-14 | How the Phase 1 Stop gate reads state and takes its mode |
+| [D74](#d74-status-line-reads-a-daemon-written-summary-file-phase-1-glyph-and-fallback-rules) | 2026-10-14 | Status line reads a daemon-written summary file; Phase 1 glyph and fallback rules |
+| [D75](#d75-phase-1-track-page-and-local-server-rules-the-specs-left-open) | 2026-10-14 | Phase 1 Track page and local server rules the specs left open |
 
 ---
 
@@ -919,13 +921,10 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** Replay the spool inside the hook (always fresh, but needs the stage machine and linker in a 100 ms budget); ask the daemon over HTTP (a second moving part, and a down daemon would need a timeout); a full TOML parser (no dependency headroom); wiring exit 2 now (policy is Q11).
 - **Impact:** Updates the [proof spec](specs/proof.md#the-gate), [ingestion](specs/ingestion.md) and [operations](specs/operations.md). A check run in the last 30 seconds before the Stop may not be seen yet, which produces a false warning; the Stop event also raises `unproven_claim` only after the daemon's next pass. Revisit if false warnings from that lag show up in use (a "run a pass now" call from the hook would fix it), or when block mode is wired.
 
----
-
-## Proposed (pending confirmation)
-
 ### D74. Status line reads a daemon-written summary file; Phase 1 glyph and fallback rules
 
-- **Status:** proposed
+- **Status:** accepted 2026-10-14
+- **Decided by:** user (delegated to the parent session on 2026-10-14; checked against measured data and the standards: consistent with earlier decisions, alternatives recorded, reversible, nothing leaves the machine)
 - **Context:** The status line must be fast, must never break a session, and must work with the daemon down. The spec fixes the glyphs and layout but leaves open how a session finds its item, what the line shows with no data, what counts as "needs you" in Phase 1, and how the six-step track maps onto the three stages that exist.
 - **Decision:** The daemon rewrites `~/.vantage/status.json` after every stage pass, and the command reads only that file (no SQLite, no network). The file maps each session active in the last 7 days to the linked item with its latest event. `needsYou` counts items with any open, undismissed flag. The track shows `●◉○○○○` (Asked), `●●◐○○○` (Built without fresh proof), `●●●¹○○○` or `●●●²○○○` (Proven), `●●◌○○○` (docs only), and an item with an open flag shows `◍!` on its current step. No file or an unreadable one prints `vantage · offline`, a file older than 5 minutes prints `vantage · stale`, and the command always exits 0. The command imports `@vantage/core/status-line`, a subpath export, so start-up stays near bare node.
 - **Why:** A file read keeps the line independent of the daemon and its database lock, and meets the 100 ms budget. Counting any flag as needs-you matches the spec's single count and the three Phase 1 flags all want the user's attention. Distinct `offline` and `stale` lines tell the user whether the daemon never ran or stopped.
@@ -934,7 +933,8 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 
 ### D75. Phase 1 Track page and local server rules the specs left open
 
-- **Status:** proposed
+- **Status:** accepted 2026-10-14
+- **Decided by:** user (delegated to the parent session on 2026-10-14; checked against measured data and the standards: consistent with earlier decisions, alternatives recorded, reversible, nothing leaves the machine)
 - **Context:** Building the Track page (`vantage-olgf`) hit choices that D32, the web-ui spec and the architecture doc leave open: where the token lives, which requests need it, what "stale" and the attention groups mean with only Claude Code and git as sources, and how the page refreshes.
 - **Decision:**
   1. **Token storage:** a 256-bit random token in a user-only file (`~/.vantage/token`, mode 0600 on POSIX), created on first start. The OS credential store (architecture doc) waits for the install bean. The UI receives it in the URL fragment, moves it to `sessionStorage`, removes it from the address bar and sends it only as `Authorization: Bearer`. Query strings are never read.
@@ -946,6 +946,10 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Why:** Each rule follows from D32 and D3 (status only from evidence) using only data that exists today, and each is cheap to replace when a richer source lands.
 - **Alternatives:** OS credential store now (platform code and a native dependency for no Phase 1 gain); token on the static shell too (breaks the fragment hand-off, protects only public code); mark a source stale after N quiet minutes (false alarms when idle); WebSocket first (more moving parts than a 30-second pass justifies).
 - **Impact:** Updates the [web UI spec](specs/web-ui.md) API table and the architecture doc's token line. Revisit the token file once `vantage init` can write to the OS credential store, and the stale rule once GitHub or CI sources report their own sync times.
+
+---
+
+## Proposed (pending confirmation)
 
 ### D76. The native hook hands Stop to the Node entry and spools every other event itself
 
