@@ -1,0 +1,26 @@
+{
+  "name": "vantage-monorepo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -b && pnpm -F @vantage/ui check",
+    "lint": "oxlint --type-aware --deny-warnings",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "test": "vitest run",
+    "check:fixtures": "node tools/check-fixtures.mjs",
+    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm check:fixtures"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.5",
+    "oxfmt": "0.73.0",
+    "oxlint": "1.88.0",
+    "oxlint-tsgolint": "7.0.2004",
+    "typescript": "7.0.2",
+    "vitest": "5.0.4"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10.29.2"
+}

@@ -79,6 +79,7 @@ Proposals the user hasn't confirmed live under [Proposed](#proposed-pending-conf
 | [D63](#d63-npm-package-for-install) | 2026-10-14 | npm package for install |
 | [D64](#d64-oxc-tools-for-lint-and-format) | 2026-10-14 | Oxc tools for lint and format |
 | [D65](#d65-shadcn-svelte-for-ui-components) | 2026-10-14 | shadcn-svelte for UI components |
+| [D66](#d66-pnpm-workspaces-on-node) | 2026-10-14 | pnpm workspaces on Node |
 
 ---
 
@@ -628,6 +629,14 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Why:** The user's choice. The code lives in the repo, so it can be restyled to look calm and custom; Bits UI provides keyboard and accessibility behavior; it has the largest Svelte community.
 - **Alternatives:** Ark UI (strong accessibility and the same API across frameworks, but unstyled and a smaller Svelte community); Bits UI or Melt UI alone (more hand work); Skeleton or Flowbite Svelte (look generic, fight custom themes); daisyUI (CSS only, no behavior).
 - **Impact:** Adds Tailwind to the stack and the scaffold. Copied components are ours to maintain; updates are pulled by hand. Revisit if Tailwind fights the theme tokens or the UI moves to React (D62).
+
+### D66. pnpm workspaces on Node
+
+- **Context:** The Phase 1 scaffold has five packages (core, daemon, hooks, cli, ui) and needs a package manager. Bun was also raised, as package manager and runtime.
+- **Decision:** pnpm workspaces for development, pinned with `packageManager`, exact versions and `minimumReleaseAge: 1440`. Node stays the runtime; users still install from npm (D63).
+- **Why:** The user's choice. First-class workspaces and filters, strict dependencies (no undeclared imports), a shared store, install scripts blocked unless allowed, and a delay on brand-new releases as a supply-chain guard.
+- **Alternatives:** npm workspaces (works, but flat `node_modules` hides missing dependencies and every install script runs); Bun (fastest installs and about 10 ms startup, but as runtime it conflicts with `npx` install (D63) and has more Windows edge cases).
+- **Impact:** Contributors need pnpm (corepack). Revisit Bun for a compiled hook binary only if Node hooks miss the 100 ms budget.
 
 ---
 
