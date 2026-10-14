@@ -4,3 +4,4 @@ export { BACKFILL_DAYS, backfillTranscripts, ingestSpool } from "./ingest.ts";
 export type { IngestResult } from "./ingest.ts";
 export { runOnce } from "./run.ts";
 export type { RunOptions } from "./run.ts";
+export * from "./git-scanner.ts";
