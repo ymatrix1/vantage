@@ -121,7 +121,7 @@ const MIGRATIONS: readonly string[] = [
      branch TEXT NOT NULL,
      PRIMARY KEY (source, source_id)
    );`,
-  // Fork and resume counts, sub-agent tool counts and the agent's task list per item (D94, D95).
+  // Fork and resume counts, sub-agent tool counts and the agent's task list per item (D96, D97).
   // fork_count and resume_count come from the SessionStart source only; fork_hint_count counts derived
   // sessions whose parent kept producing events after the child started (a hint, never a rule).
   `DROP VIEW item_sessions;
@@ -231,7 +231,7 @@ export class Store {
       .run(source, sourceId, branch);
   }
 
-  /** Keep the cleaned text of the current task (D94). Set from the same switch as request titles. */
+  /** Keep the cleaned text of the current task (D96). Set from the same switch as request titles. */
   captureTaskText = true;
 
   countEventBranches(): number {

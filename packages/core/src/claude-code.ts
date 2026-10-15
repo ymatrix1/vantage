@@ -34,7 +34,7 @@ export interface ToolCall {
   repoRoot?: string | undefined;
   /** The tool's combined output text, read only to extract test counts and never stored. */
   output?: string | undefined;
-  /** Keep the cleaned text of the in_progress task (D94). Counts are kept either way. */
+  /** Keep the cleaned text of the in_progress task (D96). Counts are kept either way. */
   taskText?: boolean | undefined;
 }
 
@@ -42,7 +42,7 @@ export interface ToolCall {
 export interface IngestContext {
   /** Known repo and worktree roots; a call's root is the longest one containing its cwd. */
   repoRoots?: readonly string[];
-  /** Keep the cleaned text of the current task (default true; same switch as request titles, D94). */
+  /** Keep the cleaned text of the current task (default true; same switch as request titles, D96). */
   taskText?: boolean;
 }
 

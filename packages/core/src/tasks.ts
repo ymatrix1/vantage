@@ -1,4 +1,4 @@
-// The agent's own task list (TodoWrite) as counts, plus one short current-task line (D94, proposed).
+// The agent's own task list (TodoWrite) as counts, plus one short current-task line (D96, proposed).
 // The full todo texts are never kept: only counts per status and, when capture is on, the text of the
 // first in_progress item, cleaned and capped like request titles.
 

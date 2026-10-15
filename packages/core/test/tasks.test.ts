@@ -1,4 +1,4 @@
-// Task lists (TodoWrite) and sub-agent runs from synthetic hook payloads and transcript lines (D94).
+// Task lists (TodoWrite) and sub-agent runs from synthetic hook payloads and transcript lines (D96).
 import { describe, expect, it } from "vitest";
 import {
   cleanTaskText,

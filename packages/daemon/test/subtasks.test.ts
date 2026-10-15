@@ -1,4 +1,4 @@
-// Task lists, sub-agent runs and fork and resume counts end to end (D94, D95). All data is synthetic.
+// Task lists, sub-agent runs and fork and resume counts end to end (D96, D97). All data is synthetic.
 import { DatabaseSync } from "node:sqlite";
 import { appendFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
