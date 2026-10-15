@@ -68,7 +68,7 @@ An undone link removes its event from every count.
 
 An item lists every repo it touched (`repos`, primary first; D190, proposed): the repo of each folder a linked event ran in or an edited file sits in. `repo` stays the primary one.
 
-A work item's title comes from, in order: its anchor (an issue key, branch name or worktree folder), else the name Claude Code gave the session (`custom-title`, then `agent-name`; D191, proposed), else the first sentence of the session's first request when one was captured (text Claude Code injects, such as the worktree notice or a system reminder, is never the request; D194, proposed) (cleaned, at most 80 characters, local only, switchable: [D95](../DECISIONS.md), proposed), else the repo, branch and first activity date (D84). `work_items.title_source` records which (`anchor`, `name`, `request`, `fallback`).
+A work item's title comes from, in order: its anchor (an issue key, branch name or worktree folder), else the name Claude Code gave the session (`custom-title`, then `agent-name`; D191, proposed), else the first sentence of the session's first request when one was captured (text Claude Code injects, such as the worktree notice or a system reminder, is never the request; D194, proposed) (cleaned, at most 80 characters, local only, switchable: [D95](../DECISIONS.md), proposed), else the repo, branch and first activity date, plus the last edited file (then a short id) when two untitled items would read alike (D84, D195 proposed). `work_items.title_source` records which (`anchor`, `name`, `request`, `fallback`).
 
 ## Entities
 

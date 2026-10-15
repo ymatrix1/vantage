@@ -73,6 +73,31 @@ function titleOf(
   };
 }
 
+/** Base name of the last file an item's linked events edited, or null. */
+function lastEditedFile(store: Store, itemKey: string): string | null {
+  const rows = store.db
+    .prepare(
+      `SELECT e.payload_json AS p FROM links l JOIN events e ON e.id = l.event_id
+       WHERE l.item_key = ? AND l.undone_at IS NULL AND l.method != 'inferred' AND e.kind = 'file.edited'
+       ORDER BY e.occurred_at DESC LIMIT 1`,
+    )
+    .all(itemKey);
+  const raw = rows[0]?.["p"];
+  if (typeof raw !== "string") return null;
+  try {
+    const v: unknown = JSON.parse(raw);
+    if (typeof v !== "object" || v === null) return null;
+    const rec = Object.fromEntries(Object.entries(v));
+    const paths = Array.isArray(rec["paths"]) ? rec["paths"] : [];
+    const last = [rec["path"], ...paths].filter((x): x is string => typeof x === "string" && x !== "").pop();
+    return last
+      ? (last.split(String.fromCharCode(92)).join("/").split("/").filter(Boolean).pop() ?? null)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Links every stored event, evaluates every item, and rewrites the derived tables. */
 const scratchCache = newScratchCache();
 
@@ -225,6 +250,25 @@ export function runStagePass(store: Store, opts: StagePassOptions = {}, now = ne
       persistFlags(store, id, item, at);
     }
   });
+  // Untitled items that read the same (a fork of a session, two sessions in one repo on one day) are told apart:
+  // first by the last file each edited, then by a short id, so no two rows in a list look identical.
+  const collisions = (): { key: string; title: string }[] =>
+    store.db
+      .prepare(
+        `SELECT item_key, title FROM work_items WHERE title_source = 'fallback' AND title IN
+           (SELECT title FROM work_items WHERE title_source = 'fallback' GROUP BY title HAVING COUNT(*) > 1)`,
+      )
+      .all()
+      .map((r) => ({ key: text(r, "item_key"), title: text(r, "title") }));
+  const retitle = (key: string, title: string): void => {
+    store.db.prepare("UPDATE work_items SET title = ? WHERE item_key = ?").run(title, key);
+  };
+  for (const c of collisions()) {
+    const file = lastEditedFile(store, c.key);
+    if (file) retitle(c.key, `${c.title} · edited ${file}`);
+  }
+  for (const c of collisions())
+    retitle(c.key, `${c.title} · #${c.key.startsWith("session:") ? c.key.slice(8, 12) : c.key.slice(-4)}`);
   store.db.prepare("DELETE FROM item_repos WHERE item_key NOT IN (SELECT item_key FROM work_items)").run();
   return { items: items.length, proofs: proofCount };
 }

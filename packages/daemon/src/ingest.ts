@@ -15,7 +15,13 @@ import type { IngestContext, TranscriptLine, VantageEvent } from "@vantage/core"
 import type { Store } from "./store.ts";
 import { tailLines } from "./tail.ts";
 import { headLines } from "./titles.ts";
-import { captureRequestTitle, captureSessionName, repairRequestTitles } from "./titles.ts";
+import {
+  captureRequestTitle,
+  captureSessionName,
+  captureSessionNameFromFile,
+  DEEP_READS_PER_PASS,
+  repairRequestTitles,
+} from "./titles.ts";
 
 export interface IngestResult {
   files: number;
@@ -197,6 +203,7 @@ export function backfillTranscripts(
   const result: IngestResult = { files: 0, inserted: 0 };
   const ctx: IngestContext = { repoRoots: knownRepoRoots(store), taskText: store.captureTaskText };
   repairRequestTitles(store, stamp);
+  const deep = { left: DEEP_READS_PER_PASS };
   backfillEventBranches(store, projectsDir, now, days, workDir);
   for (const path of jsonlFiles(projectsDir)) {
     if (statSync(path).mtimeMs < cutoff) continue;
@@ -206,7 +213,10 @@ export function backfillTranscripts(
     // A session file is named by its session id. Sub-agent files (`subagents/`) carry the parent's id
     // and are not sessions of their own. Copied history is read before the window filter (D86).
     const own = path.split(sep).includes("subagents") ? null : basename(path, ".jsonl");
-    if (requestTitles && own) captureRequestTitle(store, path, key, own, stamp);
+    if (requestTitles && own) {
+      captureRequestTitle(store, path, key, own, stamp, deep);
+      captureSessionNameFromFile(store, path, key, own, stamp, deep);
+    }
     const { lines, nextOffset } = tailLines(path, before);
     if (lines.length === 0 && nextOffset === before) continue;
     if (requestTitles && own) captureSessionName(store, lines, own, stamp);
