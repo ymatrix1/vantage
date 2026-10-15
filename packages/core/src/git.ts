@@ -1,6 +1,7 @@
 // Pure git logic: parsers, repo identity, event diffing, scan cadence.
 // Adapter rules: docs/specs/ingestion.md (git row, event catalog, polling budget).
 import type { EventKind, VantageEvent } from "./events.ts";
+import { repoUrlOf } from "./track.ts";
 
 export interface WorktreeInfo {
   path: string;
@@ -130,8 +131,36 @@ export interface ScanState {
   dirtyKey: string | null;
 }
 
+/** Who a repo is, carried on `worktree.scanned` so a path can be mapped to its repo later (read time). */
+export interface RepoInfo {
+  key: string;
+  /** `owner/repo` from the normalised remote; the main worktree's folder name when there is no remote. */
+  name: string;
+  /** `https://host/owner/repo`, or null for no remote or an odd one. */
+  remoteUrl: string | null;
+}
+
+/** Repo identity from a remote and the first commit; never from a linked worktree's folder. */
+export function repoInfoOf(
+  remote: string | null,
+  firstCommit: string | null,
+  mainFolder: string,
+): RepoInfo | null {
+  const key = repoKey(remote, firstCommit);
+  if (!key) return null;
+  const path = remote ? normalizeRemoteUrl(remote) : "";
+  const slash = path.indexOf("/");
+  return {
+    key,
+    name: slash > 0 && slash < path.length - 1 ? path.slice(slash + 1) : mainFolder,
+    remoteUrl: repoUrlOf(path),
+  };
+}
+
 export interface ScanInput {
   repoKey: string;
+  /** Added to `worktree.scanned` payloads when known. */
+  repo?: RepoInfo;
   worktreePath: string;
   status: WorktreeStatus;
   /** Commits reachable from HEAD and not from the previous head, newest first. */
@@ -204,7 +233,13 @@ export function diffScan(prev: ScanState | null, input: ScanInput): ScanResult {
       source: "git",
       kind: "worktree.scanned",
       timestamp: now,
-      payload: { worktree: worktreePath, branch: status.branch, head: status.head, dirty: status.dirty },
+      payload: {
+        worktree: worktreePath,
+        branch: status.branch,
+        head: status.head,
+        dirty: status.dirty,
+        ...(input.repo ? { repo: input.repo } : {}),
+      },
     });
   }
 

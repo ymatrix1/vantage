@@ -8,6 +8,8 @@ import {
   STALE_PASS_MS,
   TRACK_STAGES,
   attentionOf,
+  projectNameOf,
+  repoUrlOf,
   type AgeBucket,
   type Counts,
   type DiagnosticsResponse,
@@ -245,6 +247,7 @@ const toTrackItem = (
   id: i.itemKey,
   title: i.title,
   repo: i.repo,
+  repoUrl: repoUrlOf(i.repo),
   branch: i.branch,
   stage: i.stage,
   proofStatus: i.proofStatus,
@@ -303,7 +306,9 @@ export function trackView(store: Store, now = new Date(), q: TrackQuery = DEFAUL
     const byId = new Map<string, TrackItem[]>();
     for (const i of items) byId.set(key(i), [...(byId.get(key(i)) ?? []), i]);
     const label = (id: string): string =>
-      q.group === "repo" ? id.slice(5) || "No repo" : (STAGE_LABEL[id.slice(6)] ?? id.slice(6));
+      q.group === "repo"
+        ? (projectNameOf(id.slice(5)) ?? "No repo")
+        : (STAGE_LABEL[id.slice(6)] ?? id.slice(6));
     const rank = (id: string): number =>
       q.group === "stage" ? TRACK_STAGES.findIndex((s) => `stage:${s}` === id) : 0;
     const ids = [...byId.keys()].toSorted(

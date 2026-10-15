@@ -36,6 +36,8 @@ export interface TrackItem {
   flags: { kind: string; severity: string; reason: string }[];
   /** The next three are always set by the daemon; optional so values built before D84 still type-check. */
   branch?: string | null;
+  /** `https://host/owner/repo` of the item's repo; null when it has no remote. Always set by the daemon. */
+  repoUrl?: string | null;
   /** False for a session with no code edits: the UI folds these into "Conversations without code". */
   hasEdits?: boolean;
   firstActivity?: string;
@@ -335,4 +337,22 @@ export interface DiagnosticsResponse {
   items: number;
   lastPassAt: string | null;
   schemaVersion: number;
+}
+
+/**
+ * `https://host/owner/repo` from a normalised remote (`host/owner/repo`, optionally followed by
+ * `#<first commit>` as in `repoKey`). Null when it names no host and repo path, so a folder name or
+ * `no-remote` never becomes a link. Only characters a host and a repo path may hold pass.
+ */
+export function repoUrlOf(repo: string | null | undefined): string | null {
+  const path = (repo ?? "").split("#")[0] ?? "";
+  const m = /^([a-z0-9-]+(?:\.[a-z0-9-]+)+)\/([\w.-]+(?:\/[\w.-]+)+)$/i.exec(path);
+  return m ? `https://${m[1]}/${m[2]}` : null;
+}
+
+/** The project name a person reads: `owner/repo` for a remote, the folder name otherwise, null for none. */
+export function projectNameOf(repo: string | null | undefined): string | null {
+  const path = (repo ?? "").split("#")[0] ?? "";
+  if (path === "" || path === "no-remote") return null;
+  return repoUrlOf(path) ? path.slice(path.indexOf("/") + 1) : path;
 }
