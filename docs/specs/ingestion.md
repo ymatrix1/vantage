@@ -122,7 +122,7 @@ The transcript backfill also reads the head of each session file (the first 256 
 
 ### Sessions Vantage starts
 
-`vantage classify` runs `claude -p`, which is a Claude Code session. Hooks and the transcript backfill would record it, so ingestion drops everything that ran inside `$VANTAGE_HOME/work/` (D102):
+`vantage classify` runs `claude -p`, which is a Claude Code session. Hooks and the transcript backfill would record it, so ingestion drops everything that ran inside `$VANTAGE_HOME/work/` (D103):
 
 - Every classifier call works in its own folder under `$VANTAGE_HOME/work/classify/`, removed afterwards.
 - **Rule:** a spool event whose `cwd` is inside `work/`, and every other event of the same session, is dropped. A transcript file whose own lines carry a `cwd` inside `work/` is skipped whole: no events, no lineage, no request title, no branch note. This covers sub-agents and any Claude Code version, and ordinary history in the same pass is unaffected.

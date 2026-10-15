@@ -22,7 +22,7 @@ const ids = (g: { items: { id: string }[] }): string[] => g.items.map((i) => i.i
 
 describe("foldGroups", () => {
   it("moves rows without edits into Conversations without code, with the filter-wide total", () => {
-    const out = foldGroups(DEFAULT_VIEW, data, NOW);
+    const out = foldGroups({ ...DEFAULT_VIEW, group: "attention" }, data, NOW);
     expect(out.map((g) => g.id)).toEqual(["needs_you", "in_progress", "no_edits"]);
     expect(ids(out[0])).toEqual(["b"]);
     expect(out[2]).toMatchObject({ label: "Conversations without code", total: 9 });
@@ -30,28 +30,42 @@ describe("foldGroups", () => {
   });
 
   it("builds Older only for the 30-day and all-time ranges", () => {
-    expect(foldGroups({ ...DEFAULT_VIEW, since: "30d" }, data, NOW).map((g) => g.id)).toEqual([
+    expect(
+      foldGroups({ ...DEFAULT_VIEW, group: "attention", since: "30d" }, data, NOW).map((g) => g.id),
+    ).toEqual(["needs_you", "in_progress", "no_edits", "older"]);
+    expect(
+      foldGroups({ ...DEFAULT_VIEW, group: "attention", since: "7d" }, data, NOW).some(
+        (g) => g.id === "older",
+      ),
+    ).toBe(false);
+  });
+
+  it("folds when grouped by attention or by project, not by stage or when ungrouped", () => {
+    expect(foldGroups({ ...DEFAULT_VIEW, group: "repo" }, data, NOW).map((g) => g.id)).toEqual([
       "needs_you",
       "in_progress",
       "no_edits",
-      "older",
     ]);
-    expect(foldGroups({ ...DEFAULT_VIEW, since: "7d" }, data, NOW).some((g) => g.id === "older")).toBe(false);
+    for (const by of ["stage", "none"] as const) {
+      expect(foldGroups({ ...DEFAULT_VIEW, group: by }, data, NOW).map((g) => g.id)).toEqual([
+        "needs_you",
+        "in_progress",
+      ]);
+    }
   });
 
-  it("does not fold when the user filters on edits, or groups by anything but attention", () => {
-    for (const view of [
-      { ...DEFAULT_VIEW, hasEdits: true },
-      { ...DEFAULT_VIEW, hasEdits: false },
-      { ...DEFAULT_VIEW, group: "repo" as const },
-      { ...DEFAULT_VIEW, group: "none" as const },
-    ]) {
-      expect(foldGroups(view, data, NOW).map((g) => g.id)).toEqual(["needs_you", "in_progress"]);
+  it("does not fold when the user filters on edits", () => {
+    for (const hasEdits of [true, false]) {
+      expect(
+        foldGroups({ ...DEFAULT_VIEW, group: "attention", hasEdits }, data, NOW).map((g) => g.id),
+      ).toEqual(["needs_you", "in_progress"]);
     }
   });
 
   it("never reports fewer than the rows it shows", () => {
     const low = { ...data, facets: { ...data.facets, hasEdits: { true: 0, false: 0 } } };
-    expect(foldGroups(DEFAULT_VIEW, low, NOW).find((g) => g.id === "no_edits")?.total).toBe(1);
+    expect(
+      foldGroups({ ...DEFAULT_VIEW, group: "attention" }, low, NOW).find((g) => g.id === "no_edits")?.total,
+    ).toBe(1);
   });
 });

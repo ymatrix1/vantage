@@ -31,11 +31,8 @@ export type Order = "asc" | "desc";
 export type Facets = TrackFacets;
 export type PageInfo = CoreTrackView["page"];
 
-/**
- * A row. `sessionCount` and `derivedCount` are optional: the daemon computes them
- * (`packages/daemon/src/lineage.ts`) but `/api/track` does not send them yet, so "N sessions" shows only when present.
- */
-export type TrackRow = TrackItem & { sessionCount?: number; derivedCount?: number };
+/** A row: `sessionCount` and `derivedCount` come from the daemon (D86), so "N sessions" shows when above 1. */
+export type TrackRow = TrackItem;
 export type TrackGroup = Omit<CoreTrackView["groups"][number], "items"> & { items: TrackRow[] };
 /** What the daemon sends for `GET /api/track`, with rows that may carry session counts. */
 export type TrackView = Omit<CoreTrackView, "groups"> & { groups: TrackGroup[] };

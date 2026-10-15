@@ -367,6 +367,29 @@ export function projectNameOf(repo: string | null | undefined): string | null {
   return repoUrlOf(path) ? path.slice(path.indexOf("/") + 1) : path;
 }
 
+/** One session of an item; a derived session names the session it continues. */
+export interface ItemSession {
+  id: string;
+  parentId: string | null;
+  firstAt: string;
+  lastAt: string;
+  events: number;
+}
+
+/** `GET /api/items/:id`: what the inline detail needs beyond the row and the trace. */
+export interface ItemDetailView {
+  id: string;
+  repo: string | null;
+  repoUrl: string | null;
+  branch: string | null;
+  /** Where the item's latest session ran; shown only in the expanded view. */
+  worktreePath: string | null;
+  lastCommitSha: string | null;
+  sessions: ItemSession[];
+  /** Edited files by base name, never full paths; `total` counts all of them. */
+  files: { names: string[]; total: number };
+}
+
 /**
  * The organisation of a stored repo (`host/Owner/repo`): its owner, case kept; `local` for a repo with no
  * remote (a folder name); null when the item has no repo. Compare it case-insensitively.

@@ -8,6 +8,7 @@ import { extname, join, normalize, sep } from "node:path";
 import { parseTrackQuery } from "@vantage/core";
 import { diagnosticsView, traceView, trackView } from "./api.ts";
 import { classifyRoute, type ClassifyApi } from "./classify-api.ts";
+import { itemDetailView } from "./item-detail.ts";
 import { LIVE_PROTOCOL, type LiveHub } from "./live.ts";
 import { tokenMatches } from "./token.ts";
 import type { Store } from "./store.ts";
@@ -198,6 +199,17 @@ export function startHttp(options: HttpOptions): Promise<HttpHandle> {
           : refuse(res, 400, parsed.error);
       }
       if (url.pathname === "/api/diagnostics") return send(res, 200, diagnosticsView(store, now()));
+      const d = /^\/api\/items\/([^/]+)$/.exec(url.pathname);
+      if (d) {
+        let id: string;
+        try {
+          id = decodeURIComponent(d[1] ?? "");
+        } catch {
+          return refuse(res, 400, "bad item id");
+        }
+        const detail = itemDetailView(store, id);
+        return detail ? send(res, 200, detail) : refuse(res, 404, "no such item");
+      }
       const m = /^\/api\/items\/([^/]+)\/trace$/.exec(url.pathname);
       if (m) {
         let id: string;
