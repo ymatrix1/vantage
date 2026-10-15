@@ -123,6 +123,7 @@ describe("migration 5", () => {
     old.exec(`
       CREATE TABLE schema_meta (version INTEGER NOT NULL);
       INSERT INTO schema_meta (version) VALUES (5);
+      CREATE VIEW item_sessions AS SELECT 1 AS item_key;
       CREATE TABLE events (id INTEGER PRIMARY KEY AUTOINCREMENT, source TEXT NOT NULL, source_id TEXT NOT NULL,
         kind TEXT NOT NULL, occurred_at TEXT NOT NULL, ingested_at TEXT NOT NULL, session_id TEXT, repo TEXT,
         payload_json TEXT NOT NULL, payload_version INTEGER NOT NULL DEFAULT 1, UNIQUE (source, source_id));

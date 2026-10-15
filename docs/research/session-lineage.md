@@ -69,6 +69,28 @@ Same copy of the live store (about 32.7 thousand events, 163 sessions, 137 with 
 
 ❓ The 8 sessions and 1,174 edits still in per-session items are on the default branch, detached, or have no `gitBranch`; the split was not measured. Total items fall only a little (467 to 446) because sessions that were separate rows now share a branch item: that is the intended effect, and it moves 97 rows from untitled `Session <id>` to a named branch or key.
 
+## Task lists, sub-agent runs and forks
+
+Measured 2026-10-14 on the same machine, last 14 days, 521 sessions. Counts only.
+
+| Measure | Count |
+|---|---|
+| Sessions with a `TodoWrite` call | 0 |
+| `TaskCreate`, `TaskUpdate`, `TaskList` calls (the newer task tools) | 5, 8, 1, in 3 sessions |
+| `Agent` tool calls | 776 (no `Task` tool name seen) |
+| Sub-agent runs named in a parent's tool result | 730 in 119 sessions (median 2, p90 22, max 54 per session) |
+| Distinct agent ids in sidechain files | 415 |
+| Runs whose result carries duration, tokens and tool count | 42 of 730 (the rest are async: no totals in the result) |
+| `Agent` calls with a `description` input | 776 of 776 |
+| Derived sessions whose parent transcript is in the window | 75 of 79 |
+| Of those, the parent has own lines the child's copy lacks | 61 (81%) |
+| Of those, the parent produced lines after the child started | 59 (79%); 16 (21%) did not |
+| `SessionStart` sources seen in the spool | 3, all `startup` |
+
+- **Task lists:** `TodoWrite` never appears here, and the task tools are used in 3 of 521 sessions. A `TaskUpdate` names a `taskId` that only the `TaskCreate` result carries, and that result shape was not verified on 5 creates, so only `TodoWrite` (the whole list in each call) is read. ❓ Whether the newer task tools replace `TodoWrite` for most users is unknown from one machine.
+- **Sub-agents:** the run's duration and tool count are only complete in the sidechain file, so they come from there. The parent's `description` is capped text and was left out (follow-up bean).
+- **Forks:** 59 of 75 derived sessions started while their parent was still producing lines (the history was copied, then both went on), the structural sign of a fork or a second resume of one parent. The hook source that would say `fork` or `resume` is not in the data yet, so no session can be called a fork or a resume with certainty; the count is a hint. This replaces the earlier "45 of 72" reading, which compared only the parent's last timestamp.
+
 ## Method
 
 One Node script, read-only, over `~/.claude/projects/**/*.jsonl` (files with mtime in the last 14 days) and `~/.vantage/spool`. Per file it read `sessionId`, `uuid`, `parentUuid`, `isSidechain`, `agentId`, `cwd`, `gitBranch`, `timestamp` and the key names of each line, and printed only counts. Session files are named by their session id; that was checked by comparing line ids with the file name (439 of 518 all equal, 79 carry foreign ids).
