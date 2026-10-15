@@ -37,8 +37,8 @@
   const link = "underline decoration-dotted underline-offset-2 hover:decoration-solid";
 </script>
 
-<div class="flex flex-wrap items-baseline gap-x-2 gap-y-1 py-2 text-sm" role="group" aria-label="Summary">
-  <strong class="font-semibold">{range.label}:</strong>
+<div class="py-2 text-sm leading-6" role="group" aria-label="Summary">
+  <strong class="mr-1 font-semibold">{range.label}:</strong>
   {#if summary}
     <button type="button" class={link} title="Items with no open flag" onclick={() => onchange({ flag: ["none"], page: 1 })}>{summary.inProgress} in progress</button>,
     <button type="button" class={link} onclick={() => onchange({ flag: FLAGGED, page: 1 })}>{summary.needsYou} need you</button>
@@ -47,10 +47,10 @@
   {:else}
     <span class="text-muted-foreground">counting…</span>
   {/if}
-  {#if dates}<span class="text-xs text-muted-foreground">{dates}</span>{/if}
+  {#if dates}<span class="ml-2 text-xs text-muted-foreground">{dates}</span>{/if}
   {#if offline}
-    <span class="rounded-full border border-border px-2 text-xs">Offline</span>
+    <span class="ml-2 rounded-full border border-border px-2 text-xs">Offline</span>
   {:else if stale}
-    <span class="rounded-full border border-border px-2 text-xs">Stale</span>
+    <span class="ml-2 rounded-full border border-border px-2 text-xs">Stale</span>
   {/if}
 </div>

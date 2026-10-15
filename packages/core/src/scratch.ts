@@ -40,6 +40,23 @@ const SCRATCH_DIRS = new Set([
   ".turbo",
 ]);
 
+// Throwaway names a person or agent gives a file it will not keep: `zz.py`, `res5.py`, `tmp2.js`, `scratch.ts`,
+// `debug.py`, `out3.txt`, `test1.py` (a numbered probe, not a test suite). Proposed D180.
+const THROWAWAY_NAME =
+  /^(?:z{2,}\d*|res\d*|tmp\d*|temp\d*|scratch\d*|debug\d*|out\d*|untitled\d*|try\d*|test\d+)(?:\.[\w.]+)?$/;
+
+/** A test file or a file inside a test folder: editing it changes no shipped behaviour (proposed D180). */
+export function isTestPath(path: string): boolean {
+  if (typeof path !== "string" || path === "") return false;
+  const parts = path.replaceAll("\\", "/").toLowerCase().split("/").filter(Boolean);
+  const name = parts.at(-1) ?? "";
+  if (/\.(?:test|spec)\.[\w]+$/.test(name) || /^test_.+\.py$/.test(name) || /_test\.(?:py|go)$/.test(name))
+    return true;
+  return parts
+    .slice(0, -1)
+    .some((d) => ["test", "tests", "__tests__", "spec", "specs", "fixtures"].includes(d));
+}
+
 /**
  * True for a path that is scratch by name alone: a temp or cache folder, a log, `.tmp`, `.out`, `.bak`,
  * `.swp`, `*~`, `*.pyc` and similar. Never throws; an empty or odd path is not scratch (an unclassified
@@ -55,6 +72,7 @@ export function isScratchPath(path: string): boolean {
   if (dot > 0 && SCRATCH_EXTENSIONS.has(name.slice(dot + 1))) return true;
   // `.log.1`, `.log.2024-01-05` rotations.
   if (/\.log\.[\w-]+$/.test(name)) return true;
+  if (THROWAWAY_NAME.test(name)) return true;
   return parts.slice(0, -1).some((d) => SCRATCH_DIRS.has(d));
 }
 

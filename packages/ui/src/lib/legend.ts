@@ -29,6 +29,16 @@ export const STATE_LEGEND: Record<DotState, { shape: string; meaning: string }> 
   not_yet: { shape: "Thin ring", meaning: "Will happen, and Vantage can measure it." },
 };
 
+/** The default style (D183): one filled circle per state, told apart by colour; every dot still has words. */
+export const COLOUR_LEGEND: Record<DotState, { shape: string; meaning: string }> = {
+  done: { shape: "Green", meaning: STATE_LEGEND.done.meaning },
+  current: { shape: "Blue", meaning: STATE_LEGEND.current.meaning },
+  no_proof: { shape: "Amber", meaning: STATE_LEGEND.no_proof.meaning },
+  needs_you: { shape: "Red", meaning: STATE_LEGEND.needs_you.meaning },
+  skipped: { shape: "Short grey dash", meaning: STATE_LEGEND.skipped.meaning },
+  not_yet: { shape: "Grey", meaning: STATE_LEGEND.not_yet.meaning },
+};
+
 export const STAGE_LEGEND: Record<TrackStage, { name: string; question: string }> = {
   asked: { name: "Asked", question: "Was this work requested?" },
   built: { name: "Built", question: "Did code change for it?" },

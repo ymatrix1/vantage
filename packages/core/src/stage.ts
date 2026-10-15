@@ -3,7 +3,7 @@
 // (D3): never because an agent said so. Reviewed, Shipped and Verified are out of Phase 1.
 import type { VantageEvent } from "./events.ts";
 import type { Link } from "./linker.ts";
-import { isScratchPath, normalizeEditPath, scratchLabel } from "./scratch.ts";
+import { isScratchPath, isTestPath, normalizeEditPath, scratchLabel } from "./scratch.ts";
 import { splitCommandSegments } from "./shell.ts";
 
 export type Stage = "asked" | "built" | "proven";
@@ -334,7 +334,8 @@ function evaluate(itemKey: string, events: readonly VantageEvent[], opts: StageO
           }
           break;
         }
-        const docOnly = paths !== null && paths.every(isDoc);
+        // Docs and test files change no shipped behaviour: they never raise `unproven_claim` (proposed D180).
+        const docOnly = paths !== null && paths.every((p) => isDoc(p) || isTestPath(p));
         // An edit after a command closes the previous cycle and opens the next.
         if (cycleHadCommand) {
           closeCycle(e.timestamp);

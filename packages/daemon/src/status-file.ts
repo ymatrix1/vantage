@@ -43,7 +43,8 @@ export function buildStatusSummary(store: Store, now = new Date()): StatusSummar
   return {
     v: 1,
     writtenAt: now.toISOString(),
-    needsYou: items.filter((i) => i.flags.length > 0).length,
+    // Same rule as the Track page: a lone `forgotten` flag is low urgency, not "needs you" (D94, D180).
+    needsYou: items.filter((i) => i.flags.some((f) => f.kind !== "forgotten")).length,
     pings: 0,
     sessions,
   };
