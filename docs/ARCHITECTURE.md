@@ -2,6 +2,8 @@
 
 > **Status:** proposed. Tech choices marked *tentative* aren't decided.
 
+> **Terms:** [anchor](GLOSSARY.md#anchor), [backfill](GLOSSARY.md#backfill), [daemon](GLOSSARY.md#daemon), [flag](GLOSSARY.md#flag), [hook](GLOSSARY.md#hook), [linker](GLOSSARY.md#linker), [spool](GLOSSARY.md#spool), [work item](GLOSSARY.md#work-item), [worktree](GLOSSARY.md#worktree). Plain-language definitions are in the [glossary](GLOSSARY.md).
+
 ## Overview
 
 ```

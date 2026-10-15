@@ -1,5 +1,7 @@
 # Spec: ingestion and triggers
 
+> **Terms:** [backfill](../GLOSSARY.md#backfill), [daemon](../GLOSSARY.md#daemon), [derived session](../GLOSSARY.md#derived-session), [hook](../GLOSSARY.md#hook), [linker](../GLOSSARY.md#linker), [signal](../GLOSSARY.md#signal), [spool](../GLOSSARY.md#spool), [worktree](../GLOSSARY.md#worktree). Plain-language definitions are in the [glossary](../GLOSSARY.md).
+
 How Vantage hears about things happening in each source.
 
 ## Principles

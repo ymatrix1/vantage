@@ -2,6 +2,8 @@
 
 > **Status:** draft. Fills features that other specs name but don't define.
 
+> **Terms:** [flag](../GLOSSARY.md#flag), [work item](../GLOSSARY.md#work-item), [worktree](../GLOSSARY.md#worktree). Plain-language definitions are in the [glossary](../GLOSSARY.md).
+
 ## Behaviors (Given/When/Then)
 
 A behavior is one short expected outcome on a work item. Proof level L3 needs behaviors.

@@ -2,6 +2,8 @@
 
 > **Status:** draft.
 
+> **Terms:** [backfill](../GLOSSARY.md#backfill), [daemon](../GLOSSARY.md#daemon), [hook](../GLOSSARY.md#hook), [landscape](../GLOSSARY.md#landscape), [Needs you](../GLOSSARY.md#needs-you), [signal](../GLOSSARY.md#signal), [spool](../GLOSSARY.md#spool), [worktree](../GLOSSARY.md#worktree), [flag](../GLOSSARY.md#flag), [thrashing](../GLOSSARY.md#thrashing), [unproven claim](../GLOSSARY.md#unproven-claim), [derived session](../GLOSSARY.md#derived-session). Plain-language definitions are in the [glossary](../GLOSSARY.md).
+
 The first ten minutes decide whether Vantage gets used. This spec covers install to first useful view.
 
 ## `vantage init`
@@ -47,6 +49,46 @@ Guarantees:
 ## Installing with a prompt
 
 The end-goal install is a prompt the user pastes into their agent (Claude Code or Codex). The agent follows [install-for-agents.md](../install-for-agents.md): prerequisites, a dry run shown to the user, explicit OK, install, `vantage doctor`, and a short report with how to undo it. The agent never adds credentials and never commits.
+
+## The guided tour
+
+> **Status:** planned (bean `vantage-u1hk`). Text for the Track page's first-run state is specified here so the Track UI can build it.
+
+`vantage tour` is an interactive walkthrough in the terminal. It needs no network and no real data, and uses only synthetic examples.
+
+| Step | Topic |
+|---|---|
+| 1 | What Vantage shows and why |
+| 2 | The six stages, with one worked example |
+| 3 | The dot shapes and what the page's legend says |
+| 4 | Proof: what counts (a test run after the last edit) and what does not (`pnpm test \|\| true`) |
+| 5 | Flags and Needs you |
+| 6 | How to read an item: title, branch, evidence per stage |
+| 7 | Daily commands: `start`, `open`, `doctor`, `stats`, `add`, `remove` |
+| 8 | Where your data lives, what leaves the machine (nothing by default) and how to undo |
+
+Each step is about 8 lines, shows a small synthetic example and waits for Enter.
+
+| Option | Effect |
+|---|---|
+| `--lang pt\|en` | Language; default from the system locale |
+| `--no-pause` | Print every step without waiting (pipes, tests) |
+| `--step N` | Start at step N |
+| `--demo` | Build a temporary synthetic Vantage home, start the daemon on a free port against it, print the URL (token in the fragment) and clean up on exit |
+
+The demo home holds about 12 invented items: every stage, a thrashing flag, an unproven claim, a group of derived sessions and a forgotten item, all with clearly fake names and repos. It never reads or writes the real `VANTAGE_HOME`. The tour text lives in one data file per language (`packages/cli/src/tour/`), so it can be tested and translated. `vantage add` ends with one line: "New here? Run `vantage tour`".
+
+### First-run state of the Track page
+
+When the Track page has no items, it shows exactly this (the Track UI owns the page; this is the text and command it should use):
+
+```
+No work yet.
+Start a Claude Code session in a repo you added with `vantage add`; it appears here within a minute.
+New here? Run `vantage tour`, or open the guide: docs/GUIDE.md
+```
+
+Three lines, and `vantage tour` as the command. The page may link "guide" to the repository's `docs/GUIDE.md`.
 
 ## First view
 

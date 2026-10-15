@@ -2,6 +2,8 @@
 
 > **Status:** draft.
 
+> **Terms:** [flag](../GLOSSARY.md#flag), [landscape](../GLOSSARY.md#landscape). Plain-language definitions are in the [glossary](../GLOSSARY.md).
+
 Every decision about a piece of work, made by an AI agent or a person, is recorded in one place and readable at a glance. AI decisions are never silent: they appear as *proposed* until a person approves or changes them.
 
 ## What counts as a decision

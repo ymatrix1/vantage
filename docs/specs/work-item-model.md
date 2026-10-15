@@ -2,6 +2,8 @@
 
 > **Status:** draft. Boundary rules accepted (D25); validate them against Phase 0 data.
 
+> **Terms:** [anchor](../GLOSSARY.md#anchor), [daemon](../GLOSSARY.md#daemon), [derived session](../GLOSSARY.md#derived-session), [flag](../GLOSSARY.md#flag), [hook](../GLOSSARY.md#hook), [linker](../GLOSSARY.md#linker), [signal](../GLOSSARY.md#signal), [work item](../GLOSSARY.md#work-item), [worktree](../GLOSSARY.md#worktree). Plain-language definitions are in the [glossary](../GLOSSARY.md).
+
 ## Item kinds
 
 Not everything that needs attention is the user's own code.

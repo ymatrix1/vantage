@@ -1,5 +1,7 @@
 # Spec: CI/CD
 
+> **Terms:** [daemon](../GLOSSARY.md#daemon), [hook](../GLOSSARY.md#hook), [linker](../GLOSSARY.md#linker), [spool](../GLOSSARY.md#spool). Plain-language definitions are in the [glossary](../GLOSSARY.md).
+
 CI for the Vantage repo itself. Hosted CI never sees real data: fixtures only (see the [privacy boundary](../../.agents/rules/privacy-boundary.md)).
 
 ## Now: docs (workflow `.github/workflows/docs.yml`)

@@ -5,7 +5,7 @@
 1. **One question per page.** Each page answers exactly one question (see [pages](#pages)).
 2. **Status comes only from evidence.** Never from what an agent says.
 3. **One line per row, one action per alert.** No paragraphs. Card and row text stays under about 140 characters. Transcripts are one click away, never shown by default.
-4. **Fixed color meaning everywhere:** gray = not started, blue = in progress, amber = unproven or at risk, red = needs you, green = done.
+4. **Fixed color meaning everywhere:** gray = not started, blue = in progress, amber = unproven or at risk, red = [needs you](GLOSSARY.md#needs-you), green = done.
 5. **Calm by default.** Top 3, not top 30. Interrupt only for red. Batch the rest. Say "safe to ignore" out loud.
 6. **Honest dots.** A skipped or unconfigured stage is a gray dash, never green.
 7. **Visual first.** Shape, color, size and position carry state; 2–4 word titles carry identity; about 30 words per screen. Defined in the [visual language spec](specs/visual-language.md).
@@ -17,7 +17,7 @@
 |---|---|---|
 | **Context** | A top-level switch such as *Work* and *Personal* | Inferred from repo location or org; user can edit |
 | **Project** | A Jira epic, a Linear project, or a group of repos the user defines | One project per repo |
-| **Work item** | One card (see [work item model](specs/work-item-model.md)) | |
+| **[Work item](GLOSSARY.md#work-item)** | One card (see [work item model](specs/work-item-model.md)) | |
 
 - A context switch (Work, Personal, All) hides everything outside the selected context, for example personal projects during work hours.
 - A project can span several repos; a repo can belong to several projects only through explicit user choice.
@@ -39,7 +39,7 @@ Ambient surfaces (status line, toasts, badge) are always present.
 
 ### Focus (home)
 
-Focus is drawn as the **landscape**: work items as dot characters, with needs-you in the foreground, moving work in the middle, waiting work on the horizon and verified work as stars in the sky (see [visual language](specs/visual-language.md#the-landscape-home)). The elements below appear inside it or on click.
+Focus is drawn as the **[landscape](GLOSSARY.md#landscape)**: work items as dot characters, with needs-you in the foreground, moving work in the middle, waiting work on the horizon and verified work as stars in the sky (see [visual language](specs/visual-language.md#the-landscape-home)). The elements below appear inside it or on click.
 
 
 - Header: "Today, 3 things matter" and "N other changes batched for HH:MM".
@@ -50,7 +50,7 @@ Focus is drawn as the **landscape**: work items as dot characters, with needs-yo
 
 The main "all work" view. A table, not a board, because it stays readable with many items and keeps priority visible.
 
-- **Row:** priority chip, title, project or repo with one line of evidence, six-dot track (Asked, Built, Proven, Reviewed, Shipped, Verified), main flag, last activity.
+- **Row:** priority chip, title, project or repo with one line of evidence, six-dot track (Asked, Built, Proven, Reviewed, Shipped, Verified), main [flag](GLOSSARY.md#flag), last activity.
 - **Dot states:** filled green = done, blue ring = current, amber = at risk (for example unproven), red = needs you, a short dash = skipped or not configured.
 - **Short tracks:** `review_request` and `commitment` items show only their relevant dots.
 - **Group by** toggle:
@@ -72,7 +72,7 @@ The main "all work" view. A table, not a board, because it stays readable with m
 - **History:** a horizontal strip of events by day, agent and session ("Mon · Claude · discussed → Tue · Codex · built 3 files → Wed · Claude · 1 of 3 proven").
 - **Links:** a small relationship graph (item ↔ sessions ↔ PRs ↔ tickets ↔ Slack threads ↔ follow-ups). This is the only place a graph is used; graphs are hard to scan as a main view.
 - **Actions:** Explain, Resume with context, Ask for proof, Mark verified by hand, Park, Split, Merge, Unlink.
-- **Explain** (`e`) opens a top-down brief (answer first, Situation, Complication, Resolution) and expandable issue trees for *why we built it* and *where it stands*. See the [Explain spec](specs/explain.md).
+- **Explain** (`e`) opens a top-down brief ([answer first](GLOSSARY.md#answer-first), Situation, Complication, Resolution) and expandable [issue trees](GLOSSARY.md#issue-tree) for *why we built it* and *where it stands*. See the [Explain spec](specs/explain.md).
 
 ### Journal
 

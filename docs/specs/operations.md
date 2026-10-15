@@ -1,5 +1,7 @@
 # Spec: identity, config and operations
 
+> **Terms:** [anchor](../GLOSSARY.md#anchor), [backfill](../GLOSSARY.md#backfill), [daemon](../GLOSSARY.md#daemon), [derived session](../GLOSSARY.md#derived-session), [flag](../GLOSSARY.md#flag), [hook](../GLOSSARY.md#hook), [linker](../GLOSSARY.md#linker), [Needs you](../GLOSSARY.md#needs-you), [signal](../GLOSSARY.md#signal), [spool](../GLOSSARY.md#spool), [work item](../GLOSSARY.md#work-item), [worktree](../GLOSSARY.md#worktree). Plain-language definitions are in the [glossary](../GLOSSARY.md).
+
 The plumbing that the other specs assume.
 
 ## Identity

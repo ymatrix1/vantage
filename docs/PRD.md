@@ -14,7 +14,7 @@ The end goal is less stress from constant change: fewer things to remember, fewe
 
 Primary user: one developer (the author) who:
 
-- runs several Claude Code and Codex sessions in parallel, often in git worktrees;
+- runs several Claude Code and Codex sessions in parallel, often in git [worktrees](GLOSSARY.md#worktree);
 - works from Jira or Linear issues, GitHub PRs with human and bot reviewers, and Slack;
 - ships to production systems and data pipelines that need checking after deploy;
 - loses track of what was asked, built, proven, shipped and verified across sessions and days.
@@ -29,7 +29,7 @@ Team features are out of scope for now. The design should not prevent them later
 | P2 | **Unproven claims** | An agent says "done, fixed and optimized" without running a test or checking data. |
 | P3 | **Ghost and forgotten work** | Ideas discussed in a chat, or promised in Slack, that never became code. |
 | P4 | **Silent decisions** | The agent invents business rules (retry limits, grace periods, cascades) nobody asked for. |
-| P5 | **Thrashing** | Edit → fail → edit → fail loops instead of building a reproduction harness. |
+| P5 | **[Thrashing](GLOSSARY.md#thrashing)** | Edit → fail → edit → fail loops instead of building a reproduction harness. |
 | P6 | **Review loop** | Review comments, fixes, re-review requests and "claimed fixed" replies are hard to track across PRs. |
 | P7 | **Sessions waiting on me** | A session sits on a permission prompt or question while attention is elsewhere. |
 | P8 | **Unseen mentions and owed replies** | Slack, Jira and Linear mentions and review requests never answered, even when seen; follow-ups never sent; people never told their thing shipped. |
@@ -37,7 +37,7 @@ Team features are out of scope for now. The design should not prevent them later
 | P10 | **Text overload** | Reconstructing state means reading long transcripts and diffs. |
 | P11 | **Stress from constant change** | Many small updates, none batched, none marked safe to ignore. |
 | P12 | **Merged is not working** | Code ships but nobody checks it works in production; regressions surface days later. |
-| P13 | **Archived while unfinished** | A conversation is archived or closed (for example when its PR merges, or after inactivity) while follow-up work is still open: pending tasks, unproven edits, an open flag. The context is lost and the next step is forgotten. |
+| P13 | **Archived while unfinished** | A conversation is archived or closed (for example when its PR merges, or after inactivity) while follow-up work is still open: pending tasks, unproven edits, an open [flag](GLOSSARY.md#flag). The context is lost and the next step is forgotten. |
 
 ## 4. Goals
 
@@ -49,7 +49,7 @@ Team features are out of scope for now. The design should not prevent them later
 - G6. Post-ship verification: deploy, post-deploy checks and a monitoring window before a card counts as done.
 - G7. Local-first: all data stays on the machine by default.
 - G8. Visual first: state readable at a glance from shape, color and position, with about 30 words per screen.
-- G9. Explain on demand: answer-first, expandable explanations of any item, project or week, via the user's connected agent.
+- G9. Explain on demand: [answer-first](GLOSSARY.md#answer-first), expandable explanations of any item, project or week, via the user's connected agent.
 - G10. Close loops with people: owed replies, follow-ups and "tell them it shipped", drafted for the user to send.
 - G11. Every decision visible: choices made by AI agents or people are logged with context, why, alternatives, impact, who and status; AI decisions need a person's approval.
 
@@ -60,13 +60,13 @@ Team features are out of scope for now. The design should not prevent them later
 - Team dashboards, multi-user sync, billing.
 - Two-way issue tracker sync (Jira or Linear). Read first; write-back only on explicit user action.
 - Cursor and web-chat (chatgpt.com, claude.ai) ingestion.
-- Being a monitoring system. Vantage links to existing monitoring and reads its signals.
+- Being a monitoring system. Vantage links to existing monitoring and reads its [signals](GLOSSARY.md#signal).
 
 **Deliberately not in v1** (Phases 0–3), even though they're designed:
 
 - Slack, Jira and Linear sources (Phase 6), and the pings and decisions that depend on them.
 - Monitoring adapters and the Verified stage beyond GitHub deployments (Phase 5).
-- The companion character (decided after the landscape is in use, Q22).
+- The companion character (decided after the [landscape](GLOSSARY.md#landscape) is in use, Q22).
 - A custom theme editor; only built-in themes and theme files.
 - Automatic behavior extraction from prompts (Q19), and the judgment model (rules first, R10).
 - A mobile view, sound, and the webhook relay.
@@ -87,7 +87,7 @@ See [lifecycle spec](specs/lifecycle.md). Summary:
 | Pain | Feature |
 |---|---|
 | P1 | Board with stage columns; "moved since yesterday" markers |
-| P2 | Proof gate via Claude Code `Stop` hook (warn first, block optionally); Proven requires post-edit proof |
+| P2 | Proof gate via Claude Code `Stop` [hook](GLOSSARY.md#hook) (warn first, block optionally); Proven requires post-edit proof |
 | P3 | Ghost and commitment detection; `forgotten` flag after N days |
 | P4 | "AI decided alone" behaviors with approve or change |
 | P5 | `thrashing` flag from edit/fail patterns |
@@ -95,7 +95,7 @@ See [lifecycle spec](specs/lifecycle.md). Summary:
 | P7 | Needs-you queue; toasts for red items only |
 | P8 | Pings: `owe_reply`, `follow_up_due`, `close_the_loop` with drafted messages ([pings](specs/pings.md)) |
 | P9 | Computed priority, difficulty (estimate and actual), spread bar |
-| P10 | Visual language and landscape home ([visual language](specs/visual-language.md)); Explain with SCR and expandable issue trees ([Explain](specs/explain.md)) |
+| P10 | Visual language and landscape home ([visual language](specs/visual-language.md)); Explain with [SCR](GLOSSARY.md#scr) and expandable [issue trees](GLOSSARY.md#issue-tree) ([Explain](specs/explain.md)) |
 | P11 | Top 3 focus, batched digest, "safe to ignore" count, evening landing, calm gamification without loss mechanics |
 | P12 | Verified stage; `shipped_unverified` and `regression` flags; follow-up cards |
 | P13 | `left_unfinished` flag from open tasks, unproven edits and open flags on a stopped or archived session; Resume with context; advice to turn off auto-archive on PR close |
@@ -109,7 +109,7 @@ Measured on the author's own usage:
 - Share of sessions ending with unproven edits drops (baseline from transcript mining).
 - No "I forgot about that" item older than 7 days that Vantage didn't flag.
 - Fewer re-review rounds caused by unaddressed comments.
-- Regressions linked to their originating work item within a day.
+- Regressions linked to their originating [work item](GLOSSARY.md#work-item) within a day.
 - **Felt load goes down:** a one-tap check at the evening landing ("How heavy does work feel? 1–5") trends down over the first month. This tests the core promise, not just usage.
 
 **Baseline first:** before Phase 1 ships, time the current morning catch-up for a week (start, end, number of terminals and tabs opened) so the target has something to compare against.
@@ -127,4 +127,4 @@ Measured on the author's own usage:
 ## 10. Licensing (for later)
 
 - Code: the repo stays private. If opened, choose a license then.
-- The A2V method text (`docs/METHOD.md`) could be published under CC BY 4.0 while keeping the A2V name as a mark, so others can teach it while the name stays recognizable. Decide before publishing anything.
+- The [A2V](GLOSSARY.md#a2v) method text (`docs/METHOD.md`) could be published under CC BY 4.0 while keeping the A2V name as a mark, so others can teach it while the name stays recognizable. Decide before publishing anything.

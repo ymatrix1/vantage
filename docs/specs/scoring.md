@@ -1,5 +1,7 @@
 # Spec: scoring
 
+> **Terms:** [anchor](../GLOSSARY.md#anchor), [backfill](../GLOSSARY.md#backfill), [flag](../GLOSSARY.md#flag), [Needs you](../GLOSSARY.md#needs-you), [signal](../GLOSSARY.md#signal). Plain-language definitions are in the [glossary](../GLOSSARY.md).
+
 All scores are computed in code from explicit signals, so they're explainable. A card can always show "why is this ranked here?".
 
 ## Priority

@@ -6,7 +6,8 @@ Checks:
    and owner, and an accepted decision is never edited or removed relative to the base branch (D69).
 3. The SQLite migration files are numbered without gaps or duplicates, named NNNN-slug.sql, and a migration
    on the base branch is never edited, renamed or removed (D93).
-4. No secrets or personal identifiers slipped into tracked text files (privacy boundary).
+4. The glossary (docs/GLOSSARY.md): complete entries, core terms present, docs link the terms they use, pt-BR in sync (tools/glossary_check.py).
+5. No secrets or personal identifiers slipped into tracked text files (privacy boundary).
 
 Exits non-zero with a list of problems. Standard library only.
 """
@@ -20,6 +21,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import decisions_check  # noqa: E402
+import glossary_check  # noqa: E402
 import migrations_check  # noqa: E402
 import plugin_check  # noqa: E402
 LINK = re.compile(r"\]\(([^)\s]+)\)")
@@ -152,6 +154,29 @@ def check_plugin():
     return [f"plugin/vantage: {p}" for p in problems]
 
 
+def check_glossary():
+    docs = ROOT / "docs"
+    glossary = docs / "GLOSSARY.md"
+    if not glossary.exists():
+        return ["docs/GLOSSARY.md is missing"]
+    en = glossary.read_text(encoding="utf-8")
+    problems = glossary_check.check_entries(en)
+    targets = [ROOT / "README.md", docs / "GUIDE.md", docs / "METHOD.md", docs / "PRD.md", docs / "UX.md", docs / "ARCHITECTURE.md"]
+    targets += sorted((docs / "specs").glob("*.md"))
+    for f in targets:
+        problems += glossary_check.check_term_links(str(f.relative_to(ROOT)).replace("\\", "/"), f.read_text(encoding="utf-8"))
+    pt = docs / "pt-BR"
+    if pt.is_dir():
+        files = sorted(f.name for f in pt.glob("*.md"))
+        pt_glossary = pt / "GLOSSARY.md"
+        index = pt / "README.md"
+        if not pt_glossary.exists() or not index.exists():
+            problems.append("docs/pt-BR needs GLOSSARY.md and README.md")
+        else:
+            problems += glossary_check.check_pt_sync(en, pt_glossary.read_text(encoding="utf-8"), index.read_text(encoding="utf-8"), files)
+    return problems
+
+
 def check_privacy(files):
     problems = []
     for f in files:
@@ -166,7 +191,7 @@ def check_privacy(files):
 
 def main():
     files = tracked_files()
-    problems = check_links(files) + check_tables(files) + check_decisions() + check_migrations() + check_plugin() + check_privacy(files)
+    problems = check_links(files) + check_tables(files) + check_decisions() + check_migrations() + check_plugin() + check_glossary() + check_privacy(files)
     for p in problems:
         print(p)
     print(f"{len(problems)} problem(s) in {len(files)} tracked files")

@@ -2,7 +2,7 @@
 
 *From asked to verified, with evidence at every step.*
 
-A2V is a method for delivering software when much of the work is done by AI agents. It replaces "the agent says it's done" with a short track that every piece of work moves along, one step at a time, and only on evidence. Vantage is the tool that runs it; the method stands on its own and works with any tooling.
+[A2V](GLOSSARY.md#a2v) is a method for delivering software when much of the work is done by AI agents. It replaces "the agent says it's done" with a short track that every piece of work moves along, one step at a time, and only on evidence. Vantage is the tool that runs it; the method stands on its own and works with any tooling.
 
 ## The A2V track
 
@@ -39,7 +39,7 @@ Asked → Built → Proven → Reviewed → Shipped → Verified
 
 ## Signals
 
-Signals are warnings that can sit on any piece of work, whatever its step: *waiting on you*, *AI decided alone*, *unproven claim*, *thrashing*, *collision*, *forgotten*, *unseen mention*, *claimed fixed*, *shipped unverified*, *regression*, *owe reply*, *follow-up due*, *close the loop*. Each one has one clear action.
+[Signals](GLOSSARY.md#signal) are warnings that can sit on any piece of work, whatever its step: *waiting on you*, *AI decided alone*, *[unproven claim](GLOSSARY.md#unproven-claim)*, *[thrashing](GLOSSARY.md#thrashing)*, *collision*, *forgotten*, *unseen mention*, *claimed fixed*, *shipped unverified*, *regression*, *owe reply*, *follow-up due*, *close the loop*. Each one has one clear action.
 
 ## Calm practices
 
@@ -51,16 +51,18 @@ A2V is also about stress. Its practices for the person doing the work:
 - **Land the day.** Before stopping, close, park or schedule each open loop, so work doesn't follow you home.
 - **Close loops with people.** Answer what you owe, nudge what's stuck, and tell people when their thing ships.
 - **No silent decisions.** Every choice, by an agent or a person, is written down with why and what else was considered. Agent choices count as proposals until a person approves them.
-- **Answer first.** When explaining status, lead with the answer, then situation, complication and resolution; let people expand only what they need.
+- **[Answer first](GLOSSARY.md#answer-first).** When explaining status, lead with the answer, then situation, complication and resolution; let people expand only what they need.
 
 ## Glossary
 
+The full A to Z, with examples and where each term is defined, is in the [glossary](GLOSSARY.md). The short version:
+
 | Term | Meaning |
 |---|---|
-| Work item | One goal, one card, one A2V track |
+| [Work item](GLOSSARY.md#work-item) | One goal, one card, one A2V track |
 | Step | One of the six stages of the A2V track |
 | Proof | A captured record of a check that ran, with type, level and the code it covered |
-| Signal | A warning on a work item (also called a flag in the specs) |
+| Signal | A warning on a work item (also called a [flag](GLOSSARY.md#flag) in the specs) |
 | Follow-up | New work created by a regression, linked to the original |
 
 ## How Vantage implements A2V
@@ -69,6 +71,10 @@ A2V is also about stress. Its practices for the person doing the work:
 - Proof types, levels and expiry: [proof spec](specs/proof.md)
 - What counts as one work item: [work item model](specs/work-item-model.md)
 - Signals, priority and calm: [scoring spec](specs/scoring.md), [UX](UX.md)
+
+## Where the writing style comes from
+
+The method borrows a few habits from consulting because readers are busy: the [Pyramid Principle](GLOSSARY.md#pyramid-principle) (answer first, then reasons), [SCR](GLOSSARY.md#scr) briefs, [MECE](GLOSSARY.md#mece) groups and [issue trees](GLOSSARY.md#issue-tree). Each has a plain entry and an outside link in the glossary.
 
 ## Naming
 

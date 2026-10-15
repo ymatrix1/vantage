@@ -1,5 +1,7 @@
 # Spec: data schema (draft)
 
+> **Terms:** [backfill](../GLOSSARY.md#backfill), [daemon](../GLOSSARY.md#daemon), [flag](../GLOSSARY.md#flag), [linker](../GLOSSARY.md#linker), [work item](../GLOSSARY.md#work-item). Plain-language definitions are in the [glossary](../GLOSSARY.md).
+
 SQLite, WAL mode, in `~/.vantage/vantage.db`. Field lists come from the [work item model](work-item-model.md) and [proof spec](proof.md).
 
 ## Tables

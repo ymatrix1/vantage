@@ -7,9 +7,35 @@
 
 # Vantage
 
+## What is Vantage? (60 seconds)
+
+Vantage runs on your own computer and shows how far each piece of your work has *really* got. When AI coding agents do much of the typing, it is easy to lose track of what was asked, what was built and what was actually tested. Vantage reads the traces your agents and git leave behind and draws one row per piece of work. A row moves forward only on evidence, such as a test that ran after the last edit. What an agent *says* never moves it. Nothing leaves your machine.
+
+One example item, "add a retry to the uploader", moving along the track:
+
+```
+ Asked      Built       Proven       Reviewed    Shipped     Verified
+   ●          ●           ◐            ○           ○           ○
+ you asked  3 files     no test ran   waiting     not yet     not yet
+            changed     after the edit
+```
+
+It sits at **Built · no proof yet** until a real test runs after the last edit; then the third dot fills in. New here? Read the [plain-language guide](docs/GUIDE.md), or try `vantage tour` (planned, see [first run](docs/specs/first-run.md#the-guided-tour)).
+
+**Learn more**
+
+| You are | Start here |
+|---|---|
+| A new user | [Guide](docs/GUIDE.md), then the [glossary](docs/GLOSSARY.md) (in Portuguese: [Guia](docs/pt-BR/GUIDE.md), [Glossário](docs/pt-BR/GLOSSARY.md)) |
+| A contributor | [AGENTS.md](AGENTS.md), [architecture](docs/ARCHITECTURE.md), the [specs](docs/README.md#specs) |
+| An agent installing it | [Install guide for agents](docs/install-for-agents.md) |
+| Curious about the method | [A2V: Asked to Verified](docs/METHOD.md) |
+
+All docs by audience: [docs/README.md](docs/README.md).
+
 A personal, calm view of the true state of your work across AI coding agents, git, pull requests, CI/CD, monitoring, Jira or Linear, and Slack.
 
-Vantage tracks **work items**, not sessions. Each item moves along one evidence-based track, the **A2V track** from the [A2V: Asked to Verified](docs/METHOD.md) method:
+Vantage tracks **[work items](docs/GLOSSARY.md#work-item)**, not sessions. Each item moves along one evidence-based track, the **[A2V](docs/GLOSSARY.md#a2v) track** from the [A2V: Asked to Verified](docs/METHOD.md) method:
 
 ```
 Asked → Built → Proven → Reviewed → Shipped → Verified
@@ -19,7 +45,7 @@ A card moves only on evidence: a git diff, a test or data check that ran after t
 
 ## Status
 
-**Phase 1 (the first usable slice) is built** for Claude Code and git: hook capture into a local spool, a SQLite store, the git scanner, the linker, the stage machine (Asked, Built, Proven), a `Stop` hook gate in warn mode, a terminal status line, a secured local Track page, a one-process daemon, and the installer. It has not been used day to day for a week yet (the Phase 1 exit, see the [roadmap](docs/ROADMAP.md)), and it is not published to npm. Reviewed, Shipped and Verified need sources from later phases.
+**Phase 1 (the first usable slice) is built** for Claude Code and git: [hook](docs/GLOSSARY.md#hook) capture into a local [spool](docs/GLOSSARY.md#spool), a SQLite store, the git scanner, the [linker](docs/GLOSSARY.md#linker), the stage machine (Asked, Built, Proven), a `Stop` hook gate in warn mode, a terminal status line, a secured local Track page, a one-process [daemon](docs/GLOSSARY.md#daemon), and the installer. It has not been used day to day for a week yet (the Phase 1 exit, see the [roadmap](docs/ROADMAP.md)), and it is not published to npm. Reviewed, Shipped and Verified need sources from later phases.
 
 Tested in CI on Windows and Ubuntu. Developed and run by hand on Windows first.
 
@@ -101,9 +127,9 @@ Nothing inside your repo changes.
 
 ### What you will see
 
-- **Track page** (`vantage open`): items grouped by attention, one row each with the six-dot track, proof state and flags. Click a row for its trace (why it is where it is).
+- **Track page** (`vantage open`): items grouped by attention, one row each with the six-dot track, proof state and [flags](docs/GLOSSARY.md#flag). Click a row for its trace (why it is where it is).
 - **Status line** (if installed): a short glyph line for the current session's item.
-- **Stop gate** (warn mode): when an agent stops after editing code with no fresh test or data check, Claude Code shows a message naming the files and why. It never blocks. Set the mode with `VANTAGE_GATE_MODE=off|warn` or `proof_gate = "off"` in `config.toml`. Docs-only sessions never trigger it.
+- **[Stop gate](docs/GLOSSARY.md#stop-gate)** (warn mode): when an agent stops after editing code with no fresh test or data check, Claude Code shows a message naming the files and why. It never blocks. Set the mode with `VANTAGE_GATE_MODE=off|warn` or `proof_gate = "off"` in `config.toml`. Docs-only sessions never trigger it.
 
 ### Measuring it
 
@@ -117,7 +143,7 @@ vantage stats --repo myrepo   # one repo, matched by name; repeat the command pe
 vantage stats --json          # the same numbers as JSON
 ```
 
-It reports items (total and active in 24 h, 7 d and 30 d), readable titles versus fallback rows (`Session …` or `repo · branch · date`), anchor kinds, session lineage (how many sessions sit on a real issue or branch item instead of a one-off `Session` row, sessions per item, sessions on a branch before and after the transcript-branch fix, derived sessions, sub-agent runs), **Needs you** (total and last 48 h, split by flag kind), stages, how many edited items reached Proven and how many Built items lost their proof, which checks ran (by runner family, plus one count for commands not recognised as checks), events by source and per day, database size and the age of the last stage pass. Each line says what it means, and a ✅, ⚠️ or ❌ shows where it stands against a goal (for example Needs you under 10). The goals are starting points, not product rules.
+It reports items (total and active in 24 h, 7 d and 30 d), readable titles versus fallback rows (`Session …` or `repo · branch · date`), [anchor](docs/GLOSSARY.md#anchor) kinds, session lineage (how many sessions sit on a real issue or branch item instead of a one-off `Session` row, sessions per item, sessions on a branch before and after the transcript-branch fix, [derived sessions](docs/GLOSSARY.md#derived-session), sub-agent runs), **[Needs you](docs/GLOSSARY.md#needs-you)** (total and last 48 h, split by flag kind), stages, how many edited items reached Proven and how many Built items lost their proof, which checks ran (by runner family, plus one count for commands not recognised as checks), events by source and per day, database size and the age of the last stage pass. Each line says what it means, and a ✅, ⚠️ or ❌ shows where it stands against a goal (for example Needs you under 10). The goals are starting points, not product rules.
 
 The output holds numbers and fixed labels only: no titles, commands, paths or repo names (the one echo is the `--repo` text you typed), so it is safe to paste into an issue. Days are UTC.
 
@@ -159,7 +185,7 @@ Packages: `core` (pure logic), `daemon`, `hooks`, `hooks-native` (Rust spool hoo
 
 | Doc | What it covers |
 |---|---|
-| [A2V method](docs/METHOD.md) | The method Vantage implements: track, five rules, proof levels, signals |
+| [A2V method](docs/METHOD.md) | The method Vantage implements: track, five rules, proof levels, [signals](docs/GLOSSARY.md#signal) |
 | [PRD](docs/PRD.md) | Problem, pains, user, goals, non-goals, success metrics |
 | [UX](docs/UX.md) | Surfaces (Focus, Board, Item, Ambient) and UX rules |
 | [Architecture](docs/ARCHITECTURE.md) | Sources, event store, linker, scorers, surfaces, privacy |
@@ -169,8 +195,8 @@ Packages: `core` (pure logic), `daemon`, `hooks`, `hooks-native` (Rust spool hoo
 | [Spec: proof](docs/specs/proof.md) | Proof types, strength levels, freshness, fake proof detection, the gate |
 | [Spec: behaviors and detectors](docs/specs/behaviors-and-detectors.md) | Behavior sources, AI-decided and commitment detectors, resume with context |
 | [Spec: data schema](docs/specs/data-schema.md) | Tables, immutability, migrations, merge linking |
-| [Spec: visual language](docs/specs/visual-language.md) | Dot alphabet, proof shine, dot characters, landscape home, calm gamification |
-| [Spec: Explain](docs/specs/explain.md) | Answer-first briefs, SCR, MECE issue trees with click-to-expand, via the connected agent |
+| [Spec: visual language](docs/specs/visual-language.md) | Dot alphabet, proof shine, dot characters, [landscape](docs/GLOSSARY.md#landscape) home, calm gamification |
+| [Spec: Explain](docs/specs/explain.md) | [Answer-first](docs/GLOSSARY.md#answer-first) briefs, [SCR](docs/GLOSSARY.md#scr), [MECE](docs/GLOSSARY.md#mece) [issue trees](docs/GLOSSARY.md#issue-tree) with click-to-expand, via the connected agent |
 | [Spec: pings](docs/specs/pings.md) | Who you owe a reply, who to nudge, who to tell it's done |
 | [Spec: status line](docs/specs/status-line.md) | Text glyphs for the dot alphabet in the terminal |
 | [Spec: first run](docs/specs/first-run.md) | `vantage init`, first view, one-time legend, demo mode |

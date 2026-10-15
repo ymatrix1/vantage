@@ -52,6 +52,8 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 - [x] `vantage stats`: read-only, aggregates-only numbers on how useful the Track page is, with `--json`, `--since`, `--repo` and a per-day `--days N` view for the exit week (`vantage-v1o3`, D88 proposed). Goals stay constants; making them configurable is a follow-up bean.
 - [x] `forgotten` is its own low-urgency group, no `forgotten` flag on backfilled conversations, and `sessionCount` and `derivedCount` on Track items (`vantage-hs1y`, `vantage-e0rt`, D94 proposed).
 - [x] Item titles from the first request (`vantage-grkz`, D95 proposed): cleaned first sentence of a session's first request titles its provisional item, stored only locally, `item_titles_from_requests` switch, `title_source`, `vantage titles` and `vantage titles clear`.
+- [x] Plain-language on-ramp (`vantage-1te3`, D99 proposed): [guide](GUIDE.md), [glossary](GLOSSARY.md), term links and a **Terms** line in the docs, a [docs index](README.md), Portuguese guide and glossary in `docs/pt-BR/`, and a glossary check in `tools/check_docs.py`.
+- [ ] `vantage tour` (`vantage-u1hk`): a guided, offline terminal walkthrough in English and Portuguese, and `vantage tour --demo` on a temporary synthetic home. Spec: [first run](specs/first-run.md#the-guided-tour).
 - [ ] **Exit:** used every day for a week, and the morning catch-up happens on the Track page instead of in terminals.
 
 ## Phase 2: work items and board

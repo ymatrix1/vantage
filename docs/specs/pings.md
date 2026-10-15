@@ -2,6 +2,8 @@
 
 > **Status:** draft.
 
+> **Terms:** [flag](../GLOSSARY.md#flag), [landscape](../GLOSSARY.md#landscape). Plain-language definitions are in the [glossary](../GLOSSARY.md).
+
 Work often stalls on people, not code. Vantage tracks three situations where you should ping someone, and helps you do it in one click. **Vantage never sends a message on its own:** it drafts, you send.
 
 ## The three cases

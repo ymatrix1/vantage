@@ -1,5 +1,7 @@
 # Spec: flag registry
 
+> **Terms:** [A2V](../GLOSSARY.md#a2v), [flag](../GLOSSARY.md#flag), [hook](../GLOSSARY.md#hook), [signal](../GLOSSARY.md#signal), [work item](../GLOSSARY.md#work-item). Plain-language definitions are in the [glossary](../GLOSSARY.md).
+
 The single source of truth for flags. Other specs link here instead of repeating the list. A new flag needs a row here first, with every column filled.
 
 Flags sit on any work item, whatever its stage. Each flag has exactly one primary action. In the A2V method they're called *signals*.

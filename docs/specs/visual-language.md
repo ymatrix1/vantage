@@ -2,6 +2,8 @@
 
 > **Status:** draft. Mockups: [docs/mockups/visual.html](../mockups/visual.html).
 
+> **Terms:** [A2V](../GLOSSARY.md#a2v), [flag](../GLOSSARY.md#flag), [landscape](../GLOSSARY.md#landscape), [Needs you](../GLOSSARY.md#needs-you), [work item](../GLOSSARY.md#work-item). Plain-language definitions are in the [glossary](../GLOSSARY.md).
+
 Vantage is **visual first**: shape, color, size and position carry state; a few words carry identity; everything else is one click away. This spec defines the vocabulary every page uses.
 
 ## Word budget
