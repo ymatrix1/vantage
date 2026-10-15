@@ -12,3 +12,4 @@ export * from "./lineage.ts";
 export * from "./classify.ts";
 export * from "./tasks.ts";
 export * from "./request-title.ts";
+export * from "./scratch.ts";

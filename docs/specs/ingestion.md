@@ -120,6 +120,10 @@ Tool calls that were stored first by a hook (which has no branch) or before this
 
 The transcript backfill also reads the head of each session file (the first 256 KB, once, marker cursor `titles:<file>`) for the session's first real user request and keeps a cleaned first sentence as that session's title ([D95](../DECISIONS.md), proposed). It is not an event: `prompt.submitted` still carries only the prompt's length. The cleaning rules, the 80-character cap, what is never stored and the off switch (`item_titles_from_requests = false`) are in the decision; the table is `session_titles` ([data schema](data-schema.md)). Hook payloads carry no prompt text, so a session known only from hooks keeps its repo, branch and date title. Files already ingested are read too, so existing sessions get a title on the next pass. Sub-agent files and copied parent history are skipped. `vantage titles` lists the stored titles and `vantage titles clear` deletes them.
 
+### Scratch files
+
+An edit whose paths are all scratch (a log, temp output, a cache folder, or a file git ignores in its repo and does not track) is kept as an event and linked to its item, but the stage machine does not count it as a code or documentation edit ([D140](../DECISIONS.md), proposed): it does not move the stage, expire proof, or raise `unproven_claim` or `thrashing`. The item state records `scratchEdits` and the scratch base names. The stage pass asks git (`rev-parse`, `check-ignore`, read-only, batched, cached for 5 minutes, bounded) for absolute edited paths; with no git, a path outside a repo, a relative path or any failure only the name rules apply, and an unclassified edit keeps counting as code. An untracked file git does not ignore counts as code.
+
 ### Sessions Vantage starts
 
 `vantage classify` runs `claude -p`, which is a Claude Code session. Hooks and the transcript backfill would record it, so ingestion drops everything that ran inside `$VANTAGE_HOME/work/` (D112):
