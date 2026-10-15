@@ -11,11 +11,12 @@ const MAX_NAME = 80;
 
 /** One line, no control characters, at most 80 characters (an ellipsis marks a cut); null when nothing is left. */
 export function cleanSessionName(raw: string): string | null {
-  const one = [...raw]
-    .map((c) => (c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127 ? " " : c))
-    .join("")
-    .replace(/\s+/g, " ")
-    .trim();
+  let spaced = "";
+  for (let i = 0; i < raw.length; i++) {
+    const code = raw.charCodeAt(i);
+    spaced += code < 32 || code === 127 ? " " : (raw[i] ?? "");
+  }
+  const one = spaced.replace(/\s+/g, " ").trim();
   if (one === "") return null;
   return one.length <= MAX_NAME ? one : `${one.slice(0, MAX_NAME - 1).trimEnd()}…`;
 }
