@@ -7,6 +7,7 @@ import type { Duplex } from "node:stream";
 import { extname, join, normalize, sep } from "node:path";
 import { parseTrackQuery } from "@vantage/core";
 import { diagnosticsView, traceView, trackView } from "./api.ts";
+import { classifyRoute, type ClassifyApi } from "./classify-api.ts";
 import { itemDetailView } from "./item-detail.ts";
 import { LIVE_PROTOCOL, type LiveHub } from "./live.ts";
 import { tokenMatches } from "./token.ts";
@@ -23,6 +24,8 @@ export interface HttpOptions {
   uiDir?: string;
   /** Extra Host and Origin values allowed, e.g. the Vite dev server `127.0.0.1:5173`. */
   extraHosts?: readonly string[];
+  /** `/api/classify/*` (docs/specs/classify.md); without it those paths are 404. The only routes that accept POST. */
+  classify?: ClassifyApi;
   /** Pushes for `GET /api/live`; without it the upgrade is refused with 404. */
   live?: LiveHub;
   now?: () => Date;
@@ -86,6 +89,34 @@ function liveToken(req: IncomingMessage): string | undefined {
   return parts.includes(LIVE_PROTOCOL) ? parts.find((p) => p !== LIVE_PROTOCOL && p !== "") : undefined;
 }
 
+const MAX_BODY = 64 * 1024;
+
+/** Reads a small JSON body; an empty body is `{}`. */
+function readJson(
+  req: IncomingMessage,
+  done: (r: { ok: true; value: unknown } | { ok: false }) => void,
+): void {
+  const chunks: Buffer[] = [];
+  let size = 0;
+  let over = false;
+  req.on("data", (c: Buffer) => {
+    size += c.length;
+    if (size > MAX_BODY) over = true;
+    else chunks.push(c);
+  });
+  req.on("end", () => {
+    if (over) return done({ ok: false });
+    const text = Buffer.concat(chunks).toString("utf8").trim();
+    if (text === "") return done({ ok: true, value: {} });
+    try {
+      done({ ok: true, value: JSON.parse(text) as unknown });
+    } catch {
+      done({ ok: false });
+    }
+  });
+  req.on("error", () => done({ ok: false }));
+}
+
 function serveStatic(uiDir: string, path: string, res: ServerResponse): boolean {
   let rel: string;
   try {
@@ -125,12 +156,14 @@ export function startHttp(options: HttpOptions): Promise<HttpHandle> {
 
   const handle = (req: IncomingMessage, res: ServerResponse): void => {
     try {
-      if (req.method !== "GET" && req.method !== "HEAD") {
+      const url = new URL(req.url ?? "/", "http://127.0.0.1");
+      // POST is allowed on /api/classify/ only; the same host, origin and token checks run before it is read.
+      const classifyPost = req.method === "POST" && url.pathname.startsWith("/api/classify/");
+      if (req.method !== "GET" && req.method !== "HEAD" && !classifyPost) {
         return send(res, 405, { error: "read-only API" }, { Allow: "GET, HEAD" });
       }
       const bad = originCheck(req);
       if (bad) return refuse(res, 403, bad);
-      const url = new URL(req.url ?? "/", "http://127.0.0.1");
       if (!url.pathname.startsWith("/api/")) {
         // The UI shell holds no data, so it needs no token; every data call does.
         if (uiDir && serveStatic(uiDir, url.pathname, res)) return;
@@ -139,6 +172,26 @@ export function startHttp(options: HttpOptions): Promise<HttpHandle> {
       if (!tokenMatches(token, bearer(req))) return refuse(res, 401, "missing or wrong token");
 
       if (url.pathname === "/api/live") return refuse(res, 426, "websocket upgrade required");
+      if (url.pathname.startsWith("/api/classify/")) {
+        const api = options.classify;
+        if (!api) return refuse(res, 404, "not found");
+        if (!classifyPost) {
+          const r = classifyRoute(api, "GET", url.pathname, url.searchParams, undefined);
+          return r ? send(res, r.status, r.body) : refuse(res, 404, "not found");
+        }
+        readJson(req, (parsed) => {
+          try {
+            const r = parsed.ok
+              ? classifyRoute(api, "POST", url.pathname, url.searchParams, parsed.value)
+              : null;
+            if (!parsed.ok) return refuse(res, 400, "body must be JSON of at most 64 KB");
+            return r ? send(res, r.status, r.body) : refuse(res, 404, "not found");
+          } catch {
+            return refuse(res, 500, "internal error");
+          }
+        });
+        return;
+      }
       if (url.pathname === "/api/track") {
         const parsed = parseTrackQuery(url.searchParams);
         return parsed.ok

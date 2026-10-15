@@ -2,7 +2,7 @@
 import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { backfillTranscripts, ingestSpool } from "./ingest.ts";
+import { backfillTranscripts, ingestSpool, workDirOf } from "./ingest.ts";
 import { readRequestTitlesEnabled } from "./runtime.ts";
 import { Store } from "./store.ts";
 
@@ -27,6 +27,7 @@ export function runOnce(opts: RunOptions = {}): { spool: number; transcripts: nu
       opts.now,
       undefined,
       readRequestTitlesEnabled(home),
+      workDirOf(home),
     );
     return { spool: spool.inserted, transcripts: transcripts.inserted };
   } finally {

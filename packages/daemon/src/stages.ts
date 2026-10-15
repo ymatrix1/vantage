@@ -4,6 +4,7 @@
 // Stop gate, status line and Track page call.
 import { computeStages, fallbackTitle, projectNameOf } from "@vantage/core";
 import type { ItemState, LinkOptions, StageOptions } from "@vantage/core";
+import { acceptedTitles, isExplicitKey } from "./classify-store.ts";
 import { linkStoredEvents, loadEvents } from "./linking.ts";
 import { GIT_QUESTIONS_PER_PASS, resolveRepo, worktreeRepos } from "./projects.ts";
 import type { Store } from "./store.ts";
@@ -35,7 +36,7 @@ const textOrNull = (r: Row, c: string): string | null => {
 const num = (r: Row, c: string): number => Number(r[c] ?? 0);
 
 /** Title and repo from the item key; an item with no name of its own gets a title from repo, branch and date. */
-type TitleSource = "anchor" | "request" | "fallback";
+type TitleSource = "anchor" | "request" | "fallback" | "classifier";
 
 function titleOf(
   item: ItemState,
@@ -108,11 +109,13 @@ export function runStagePass(store: Store, opts: StagePassOptions = {}, now = ne
       }
       db.prepare("DELETE FROM work_items WHERE id = ?").run(id);
     }
+    // A title the user accepted from the classifier survives every pass, except where a ticket, branch or worktree names the item.
+    const accepted = acceptedTitles(store);
     const worktrees = worktreeRepos(store);
     const gitBudget = { left: GIT_QUESTIONS_PER_PASS };
     for (const item of items) {
       const named = titleOf(item, requests);
-      const { source } = named;
+      let { source } = named;
       // The repo a person knows (git identity), never the worktree folder an agent session ran in.
       const repo = resolveRepo(store, item.itemKey, named.repo, worktrees, gitBudget);
       // A detached HEAD has no branch name to show; the repo is the next best thing.
@@ -130,6 +133,11 @@ export function runStagePass(store: Store, opts: StagePassOptions = {}, now = ne
       // A worktree item is titled with a folder name; its branch is a better name.
       if (item.itemKey.startsWith("worktree:") && item.branch) title = item.branch;
       if (title === "HEAD") title = `detached HEAD${shown ? ` in ${shown}` : ""}`;
+      const pick = isExplicitKey(item.itemKey) ? undefined : accepted.get(item.itemKey);
+      if (pick !== undefined) {
+        title = pick;
+        source = "classifier";
+      }
       db.prepare(
         `INSERT INTO work_items (item_key, title, title_source, repo, branch, has_edits, stage, proof_status, proof_level, docs_only,
            first_activity, last_activity, created_at, updated_at)

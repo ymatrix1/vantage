@@ -3,6 +3,11 @@ import { readFileSync, writeSync } from "node:fs";
 import { collect, spoolDir, vantageHome } from "./collect.ts";
 import { runGate } from "./gate.ts";
 
+// A session Vantage starts itself (`vantage classify` runs `claude -p`) sets VANTAGE_SKIP=1. Its hooks
+// must record nothing, or the classifier would create items about itself.
+const skip = (process.env["VANTAGE_SKIP"] ?? "").trim();
+if (skip !== "" && skip !== "0") process.exit(0);
+
 let stdin = "";
 try {
   stdin = readFileSync(0, "utf8");
