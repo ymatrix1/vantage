@@ -1236,7 +1236,7 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** Store the repo on every event at ingest (cannot fix history; the hook has a 100 ms budget, D67). Group by the folder's parent (still wrong for worktrees). Ask only the scanner's worktrees (misses repos the scanner was never told about: on the real copy that left 350 of 463 items with no repo, against 189 with the git fallback).
 - **Impact:** `RepoInfo` and `repoInfoOf` in core, `projects.ts` in the daemon, a stage-pass step, `repoUrl` on the Track item. On a copy of the real store the distinct repos go from 148 to 8, with 189 items having no repo (folders that are gone or are not repos). A first pass after upgrade resolves 12 folders at a time, so repos fill in over a few passes. Revisit if asking git per folder proves too slow, or if projects get a config mapping.
 
-### D105. Plain-language on-ramp: a guide, a glossary, term links and a pt-BR pair, with a docs check
+### D120. Plain-language on-ramp: a guide, a glossary, term links and a pt-BR pair, with a docs check
 
 - **Status:** proposed
 - **Context:** The docs were written in a consulting style (answer first, SCR, MECE, issue trees) with stage names, proof levels, anchors, flags and signals used without definition. Newcomers and lay readers could not tell what Vantage shows or how to use it without reading the specs.
@@ -1245,7 +1245,7 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** Rewrite the specs in plain language (loses the precision the specs exist for, and doubles the maintenance). A single long README (hides the audience split). Translate every doc (too much to keep in sync for one author; only the two entry docs matter to the Portuguese audience).
 - **Impact:** New files `docs/GUIDE.md`, `docs/GLOSSARY.md`, `docs/README.md`, `docs/pt-BR/*`, `tools/glossary_check.py` and its test; a **Terms** line on the long docs; a README "What is Vantage" section. A new core term needs a glossary entry and links in the docs that use it, or `check_docs.py` fails. Revisit if the Portuguese files fall behind the English ones more than a few times.
 
-### D106. `vantage tour`: an offline guided walkthrough, and a demo on a temporary synthetic home
+### D121. `vantage tour`: an offline guided walkthrough, and a demo on a temporary synthetic home
 
 - **Status:** proposed
 - **Context:** A newcomer has nothing to learn from on the first run: the Track page is empty until an agent has worked in a registered repo, and the specs assume the method is known. The user asked for an onboarding that explains the product with real examples, in Portuguese and English, without network and without any real data.

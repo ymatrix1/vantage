@@ -52,7 +52,7 @@ The end-goal install is a prompt the user pastes into their agent (Claude Code o
 
 ## The guided tour
 
-> **Status:** built in the CLI (bean `vantage-u1hk`, D106 proposed): `packages/cli/src/tour/`. The Track page's first-run text below is specified for the Track UI, which owns the page and has not built it yet.
+> **Status:** built in the CLI (bean `vantage-u1hk`, D121 proposed): `packages/cli/src/tour/`. The Track page's first-run text below is specified for the Track UI, which owns the page and has not built it yet.
 
 `vantage tour` is an interactive walkthrough in the terminal. It needs no network and no real data, and uses only synthetic examples.
 
