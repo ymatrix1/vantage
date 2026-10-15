@@ -42,6 +42,8 @@ export interface TrackItem {
   /** Sessions feeding the item (default 1) and how many of them continue another (default 0); D86. */
   sessionCount?: number;
   derivedCount?: number;
+  /** `anchor` (named by its key), `request` (first sentence of the first request) or `fallback`. */
+  titleSource?: string;
   lastActivity: string;
 }
 

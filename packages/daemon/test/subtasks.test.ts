@@ -230,7 +230,7 @@ describe("fork and resume counts", () => {
   });
 });
 
-describe("migration 8", () => {
+describe("migration 9", () => {
   it("replaces item_sessions and adds item_tasks on a version 6 database, keeping its data", () => {
     const p = join(dir, "old.db");
     const old = new DatabaseSync(p);
@@ -243,6 +243,7 @@ describe("migration 8", () => {
       CREATE TABLE links (event_id INTEGER NOT NULL REFERENCES events (id), item_key TEXT NOT NULL,
         method TEXT NOT NULL, anchor_kind TEXT NOT NULL, anchor_value TEXT NOT NULL, rule TEXT NOT NULL,
         confidence REAL NOT NULL, created_at TEXT NOT NULL, undone_at TEXT, PRIMARY KEY (event_id, item_key));
+      CREATE TABLE work_items (id INTEGER PRIMARY KEY, item_key TEXT NOT NULL);
       CREATE VIEW item_sessions AS SELECT 'x' AS item_key, 1 AS session_count, 0 AS derived_count, 0 AS subagent_count;
       INSERT INTO events (source, source_id, kind, occurred_at, ingested_at, session_id, payload_json)
         VALUES ('claude_code', 'old1', 'file.edited', '2026-01-05T09:00:00Z', '2026-01-05T09:00:00Z', 's-1', '{}'),

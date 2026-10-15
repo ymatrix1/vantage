@@ -10,3 +10,4 @@ export * from "./track.ts";
 export * from "./test-summary.ts";
 export * from "./lineage.ts";
 export * from "./tasks.ts";
+export * from "./request-title.ts";

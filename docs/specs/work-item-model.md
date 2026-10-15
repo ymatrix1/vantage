@@ -62,6 +62,10 @@ From the `item_sessions` and `item_tasks` views (see [data schema](data-schema.m
 
 An undone link removes its event from every count.
 
+### Item titles
+
+A work item's title comes from, in order: its anchor (an issue key, branch name or worktree folder), else the first sentence of the session's first request when one was captured (cleaned, at most 80 characters, local only, switchable: [D95](../DECISIONS.md), proposed), else the repo, branch and first activity date (D84). `work_items.title_source` records which (`anchor`, `request`, `fallback`).
+
 ## Entities
 
 | Entity | Meaning | Key fields |

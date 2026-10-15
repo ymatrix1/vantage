@@ -1,6 +1,6 @@
 ---
 # vantage-8e10
-title: Sub-agent run descriptions and wiring the text switch
+title: Sub-agent run descriptions
 status: todo
 type: task
 created_at: 2026-10-15T00:06:43Z
@@ -19,7 +19,7 @@ Show what a sub-agent was asked to do, and one switch for all captured text.
 ## Acceptance Criteria
 
 - [ ] Capture the description, cleaned and capped at 80 characters, under the same switch
-- [ ] Set `store.captureTaskText` from `item_titles_from_requests` at daemon start
+- [x] Set `store.captureTaskText` from `item_titles_from_requests` at daemon start (done in the task-list PR once #56 merged)
 
 ## Out of Scope
 

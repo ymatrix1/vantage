@@ -3,6 +3,7 @@
 // (D3): never because an agent said so. Reviewed, Shipped and Verified are out of Phase 1.
 import type { VantageEvent } from "./events.ts";
 import type { Link } from "./linker.ts";
+import { splitCommandSegments } from "./shell.ts";
 
 export type Stage = "asked" | "built" | "proven";
 export type ProofType = "test" | "data_check";
@@ -116,18 +117,66 @@ const TEST_RUNNERS: readonly RegExp[] = [
 ];
 const DATA_TOOLS: readonly RegExp[] = [/^duckdb\b/, /^bq\s+query\b/, /^psql\b/, /^sqlcmd\b/];
 
-const splitSegments = (command: string): string[] =>
-  command
-    .split(/&&|\|\||;|\|(?!\|)|\n/)
-    .map((s) => s.trim())
-    .filter((s) => s !== "");
+const splitSegments = splitCommandSegments;
 
-/** Leading `cd x` / env assignments are not the command. */
-const bare = (segment: string): string => segment.replace(/^(?:[A-Za-z_]\w*=\S*\s+)+/, "");
+// Commands that only read or print. Their arguments may name a runner (`grep -n unittest f`,
+// `echo pytest`) without running it, so such a segment is never a check.
+const READ_ONLY = new Set([
+  "grep",
+  "egrep",
+  "fgrep",
+  "rg",
+  "ag",
+  "ack",
+  "cat",
+  "head",
+  "tail",
+  "less",
+  "more",
+  "ls",
+  "dir",
+  "find",
+  "fd",
+  "echo",
+  "printf",
+  "wc",
+  "sort",
+  "uniq",
+  "cut",
+  "tr",
+  "diff",
+  "stat",
+  "file",
+  "which",
+  "where",
+  "type",
+  "pwd",
+  "sed",
+  "awk",
+  "tee",
+]);
+const READ_ONLY_GIT =
+  /^git\s+(?:-[^\s]+\s+(?:\S+\s+)?)*(?:log|show|diff|status|grep|blame|ls-files|branch|rev-parse|describe|shortlog)\b/;
+
+/** Leading env assignments and `time`, `env`, `nohup`, `command` are not the command. */
+const bare = (segment: string): string => {
+  let s = segment;
+  for (;;) {
+    const next = s
+      .replace(/^[A-Za-z_]\w*=\S*\s+/, "")
+      .replace(/^(?:time|nohup|command|env)\s+/, "")
+      .replace(/^(?:-[A-Za-z]\S*\s+)+(?=[A-Za-z_]\w*=)/, "");
+    if (next === s) return s;
+    s = next;
+  }
+};
+
+const firstWord = (segment: string): string => /^\S+/.exec(segment)?.[0]?.replace(/^.*[\\/]/, "") ?? "";
 
 function classify(command: string): { type: ProofType; segment: string } | null {
   for (const raw of splitSegments(command)) {
     const segment = bare(raw);
+    if (READ_ONLY.has(firstWord(segment)) || READ_ONLY_GIT.test(segment)) continue;
     if (TEST_RUNNERS.some((r) => r.test(segment))) return { type: "test", segment };
     if (DATA_TOOLS.some((r) => r.test(segment))) return { type: "data_check", segment };
   }

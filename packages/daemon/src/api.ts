@@ -251,6 +251,7 @@ const toTrackItem = (
   proofLevel: i.proofLevel,
   docsOnly: i.docsOnly,
   hasEdits: i.hasEdits,
+  titleSource: i.titleSource,
   flags: i.flags.map((f) => ({ kind: f.kind, severity: f.severity, reason: f.reason })),
   firstActivity: i.firstActivity,
   // An item with no linked session event (git only) counts as one session with none derived.
