@@ -23,7 +23,8 @@ Install Vantage for this repo. Follow https://github.com/ymatrix1/vantage/blob/m
 4. **Wait for the user's explicit OK.** Installing changes machine-level settings (the user's Claude Code `settings.json`). Don't continue without a clear yes in this chat.
 5. **Install.** Run `vantage add --yes`. It backs up `settings.json` first, refuses unreadable settings, and never replaces another status line. Add `--git-hooks` only if the user asks for it.
 6. **Start and verify.** Start the daemon in the background so this session is not blocked (`vantage start`; a second start is harmless because of the single-instance guard), then run `vantage doctor`. A FAIL must be fixed (show its fix line and ask before applying it). A WARN is fine if the user understands it, for example "no repos registered" before the first add.
-7. **Report back** in a few lines: what was installed, where (file paths from the output), the backup path, how to open the Track page (`vantage open`), and how to undo it (`vantage remove` for this repo, `vantage uninstall` for the hooks and status line).
+7. **Offer the tour.** Ask: "Want a 3-minute walkthrough with made-up examples? Run `vantage tour`, or `vantage tour --demo` to click around a demo Track page." Run it only if the user says yes. The tour needs no network and never touches the real Vantage home.
+8. **Report back** in a few lines: what was installed, where (file paths from the output), the backup path, how to open the Track page (`vantage open`), and how to undo it (`vantage remove` for this repo, `vantage uninstall` for the hooks and status line).
 
 ## Rules
 

@@ -525,6 +525,7 @@ export async function runAdd(args: string[], io: InstallIo, now = new Date()): P
   io.out(`Done. Undo with \`vantage remove\` (this repo) or \`vantage uninstall\` (everything).`);
   if (backup) io.out(`Settings backup: ${backup}`);
   io.out("Next: `vantage start`, then `vantage doctor`.");
+  io.out("New here? Run `vantage tour`");
   return 0;
 }
 

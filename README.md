@@ -20,7 +20,7 @@ One example item, "add a retry to the uploader", moving along the track:
             changed     after the edit
 ```
 
-It sits at **Built · no proof yet** until a real test runs after the last edit; then the third dot fills in. New here? Read the [plain-language guide](docs/GUIDE.md), or try `vantage tour` (planned, see [first run](docs/specs/first-run.md#the-guided-tour)).
+It sits at **Built · no proof yet** until a real test runs after the last edit; then the third dot fills in. New here? Read the [plain-language guide](docs/GUIDE.md), or run `vantage tour`, a guided, offline walkthrough (`vantage tour --demo` opens made-up data you can click around; see [first run](docs/specs/first-run.md#the-guided-tour)).
 
 **Learn more**
 

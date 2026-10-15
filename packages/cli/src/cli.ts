@@ -22,6 +22,7 @@ import { runDoctor } from "./doctor.ts";
 import { runAdd, runRemove } from "./install.ts";
 import { formatVersion, readVersionInfo } from "./version.ts";
 import { runStats } from "./stats.ts";
+import { runTour } from "./tour/tour.ts";
 
 export interface CliIo {
   out(line: string): void;
@@ -35,6 +36,8 @@ export interface CliIo {
   cwd?: string;
   /** Yes or no prompt; absent when there is no terminal, so a real change needs `--yes`. */
   confirm?: (question: string) => Promise<boolean>;
+  /** Waits for Enter (the tour); absent when there is no terminal, so the tour prints everything. */
+  pause?: (prompt: string) => Promise<void>;
 }
 
 /** The token travels in the URL fragment only, never in a query string (D32, D75). */
@@ -165,8 +168,9 @@ export async function runCli(argv: string[], io: CliIo): Promise<number> {
   if (cmd === "stats") return runStats(rest, io);
   if (cmd === "titles") return titles(rest, io);
   if (cmd === "classify") return runClassify(rest, io);
+  if (cmd === "tour") return runTour(rest, io, { uiDir: builtUiDir(io.env), url: trackUrl });
   io.err(
-    "Usage: vantage start [--port N] | open [--print] | add [path] [--dry-run] [--yes] [--git-hooks] | remove [path] | uninstall | doctor | --version | stats [--json] [--since 7d] [--repo NAME] [--days N] | titles [clear] | classify [--dry-run | accept | dismiss | undo | report | status]",
+    "Usage: vantage start [--port N] | open [--print] | add [path] [--dry-run] [--yes] [--git-hooks] | remove [path] | uninstall | doctor | --version | stats [--json] [--since 7d] [--repo NAME] [--days N] | titles [clear] | classify [--dry-run | accept | dismiss | undo | report | status] | tour [--lang pt|en] [--no-pause] [--step N] [--demo]",
   );
   return cmd === undefined || cmd === "--help" || cmd === "help" ? 0 : 2;
 }

@@ -85,6 +85,6 @@ Use o Claude Code num repositório registrado com `vantage add`, espere uns 30 s
 Ele pode dizer o que quiser; isso não move nada. Um comando que não pode falhar (`echo ok`, `pnpm test || true`) não conta, e uma execução com zero testes também não.
 
 **10. Preciso conhecer o método A2V?**
-Não. A [página do método](../METHOD.md) (em inglês) explica de onde vêm as ideias, para quem tem curiosidade. Para testar o Vantage primeiro com dados inventados, use `vantage tour` (planejado, veja a [spec de primeiro uso](../specs/first-run.md#the-guided-tour)).
+Não. A [página do método](../METHOD.md) (em inglês) explica de onde vêm as ideias, para quem tem curiosidade. Para testar o Vantage primeiro com dados inventados, use `vantage tour --demo` (veja a [spec de primeiro uso](../specs/first-run.md#the-guided-tour)).
 
 Próximos passos: [glossário](GLOSSARY.md), [todos os docs por público](../README.md).

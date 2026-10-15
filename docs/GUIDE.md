@@ -85,6 +85,6 @@ Use Claude Code in a repo you registered with `vantage add`, wait about 30 secon
 It can say whatever it likes; that moves nothing. A command that cannot fail (`echo ok`, `pnpm test || true`) does not count, and neither does a run of zero tests.
 
 **10. Do I have to know the [A2V](GLOSSARY.md#a2v) method?**
-No. The [method page](METHOD.md) explains where the ideas come from, for the curious. To try Vantage on made-up data first, run `vantage tour` (planned, see the [first-run spec](specs/first-run.md#the-guided-tour)).
+No. The [method page](METHOD.md) explains where the ideas come from, for the curious. To try Vantage on made-up data first, run `vantage tour --demo` (see the [first-run spec](specs/first-run.md#the-guided-tour)).
 
 Next: [glossary](GLOSSARY.md), [all docs by audience](README.md).
