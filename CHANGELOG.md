@@ -2,6 +2,29 @@
 
 Generated from Conventional Commits by `tools/release.mjs`. See [RELEASING.md](RELEASING.md).
 
+## 0.3.0 (2026-10-15)
+
+### Features
+
+- **ui:** themed select lists; untitled items never show a session id (796c2c2)
+- **ui:** full-colour dots by default, colour-blind friendly setting, aligned row columns (b321b25)
+- **track:** session names, a meaningful Asked line and Open in Claude (D191 to D193) (76bb10f)
+- **ui:** Track redesign: overview, collapsed filters, day grouping, fewer false needs-you (e80a023)
+- **track:** items list every repo they touched (D190) (7d65fb0)
+
+### Bug fixes
+
+- **titles:** id suffix for colliding untitled items that are not sessions (41bd5d3)
+- **titles:** tell untitled items apart only when they collide (D195) (0a408ea)
+- **titles:** find names and requests deeper in the transcript, never read the same (D195) (32d79f5)
+- **titles:** injected messages are never a request or title (D194) (2911319)
+- **core:** strip control characters from session names without spreading (18ef9fd)
+- **ui:** show the pointer cursor on buttons and links (1ed4a56)
+
+### Performance
+
+- **titles:** spread one-time deep transcript reads over passes (D195) (3f00f8f)
+
 ## 0.2.0 (2026-10-15)
 
 ### Features
