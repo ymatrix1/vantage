@@ -5,7 +5,14 @@
     page,
     onpage,
     onsize,
-  }: { page: PageInfo; onpage: (n: number) => void; onsize: (n: number) => void } = $props();
+    top = false,
+  }: {
+    page: PageInfo;
+    onpage: (n: number) => void;
+    onsize: (n: number) => void;
+    /** The pager above the list: its own landmark name, and no page-size selector (the bottom one has it). */
+    top?: boolean;
+  } = $props();
 
   const first = $derived(page.total === 0 ? 0 : (page.page - 1) * page.pageSize + 1);
   const last = $derived(Math.min(page.total, page.page * page.pageSize));
@@ -13,7 +20,7 @@
   const atEnd = $derived(page.page >= page.pages);
 </script>
 
-<nav class="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm" aria-label="Pages">
+<nav class={top ? "mb-3 flex flex-wrap items-center justify-between gap-3 text-sm" : "mt-3 flex flex-wrap items-center justify-between gap-3 text-sm"} aria-label={top ? "Pages, top of list" : "Pages"}>
   <p class="text-muted-foreground" aria-live="polite">{first} to {last} of {page.total}</p>
   <div class="flex items-center gap-1">
     <button type="button" class="rounded-md border border-border px-2 py-1 disabled:opacity-40" disabled={atStart} aria-label="First page" onclick={() => onpage(1)}>First</button>
@@ -22,6 +29,7 @@
     <button type="button" class="rounded-md border border-border px-2 py-1 disabled:opacity-40" disabled={atEnd} aria-label="Next page" onclick={() => onpage(page.page + 1)}>Next</button>
     <button type="button" class="rounded-md border border-border px-2 py-1 disabled:opacity-40" disabled={atEnd} aria-label="Last page" onclick={() => onpage(page.pages)}>Last</button>
   </div>
+  {#if !top}
   <label class="flex items-center gap-2 text-xs text-muted-foreground">
     Per page
     <select
@@ -32,4 +40,5 @@
       {#each PAGE_SIZES as n (n)}<option value={String(n)}>{n}</option>{/each}
     </select>
   </label>
+  {/if}
 </nav>

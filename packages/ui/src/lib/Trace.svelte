@@ -1,11 +1,14 @@
 <script lang="ts">
   // Why this item changed (D45): stage history, proofs and the events that linked in, by rule.
   import type { TraceResponse } from "@vantage/core/track";
+  import { ago } from "./relative-time";
 
-  let { trace }: { trace: TraceResponse } = $props();
+  // `embedded` drops the panel chrome when the parent (the inline detail) already draws it.
+  let { trace, embedded = false }: { trace: TraceResponse; embedded?: boolean } = $props();
+  const now = new Date();
 </script>
 
-<div class="space-y-3 border-t border-border bg-muted/50 px-4 py-3 text-sm">
+<div class={embedded ? "space-y-3" : "space-y-3 border-t border-border bg-muted/50 px-4 py-3 text-sm"}>
   <section>
     <h3 class="font-medium">Stage history</h3>
     <ul>
@@ -21,7 +24,7 @@
     <ul>
       {#each trace.proofs as p (p.eventId)}
         <li class="text-muted-foreground">
-          L{p.level} {p.state}{p.weakReason ? ` (${p.weakReason})` : ""}: <code>{p.command}</code>
+          L{p.level} {p.state}{p.weakReason ? ` (${p.weakReason})` : ""}: <code>{p.command}</code>{#if p.ranAt}, {ago(p.ranAt, now)}{/if}
         </li>
       {:else}
         <li class="text-muted-foreground">No proof recorded.</li>

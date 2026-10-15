@@ -89,14 +89,26 @@ export function traceOf(id: string, over: Partial<TraceResponse> = {}): TraceRes
 
 type Reply = { status?: number; body?: unknown } | "network-error";
 
-/** Routes /api/track and /api/items/<id>/trace; the reply for each can change between calls. */
-export function fakeApi(routes: { track: (url: string) => Reply; trace?: (id: string) => Reply }) {
+const none = (): Reply => ({ status: 404 });
+
+/**
+ * Routes /api/track, /api/items/<id>/trace and /api/items/<id>; the reply for each can change between calls.
+ * The page's header asks for `pageSize=1` (counts only): tests count list requests with `listCalls`.
+ */
+export function fakeApi(routes: {
+  track: (url: string) => Reply;
+  trace?: (id: string) => Reply;
+  detail?: (id: string) => Reply;
+}) {
   const fn = vi.fn<(input: string, init?: RequestInit) => Promise<Response>>(async (input) => {
     const url = input;
-    const m = /^\/api\/items\/(.+)\/trace$/.exec(url);
-    const reply = m?.[1]
-      ? (routes.trace ?? ((): Reply => ({ status: 404 })))(decodeURIComponent(m[1]))
-      : routes.track(url);
+    const t = /^\/api\/items\/(.+)\/trace$/.exec(url);
+    const d = /^\/api\/items\/([^/]+)$/.exec(url);
+    const reply = t?.[1]
+      ? (routes.trace ?? none)(decodeURIComponent(t[1]))
+      : d?.[1]
+        ? (routes.detail ?? none)(decodeURIComponent(d[1]))
+        : routes.track(url);
     if (reply === "network-error") throw new TypeError("fetch failed");
     return new Response(JSON.stringify(reply.body ?? {}), {
       status: reply.status ?? 200,
@@ -106,6 +118,10 @@ export function fakeApi(routes: { track: (url: string) => Reply; trace?: (id: st
   vi.stubGlobal("fetch", fn);
   return fn;
 }
+
+/** The list requests (everything under /api/track except the header's one-row counts request). */
+export const listCalls = (api: ReturnType<typeof fakeApi>): string[] =>
+  api.mock.calls.map(([u]) => u).filter((u) => u.startsWith("/api/track") && !/[?&]pageSize=1(&|$)/.test(u));
 
 /** Stands in for the browser WebSocket: the test decides when it opens, pushes and drops. */
 export class FakeSocket extends EventTarget {

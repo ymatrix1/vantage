@@ -38,3 +38,5 @@ export {
   vantageHomeDir,
 } from "./runtime.ts";
 export type { DaemonHandle, DaemonOptions, Health } from "./runtime.ts";
+export { itemDetailView } from "./item-detail.ts";
+export { remotePathOfKey, repoKeyForCwd, resolveRepo, worktreeRepos } from "./projects.ts";

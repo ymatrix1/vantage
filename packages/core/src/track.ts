@@ -317,3 +317,44 @@ export interface DiagnosticsResponse {
   lastPassAt: string | null;
   schemaVersion: number;
 }
+
+/**
+ * `https://host/owner/repo` from a normalised remote (`host/owner/repo`, optionally followed by
+ * `#<first commit>` as in `repoKey`). Null when it names no host and repo path, so a folder name or
+ * `no-remote` never becomes a link. Only characters a host and a repo path may hold pass.
+ */
+export function repoUrlOf(repo: string | null | undefined): string | null {
+  const path = (repo ?? "").split("#")[0] ?? "";
+  const m = /^([a-z0-9-]+(?:\.[a-z0-9-]+)+)\/([\w.-]+(?:\/[\w.-]+)+)$/i.exec(path);
+  return m ? `https://${m[1]}/${m[2]}` : null;
+}
+
+/** The project name a person reads: `owner/repo` for a remote, the folder name otherwise, null for none. */
+export function projectNameOf(repo: string | null | undefined): string | null {
+  const path = (repo ?? "").split("#")[0] ?? "";
+  if (path === "" || path === "no-remote") return null;
+  return repoUrlOf(path) ? path.slice(path.indexOf("/") + 1) : path;
+}
+
+/** One session of an item; a derived session names the session it continues. */
+export interface ItemSession {
+  id: string;
+  parentId: string | null;
+  firstAt: string;
+  lastAt: string;
+  events: number;
+}
+
+/** `GET /api/items/:id`: what the inline detail needs beyond the row and the trace. */
+export interface ItemDetailView {
+  id: string;
+  repo: string | null;
+  repoUrl: string | null;
+  branch: string | null;
+  /** Where the item's latest session ran; shown only in the expanded view. */
+  worktreePath: string | null;
+  lastCommitSha: string | null;
+  sessions: ItemSession[];
+  /** Edited files by base name, never full paths; `total` counts all of them. */
+  files: { names: string[]; total: number };
+}

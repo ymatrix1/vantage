@@ -1,6 +1,6 @@
 // Daemon API client (docs/specs/web-ui.md#api-daemon-to-ui). The token arrives in the URL fragment on
 // launch (D32), moves to sessionStorage and leaves the address bar; it is only ever sent as a header.
-import type { TraceResponse } from "@vantage/core/track";
+import type { ItemDetailView, TraceResponse } from "@vantage/core/track";
 import type { TrackView } from "./contract";
 
 const KEY = "vantage.token";
@@ -63,6 +63,14 @@ export async function fetchTrack(query = "", signal?: AbortSignal): Promise<Trac
 export async function fetchTrace(id: string, signal?: AbortSignal): Promise<TraceResponse> {
   const b = await get(`/api/items/${encodeURIComponent(id)}/trace`, signal);
   if (!isTrace(b)) throw new ApiError(502, "bad response");
+  return b;
+}
+
+const isDetail = (b: Record<string, unknown>): b is Record<string, unknown> & ItemDetailView =>
+  typeof b["id"] === "string" && Array.isArray(b["sessions"]) && isObject(b["files"]);
+export async function fetchItem(id: string, signal?: AbortSignal): Promise<ItemDetailView> {
+  const b = await get(`/api/items/${encodeURIComponent(id)}`, signal);
+  if (!isDetail(b)) throw new ApiError(502, "bad response");
   return b;
 }
 
