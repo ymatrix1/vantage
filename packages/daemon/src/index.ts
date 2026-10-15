@@ -55,3 +55,4 @@ export {
   vantageHomeDir,
 } from "./runtime.ts";
 export type { DaemonHandle, DaemonOptions, Health } from "./runtime.ts";
+export { editedPaths, classifyPaths, newScratchCache, type ScratchCache } from "./scratch.ts";
