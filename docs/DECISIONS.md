@@ -1220,3 +1220,41 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Why:** An in-repo script is about 200 lines, testable on synthetic commit lists, and adds no third-party action that holds `contents: write` and `pull-requests: write`. The release PR keeps a human merge as the release decision, which matches merge-commit PRs on `main`. Bundling through `bundledDependencies` needs no new build dependency and is verified by packing and installing the tarball. `vantage-a2v` is free on npm and keeps the `vantage` command. Trusted publishing removes the one long-lived secret; staging puts a human 2FA approval in front of every live version, which is the gate.
 - **Alternatives:** release-please in manifest mode (the standard tool and it supports pre-1.0 rules, but a large third-party action with write access, a manifest and config to maintain, and its changelog format is not ours to test). Tag-driven releases by hand (no release PR, so the changelog and version are edited by people). A bundler such as esbuild (one file, but a new exact-pinned dependency and a second build of the daemon). Publishing every workspace package (many names to own, and they are not a public API). An `NPM_TOKEN` environment secret (a long-lived write credential; kept only as an optional appendix in RELEASING.md). Direct `npm publish` from CI (no 2FA approval step). `vantage-cli` and `vantage` (taken on npm).
 - **Impact:** Adds `tools/release.mjs`, `tools/assemble-main-package.mjs`, `tools/smoke-install.mjs`, workflows `release.yml` and `release-pr.yml`, `RELEASING.md`, `CHANGELOG.md` and `vantage --version`. Narrows `release-native.yml` to build and package (no manual publish). The owner must confirm the names, create the 6 packages once by hand (a trusted publisher can only be added to an existing package), add the trusted publishers (exact file `release.yml`, environment `npm-publish`), create the `npm-publish` environment, set `NPM_PUBLISH_ENABLED` and choose a licence (`RELEASING.md`). A new trusted publisher must complete a publish within 2 days, and npm does not validate it on save. `npm stage publish` with a tarball and `--access public` is unverified until the first run. Accepting this amends the package names of D72 and D80. Revisit if the scope changes (one line in `tools/package-names.mjs`) or if the script outgrows its size.
+
+### D99. `vantage classify`: an opt-in Haiku classifier through the user's own Claude Code, suggestions only
+
+- **Status:** proposed
+- **Context:** The Track page showed hundreds of items with weak titles and no grouping, and there is no labelled data to tune rules. The user accepts sending a minimal summary through their own Claude Code because it already receives their data. D57 says the model writes text only; D68 says everything outside defaults to off; R13 measured `claude -p --json-schema` (Haiku schema-valid 20 of 20, median 52 s).
+- **Decision:**
+  1. `vantage classify` runs `claude -p --model haiku` with a JSON schema, no tools, no MCP, no settings, no saved session, an empty temp folder and a timeout, as a daemon job: 2 calls in flight, batches of about 20, a daily cap, results cached by content hash, items settled for 30 minutes, a failure or invalid output giving no suggestion.
+  2. Only these fields are sent: repo name, branch, the first sentence of the first request (300 characters, stripped), up to 10 file base names, counts and the current title, under opaque per-batch ids. Never commands, transcripts, paths or item keys.
+  3. Output is validated by Vantage. It suggests a title, a topic and kind, and same-work groupings with confidences; it never sets status, stage, proof or flags, and such fields are ignored.
+  4. Off by default: `engines.classify.enabled`, `data_policy.outside_calls` and `data_policy.allow.transcripts` must all be on.
+- **Why:** It fixes titles and grouping now, with the user's existing tool and limits, and keeps evidence the only source of status. Minimal fields and opaque ids keep the data sent small even though Claude Code already sees more.
+- **Alternatives:** Rules only (no labelled data to tune them). A direct API call (separate key and billing, and the user chose their own Claude Code). Sending transcripts or commands (more than the task needs). Letting the model set status (breaks D57).
+- **Impact:** New spec [classify](specs/classify.md), settings and operations rows, migration 10, `vantage classify` and its README section. Revisit if Haiku latency or limits make a run too slow, or if the agreement report shows the suggestions are mostly wrong.
+
+### D100. Bulk accept needs a preview token and is one batch with one undo; auto-accept is off by default
+
+- **Status:** proposed
+- **Context:** Hundreds of suggestions make one-by-one acceptance unusable, but a bulk accept of model text that nobody saw is exactly what the project exists to avoid.
+- **Decision:**
+  1. Every accept or dismiss, in bulk or for one row, is a batch. `preview` returns counts per kind, a sample and a token over the exact selection; `apply` requires that token and fails with 409 if the selection changed.
+  2. Filters: all, confidence threshold (CLI default 0.8), kind, repo.
+  3. A batch has one undo: titles return to what they replaced (unless changed since), groups lose their inferred links, dismissed rows become open. An undone suggestion is not offered again.
+  4. `auto_accept = "off" | "titles" | "all"` (default `off`) with `auto_min_confidence` (default 0.9) applies a batch at the end of a run, reports it and keeps it undoable. With it off nothing is applied silently.
+  5. An accepted title is shown with `title_source = classifier`, never over an issue, branch or worktree title.
+- **Why:** The token makes "preview first" a property of the API, not of one client. One batch and one undo let the user try bulk accept without risk.
+- **Alternatives:** A confirm dialog only in the UI (the CLI and API could skip it). Per-item undo only (a bulk accept would be hard to take back). Auto-accept on by default (applies unseen text).
+- **Impact:** `classify-store.ts`, `classify-api.ts`, the CLI and the page component; the agreement report (`vantage classify report`, `vantage stats`) measures accepted and dismissed against the deterministic anchors. Revisit the 0.8 and 0.9 defaults when that report has data.
+
+### D101. A `vantage classify` run is a session Vantage must not record; accepted groups are inferred links that never feed stages
+
+- **Status:** proposed
+- **Context:** `claude -p` is a Claude Code session, so Vantage's hooks and the transcript backfill would capture the classifier as a new item. Separately, an accepted grouping needs a representation that the work-item model already allows (`method = inferred`) without letting model output change status (D57).
+- **Decision:**
+  1. The child environment has `VANTAGE_SKIP=1`. The Node hook and the native hook exit 0 without writing when it is set (anything but empty or `0`). The child also loads no settings (`--setting-sources ""`), and ingestion drops transcripts and hook events located in a `vantage-classify-*` folder.
+  2. An accepted group adds `inferred` links from the other item's events to the older item. The stage machine, the Stop gate and the status line ignore `inferred` links, so no stage, proof or flag changes. The link pass keeps them and undo marks them undone.
+- **Why:** Three independent layers keep the classifier out of its own data; a hook change is small and testable in both implementations. Ignoring inferred links for evidence keeps D3 and D57 true while still grouping items on the page.
+- **Alternatives:** The settings exclusion alone (a user setting could change). A path allowlist only (misses a hook that still fires). Merging items on accept (irreversible and changes evidence).
+- **Impact:** `packages/hooks`, `packages/hooks-native` (shipped separately, so a release is needed), `ingest.ts`, `linking.ts`, `status-file.ts`, the gate query. `item_sessions` counts inferred links, so a grouped item shows the merged sessions. Revisit if the guard misses a case in real use.

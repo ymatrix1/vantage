@@ -1,6 +1,6 @@
 # Spec: Classify
 
-An opt-in job that asks the user's own Claude Code (`claude -p`, Haiku) to suggest titles, topics and groupings for work items. The model writes text only; status, stage, proof and flags stay evidence-only ([D57](../DECISIONS.md#d57-vantage-owns-status-and-tree-shape-the-model-writes-text-only)). Decisions: D98, D99, D100 (proposed).
+An opt-in job that asks the user's own Claude Code (`claude -p`, Haiku) to suggest titles, topics and groupings for work items. The model writes text only; status, stage, proof and flags stay evidence-only ([D57](../DECISIONS.md#d57-vantage-owns-status-and-tree-shape-the-model-writes-text-only)). Decisions: D99, D100, D101 (proposed).
 
 ## Why
 
