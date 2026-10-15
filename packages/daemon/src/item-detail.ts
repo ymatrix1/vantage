@@ -78,6 +78,10 @@ export function itemDetailView(store: Store, itemKey: string): ItemDetailView | 
   return {
     id: itemKey,
     repo,
+    repos: store.db
+      .prepare("SELECT repo FROM item_repos WHERE item_key = ? ORDER BY position, repo")
+      .all(itemKey)
+      .map((r) => String(r["repo"])),
     repoUrl: repoUrlOf(repo),
     branch: str(w["branch"]),
     worktreePath: itemCwd(store, itemKey),

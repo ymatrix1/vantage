@@ -1,7 +1,7 @@
 <script lang="ts">
   // L2: one work item. Title is the most human name we have; the subtitle is the branch and a short
   // time, never the worktree folder. The link icon sits beside the row button, not inside it.
-  import type { ItemDetailView, TraceResponse } from "@vantage/core/track";
+  import { projectNameOf, type ItemDetailView, type TraceResponse } from "@vantage/core/track";
   import type { TrackRow } from "./contract";
   import Detail from "./Detail.svelte";
   import Dots from "./Dots.svelte";
@@ -36,6 +36,8 @@
 
   const repoUrl = $derived(repoLink(item.repo));
   const branchUrl = $derived(branchLink(repoUrl, item.branch));
+  /** Every repo the item touched; a chip per repo only when there is more than one (D190). */
+  const repos = $derived(item.repos ?? (item.repo ? [item.repo] : []));
   const reasons = $derived(item.flags.map((f) => f.reason));
 </script>
 
@@ -51,6 +53,7 @@
         <span class="block truncate font-medium">{humanTitle(item)}</span>
         <span class="block truncate text-xs text-muted-foreground">
           {#if item.org}<span title="Organization">{item.org === "local" ? "Local" : item.org}</span>{" · "}{/if}{#if item.branch}<span>{item.branch}</span>{" · "}{/if}<span>{ago(item.lastActivity, now)}</span>
+          {#if repos.length > 1}{#each repos as r (r)}<span class="ml-1 rounded-full border border-border px-1.5" title={r}>{projectNameOf(r) ?? r}</span>{/each}{/if}
           {#if (item.sessionCount ?? 0) > 1}<span class="ml-1 rounded-full border border-border px-1.5">{item.sessionCount} sessions</span>{/if}
           <span class="md:hidden"> · {stageLabel(item)}</span>
         </span>

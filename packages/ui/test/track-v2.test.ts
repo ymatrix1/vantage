@@ -60,6 +60,7 @@ const summaryBody = (): TrackView =>
 const detail = (id: string, over: Partial<ItemDetailView> = {}): ItemDetailView => ({
   id,
   repo: WEB,
+  repos: [WEB],
   repoUrl: `https://${WEB}`,
   branch: "claude/retry-0a1b2c",
   worktreePath: "C:\\work\\brave-joliot-995ebc",
@@ -207,6 +208,33 @@ describe("L2 rows", () => {
     expect(row).toMatch(/docs\/agents-compact · \d+ (min|h|d) ago|docs\/agents-compact · just now/);
   });
 
+  it("shows a chip per repo when an item touches several, and lists them in the detail (D190)", async () => {
+    const m = item({
+      id: "m",
+      title: "Cross-repo change",
+      repo: "github.com/acme/web",
+      repos: ["github.com/acme/web", "github.com/acme/api"],
+      branch: "feat/both",
+    });
+    fakeApi({
+      track: () => ({
+        body: track([m], { groups: [group("repo:github.com/acme/web", "acme/web", [m])], facets }),
+      }),
+      detail: () => ({
+        body: detail("m", { repos: ["github.com/acme/web", "github.com/acme/api"] }),
+      }),
+    });
+    const root = renderApp();
+    await vi.waitFor(() => expect(rows(root)).toHaveLength(1));
+    const chips = [...(rows(root)[0]?.querySelectorAll("span[title^='github.com/']") ?? [])].map(
+      (c) => c.textContent,
+    );
+    expect(chips).toEqual(["acme/web", "acme/api"]);
+    click(rows(root)[0]);
+    await vi.waitFor(() => expect(root.textContent).toContain("Repos:"));
+    expect(root.querySelectorAll("[aria-label='Details'] a[title^='github.com/']")).toHaveLength(2);
+  });
+
   it("shows the organization before the branch, 'Local' for a repo with no remote, and offers an Organization filter (D130)", async () => {
     const a = item({ id: "a", repo: "github.com/Flip-to/app", org: "Flip-to", branch: "feat/a" });
     const b = item({ id: "b", repo: "scratch", org: "local", branch: "feat/b" });
@@ -302,6 +330,7 @@ describe("L3 inline detail", () => {
     const panel = root.querySelector("[aria-label='Details']");
     const hrefs = [...(panel?.querySelectorAll("a") ?? [])].map((a) => a.getAttribute("href"));
     expect(hrefs).toEqual([
+      "https://github.com/acme/web", // the repo chip
       "https://github.com/acme/web/tree/claude/retry-0a1b2c",
       "https://github.com/acme/web/commit/deadbeef1234",
     ]);
