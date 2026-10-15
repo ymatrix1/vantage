@@ -82,7 +82,8 @@ export function linkStoredEvents(
   const result = linkEvents(events, { ...opts, undone: undoneKeys(store, ids) });
   const at = now.toISOString();
   store.transaction(() => {
-    store.db.exec("DELETE FROM links WHERE undone_at IS NULL");
+    // Inferred links (accepted classifier groups) are the user's decision, not the linker's: they stay.
+    store.db.exec("DELETE FROM links WHERE undone_at IS NULL AND method != 'inferred'");
     const ins = store.db.prepare(
       `INSERT OR IGNORE INTO links (event_id, item_key, method, anchor_kind, anchor_value, rule, confidence, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,

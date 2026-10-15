@@ -126,6 +126,15 @@ The transcript backfill also reads the head of each session file (the first 256 
 
 An edit whose paths are all scratch (a log, temp output, a cache folder, or a file git ignores in its repo and does not track) is kept as an event and linked to its item, but the stage machine does not count it as a code or documentation edit ([D140](../DECISIONS.md), proposed): it does not move the stage, expire proof, or raise `unproven_claim` or `thrashing`. The item state records `scratchEdits` and the scratch base names. The stage pass asks git (`rev-parse`, `check-ignore`, read-only, batched, cached for 5 minutes, bounded) for absolute edited paths; with no git, a path outside a repo, a relative path or any failure only the name rules apply, and an unclassified edit keeps counting as code. An untracked file git does not ignore counts as code.
 
+### Sessions Vantage starts
+
+`vantage classify` runs `claude -p`, which is a Claude Code session. Hooks and the transcript backfill would record it, so ingestion drops everything that ran inside `$VANTAGE_HOME/work/` (D112):
+
+- Every classifier call works in its own folder under `$VANTAGE_HOME/work/classify/`, removed afterwards.
+- **Rule:** a spool event whose `cwd` is inside `work/`, and every other event of the same session, is dropped. A transcript file whose own lines carry a `cwd` inside `work/` is skipped whole: no events, no lineage, no request title, no branch note. This covers sub-agents and any Claude Code version, and ordinary history in the same pass is unaffected.
+- The call passes `--no-session-persistence`, so no transcript should be written at all; the rule is the backstop.
+- The child has `VANTAGE_SKIP=1`; the Node and native hooks exit 0 on it before reading stdin (anything but empty or `0`). A cheap early exit, not the guard.
+
 ### Test run counts
 
 For a shell command the daemon also reads the tool output the hook spooled (`tool_response`, or a transcript `tool_result`) and, when it recognises a runner's own summary, adds `command.ran.result: {run, passed, failed, skipped}` (`run` = passed + failed + skipped; errors count as failed). Recognised: vitest, jest, pytest, `go test` (`-v` per-test lines, or every package reporting no tests), `dotnet test`. Only numbers are kept, never output text. Unrecognised output leaves `result` absent, which the stage machine reads as "unknown", not zero. `go test` without `-v` prints no counts, so a plain `ok` package is unrecognised.

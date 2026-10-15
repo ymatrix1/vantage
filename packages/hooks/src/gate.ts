@@ -124,7 +124,7 @@ export async function decideGate(stdin: string, dbPath: string, mode: GateMode):
     const statuses = db
       .prepare(
         `SELECT DISTINCT w.proof_status AS proof_status FROM events e
-           JOIN links l ON l.event_id = e.id AND l.undone_at IS NULL
+           JOIN links l ON l.event_id = e.id AND l.undone_at IS NULL AND l.method != 'inferred'
            JOIN work_items w ON w.item_key = l.item_key
           WHERE e.session_id = ? AND w.stage != 'asked' AND w.docs_only = 0`,
       )

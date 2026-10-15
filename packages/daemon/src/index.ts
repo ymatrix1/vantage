@@ -42,6 +42,12 @@ export { DEFAULT_QUERY, diagnosticsView, traceView, trackView } from "./api.ts";
 export { BIND_HOST, startHttp } from "./http.ts";
 export type { HttpHandle, HttpOptions } from "./http.ts";
 export * from "./live.ts";
+export * from "./classify-config.ts";
+export * from "./classify-store.ts";
+export * from "./classify-job.ts";
+export * from "./classify-report.ts";
+export { classifyRoute, parseFilter, statusView as classifyStatusView } from "./classify-api.ts";
+export type { ClassifyApi, RouteResult } from "./classify-api.ts";
 export { loadOrCreateToken, tokenMatches } from "./token.ts";
 export {
   AlreadyRunningError,

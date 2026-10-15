@@ -32,6 +32,7 @@ One row per job. Each row shows the current engine, what leaves the machine for 
 | **Judgment** (fuzzy yes or no questions) | `rules`, then optionally a small LLM or a decision model | `rules` | Open: Q4, compared in `vantage-ibuz` (R10) |
 | **Explain, layers 1 to 3** | None extra: evidence, byproduct capture, in-session command | On | [Explain](explain.md#engine-four-layers) |
 | **Explain, layer 4 (headless)** | `claude`, `codex`, in a user-chosen order | **Off** | [Explain](explain.md#engine-four-layers), [D46](../DECISIONS.md#d46-explain-runs-in-layers-headless-is-opt-in) |
+| **Classify** (titles, topics, groupings) | `claude -p` with Haiku, through the user's own Claude Code | **Off** | [Classify](classify.md), D110 |
 | **Embeddings** | Not offered until Q25 is answered | n/a | Open: Q25 |
 
 Rules:
@@ -68,6 +69,26 @@ The master switch comes first, then one switch per kind of content. A kind is on
 | `engines.judge.daily_calls` | Maximum judgment calls a day, when an engine is set | `200` |
 
 Usage against each budget shows on the Diagnostics tab (see [web UI](web-ui.md#api-daemon-to-ui)). Hitting a budget is not an error: the job falls back and the tab shows why.
+
+## Classify
+
+`vantage classify` ([spec](classify.md)) is an engine row of its own. It needs three switches, all off by default, and says which one is missing when blocked:
+
+| Key | Meaning | Default |
+|---|---|---|
+| `engines.classify.enabled` | Allow the job | `false` |
+| `data_policy.outside_calls` | The master switch above | `off` |
+| `data_policy.allow.transcripts` | The first request of a session is a prompt | `off` |
+| `engines.classify.model` | Alias or id passed to `claude --model` | `haiku` |
+| `engines.classify.batch_size` | Items per call, 1 to 50 | `20` |
+| `engines.classify.daily_calls` | Calls a day; 0 blocks | `50` |
+| `engines.classify.timeout_seconds` | Per call, 5 to 600 | `120` |
+| `engines.classify.settle_minutes` | Quiet time before an item is classified | `30` |
+| `engines.classify.auto_accept` | `off`, `titles` or `all` | `off` |
+| `engines.classify.auto_min_confidence` | Minimum confidence for auto-accept | `0.9` |
+| `engines.classify.command` | The Claude Code executable | `claude` |
+
+Claude Code already receives the user's data, so this sends nothing to a new party; the switches stay so the choice is explicit. What is sent is fixed by the spec (no commands, no paths, no transcripts beyond one stripped sentence). The settings are read from `config.toml` at the start of each run.
 
 ## Checks and states
 

@@ -1263,6 +1263,44 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** Name rules only (misses ignored build output and generated files). Asking git at ingest and storing a flag on the event (events are immutable and already ingested ones would stay misclassified). Treating every untracked file as scratch (hides new source files, the commonest real edit). Deleting scratch events (loses evidence).
 - **Impact:** `packages/core/src/scratch.ts`, `StageOptions.scratchPaths` and `repoRelative`, `ItemState.scratchEdits` and `scratchFiles`; `packages/daemon/src/scratch.ts` and the stage pass. Updates [ingestion](specs/ingestion.md#scratch-files) and [proof](specs/proof.md). D71 is applied differently, not edited. A file the user wants counted but git ignores is not counted; revisit if that bites. A repo with a huge ignore list costs more per batch; the 5 s timeout bounds it.
 
+### D110. `vantage classify`: an opt-in Haiku classifier through the user's own Claude Code, suggestions only
+
+- **Status:** proposed
+- **Context:** The Track page showed hundreds of items with weak titles and no grouping, and there is no labelled data to tune rules. The user accepts sending a minimal summary through their own Claude Code because it already receives their data. D57 says the model writes text only; D68 says everything outside defaults to off; R13 measured `claude -p --json-schema` (Haiku schema-valid 20 of 20, median 52 s).
+- **Decision:**
+  1. `vantage classify` runs `claude -p --model haiku` with a JSON schema, no tools, no MCP, no settings, no saved session, an empty temp folder and a timeout, as a daemon job: 2 calls in flight, batches of about 20, a daily cap, results cached by content hash, items settled for 30 minutes, a failure or invalid output giving no suggestion.
+  2. Only these fields are sent: repo name, branch, the first sentence of the first request (300 characters, stripped), up to 10 file base names, counts and the current title, under opaque per-batch ids. Never commands, transcripts, paths or item keys.
+  3. Output is validated by Vantage. It suggests a title, a topic and kind, and same-work groupings with confidences; it never sets status, stage, proof or flags, and such fields are ignored.
+  4. Off by default: `engines.classify.enabled`, `data_policy.outside_calls` and `data_policy.allow.transcripts` must all be on.
+- **Why:** It fixes titles and grouping now, with the user's existing tool and limits, and keeps evidence the only source of status. Minimal fields and opaque ids keep the data sent small even though Claude Code already sees more.
+- **Alternatives:** Rules only (no labelled data to tune them). A direct API call (separate key and billing, and the user chose their own Claude Code). Sending transcripts or commands (more than the task needs). Letting the model set status (breaks D57).
+- **Impact:** New spec [classify](specs/classify.md), settings and operations rows, migration 10, `vantage classify` and its README section. Revisit if Haiku latency or limits make a run too slow, or if the agreement report shows the suggestions are mostly wrong.
+
+### D111. Bulk accept needs a preview token and is one batch with one undo; auto-accept is off by default
+
+- **Status:** proposed
+- **Context:** Hundreds of suggestions make one-by-one acceptance unusable, but a bulk accept of model text that nobody saw is exactly what the project exists to avoid.
+- **Decision:**
+  1. Every accept or dismiss, in bulk or for one row, is a batch. `preview` returns counts per kind, a sample and a token over the exact selection; `apply` requires that token and fails with 409 if the selection changed.
+  2. Filters: all, confidence threshold (CLI default 0.8), kind, repo.
+  3. A batch has one undo: titles return to what they replaced (unless changed since), groups lose their inferred links, dismissed rows become open. An undone suggestion is not offered again.
+  4. `auto_accept = "off" | "titles" | "all"` (default `off`) with `auto_min_confidence` (default 0.9) applies a batch at the end of a run, reports it and keeps it undoable. With it off nothing is applied silently.
+  5. An accepted title is shown with `title_source = classifier`, never over an issue, branch or worktree title.
+- **Why:** The token makes "preview first" a property of the API, not of one client. One batch and one undo let the user try bulk accept without risk.
+- **Alternatives:** A confirm dialog only in the UI (the CLI and API could skip it). Per-item undo only (a bulk accept would be hard to take back). Auto-accept on by default (applies unseen text).
+- **Impact:** `classify-store.ts`, `classify-api.ts`, the CLI and the page component; the agreement report (`vantage classify report`, `vantage stats`) measures accepted and dismissed against the deterministic anchors. Revisit the 0.8 and 0.9 defaults when that report has data.
+
+### D112. A `vantage classify` run is a session Vantage must not record; accepted groups are inferred links that never feed stages
+
+- **Status:** proposed
+- **Context:** `claude -p` is a Claude Code session, so Vantage's hooks and the transcript backfill would capture the classifier as a new item. Separately, an accepted grouping needs a representation that the work-item model already allows (`method = inferred`) without letting model output change status (D57).
+- **Decision:**
+  1. Every call runs in a folder under `$VANTAGE_HOME/work/classify/`, and ingestion drops any event, transcript or session whose `cwd` is inside `$VANTAGE_HOME/work/` (the transcript backfill would otherwise import the session, which `VANTAGE_SKIP` cannot stop). The call passes `--no-session-persistence` and `--setting-sources ""`. The child has `VANTAGE_SKIP=1`; the Node and native hooks exit 0 on it, as a cheap early exit.
+  2. An accepted group adds `inferred` links from the other item's events to the older item. The stage machine, the Stop gate and the status line ignore `inferred` links, so no stage, proof or flag changes. The link pass keeps them and undo marks them undone.
+- **Why:** Three independent layers keep the classifier out of its own data; a hook change is small and testable in both implementations. Ignoring inferred links for evidence keeps D3 and D57 true while still grouping items on the page.
+- **Alternatives:** `VANTAGE_SKIP` alone (stops the spool, not the transcript). The settings exclusion alone (a user setting could change). A path marker in a temp folder (depends on the temp location). Merging items on accept (irreversible and changes evidence).
+- **Impact:** `packages/hooks`, `packages/hooks-native` (shipped separately, so a release is needed), `ingest.ts`, `linking.ts`, `status-file.ts`, the gate query. `item_sessions` counts inferred links, so a grouped item shows the merged sessions. Revisit if the guard misses a case in real use.
+
 ### D120. Plain-language on-ramp: a guide, a glossary, term links and a pt-BR pair, with a docs check
 
 - **Status:** proposed

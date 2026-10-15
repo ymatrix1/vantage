@@ -1,9 +1,11 @@
 // Spool ingestion and transcript backfill (docs/specs/ingestion.md). Both resume from a byte offset
 // stored in `cursors`, and both write through the unique (source, source_id) key, so replays are safe.
 import { readdirSync, statSync } from "node:fs";
-import { basename, join, relative, sep } from "node:path";
+import { basename, dirname, join, relative, sep } from "node:path";
 import {
+  WORK_DIR_NAME,
   hookEvents,
+  isInsideDir,
   parseSpoolRecord,
   parseTranscriptLine,
   transcriptEvents,
@@ -12,6 +14,7 @@ import {
 import type { IngestContext, TranscriptLine, VantageEvent } from "@vantage/core";
 import type { Store } from "./store.ts";
 import { tailLines } from "./tail.ts";
+import { headLines } from "./titles.ts";
 import { captureRequestTitle } from "./titles.ts";
 
 export interface IngestResult {
@@ -73,6 +76,7 @@ export function backfillEventBranches(
   projectsDir: string,
   now: Date = new Date(),
   days: number = BACKFILL_DAYS,
+  workDir?: string,
 ): { files: number; branches: number } {
   const done = { files: 0, branches: 0 };
   if (store.getCursorText(BRANCH_BACKFILL) !== null) return done;
@@ -80,6 +84,7 @@ export function backfillEventBranches(
   const before = store.countEventBranches();
   for (const path of jsonlFiles(projectsDir)) {
     if (statSync(path).mtimeMs < cutoff) continue;
+    if (workDir && transcriptInWorkDir(path, workDir)) continue;
     const parsed: TranscriptLine[] = [];
     for (const l of tailLines(path, 0).lines) {
       const p = parseTranscriptLine(l);
@@ -111,7 +116,39 @@ function* jsonlFiles(dir: string): Generator<string> {
   }
 }
 
-export function ingestSpool(store: Store, spoolDir: string, now: Date = new Date()): IngestResult {
+/** Where sessions Vantage starts itself work (`vantage classify`): their events are never ours to record. */
+export const workDirOf = (home: string): string => join(home, WORK_DIR_NAME);
+
+const startedByUs = new Map<string, boolean>();
+
+/** True when a transcript's own lines say its session ran inside `workDir`. Read once per file. */
+function transcriptInWorkDir(path: string, workDir: string): boolean {
+  const known = startedByUs.get(path);
+  if (known !== undefined) return known;
+  let inside = false;
+  try {
+    for (const line of headLines(path, 64 * 1024)) {
+      const p = parseTranscriptLine(line);
+      if (p?.cwd) {
+        inside = isInsideDir(p.cwd, workDir);
+        break;
+      }
+    }
+  } catch {
+    // unreadable: treat as ours to ingest; a later pass reads it again
+    return false;
+  }
+  startedByUs.set(path, inside);
+  return inside;
+}
+
+export function ingestSpool(
+  store: Store,
+  spoolDir: string,
+  now: Date = new Date(),
+  /** Defaults to `<home>/work`, where the spool is `<home>/spool`. */
+  workDir: string = workDirOf(dirname(spoolDir)),
+): IngestResult {
   const stamp = now.toISOString();
   const result: IngestResult = { files: 0, inserted: 0 };
   const ctx: IngestContext = { repoRoots: knownRepoRoots(store), taskText: store.captureTaskText };
@@ -119,9 +156,22 @@ export function ingestSpool(store: Store, spoolDir: string, now: Date = new Date
     const key = `spool:${relative(spoolDir, path)}`;
     const { lines, nextOffset } = tailLines(path, store.getCursor(key));
     if (nextOffset === store.getCursor(key) && lines.length === 0) continue;
-    const events = lines.flatMap((l) => {
+    const all = lines.flatMap((l) => {
       const rec = parseSpoolRecord(l);
       return rec ? hookEvents(rec, ctx) : [];
+    });
+    // A session that ran inside the work folder is one we started: drop all of its events, even ones without a cwd.
+    const ours = new Set(
+      all.flatMap((e) => {
+        const cwd = e.payload["cwd"];
+        return typeof cwd === "string" && e.sessionId && isInsideDir(cwd, workDir) ? [e.sessionId] : [];
+      }),
+    );
+    const events = all.filter((e) => {
+      const cwd = e.payload["cwd"];
+      return (
+        !(e.sessionId && ours.has(e.sessionId)) && !(typeof cwd === "string" && isInsideDir(cwd, workDir))
+      );
     });
     result.files++;
     result.inserted += commit(store, key, nextOffset, events, stamp);
@@ -139,14 +189,17 @@ export function backfillTranscripts(
   days: number = BACKFILL_DAYS,
   /** Capture first-request titles (default on; `item_titles_from_requests` in config.toml, D95). */
   requestTitles = true,
+  /** Transcripts of sessions that ran inside this folder are skipped whole (`<home>/work`). */
+  workDir?: string,
 ): IngestResult {
   const stamp = now.toISOString();
   const cutoff = now.getTime() - days * 86_400_000;
   const result: IngestResult = { files: 0, inserted: 0 };
   const ctx: IngestContext = { repoRoots: knownRepoRoots(store), taskText: store.captureTaskText };
-  backfillEventBranches(store, projectsDir, now, days);
+  backfillEventBranches(store, projectsDir, now, days, workDir);
   for (const path of jsonlFiles(projectsDir)) {
     if (statSync(path).mtimeMs < cutoff) continue;
+    if (workDir && transcriptInWorkDir(path, workDir)) continue;
     const key = `transcript:${relative(projectsDir, path)}`;
     const before = store.getCursor(key);
     // A session file is named by its session id. Sub-agent files (`subagents/`) carry the parent's id
