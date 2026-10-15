@@ -27,7 +27,8 @@
     "30d": { label: "Last 30 days", days: 30 },
     all: { label: "All time", days: null },
   };
-  const FLAGGED = ["thrashing", "unproven_claim", "forgotten"];
+  // "Need you" counts only these two (D94: forgotten has its own low-urgency group).
+  const FLAGGED = ["thrashing", "unproven_claim"];
 
   const day = (d: Date): string => `${MONTHS[d.getMonth()] ?? ""} ${d.getDate()}`;
   const range = $derived(RANGE[view.since] ?? { label: "Last 7 days", days: 7 });
@@ -39,7 +40,7 @@
 <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1 py-2 text-sm" role="group" aria-label="Summary">
   <strong class="font-semibold">{range.label}:</strong>
   {#if summary}
-    <button type="button" class={link} onclick={() => onchange({ flag: ["none"], page: 1 })}>{summary.inProgress} in progress</button>,
+    <button type="button" class={link} title="Items with no open flag" onclick={() => onchange({ flag: ["none"], page: 1 })}>{summary.inProgress} in progress</button>,
     <button type="button" class={link} onclick={() => onchange({ flag: FLAGGED, page: 1 })}>{summary.needsYou} need you</button>
     {#if detail}<span class="text-muted-foreground">({detail})</span>{/if},
     <button type="button" class={link} onclick={() => onchange({ since: "all", page: 1 })}>{summary.older} older</button>

@@ -84,14 +84,19 @@ const detail = (id: string, over: Partial<ItemDetailView> = {}): ItemDetailView 
   ...over,
 });
 
-async function ready(opts: { detail?: (id: string) => { status?: number; body?: unknown } } = {}) {
+async function ready(
+  opts: {
+    detail?: (id: string) => { status?: number; body?: unknown };
+    trace?: (id: string) => { status?: number; body?: unknown };
+  } = {},
+) {
   const api = fakeApi({
     track: (u) => ({
       body: /[?&]pageSize=1(&|$)/.test(u)
         ? summaryBody()
         : track([], { groups, facets, page: { page: 1, pageSize: 25, total: 60, pages: 3 } }),
     }),
-    trace: (id) => ({ body: traceOf(id) }),
+    trace: opts.trace ?? ((id) => ({ body: traceOf(id) })),
     detail: opts.detail ?? ((id) => ({ body: detail(id) })),
   });
   const root = renderApp();
@@ -131,7 +136,7 @@ describe("L0 header", () => {
     click(buttonText(root, "98 in progress"));
     await vi.waitFor(() => expect(last().get("flag")).toBe("none"));
     click(buttonText(root, "20 need you"));
-    await vi.waitFor(() => expect(last().get("flag")).toBe("thrashing,unproven_claim,forgotten"));
+    await vi.waitFor(() => expect(last().get("flag")).toBe("thrashing,unproven_claim"));
     click(buttonText(root, "37 older"));
     await vi.waitFor(() => expect(last().get("since")).toBe("all"));
   });
@@ -298,6 +303,15 @@ describe("L3 inline detail", () => {
       expect(root.textContent).toContain("Sessions and files are not available right now."),
     );
     await vi.waitFor(() => expect(root.textContent).toContain("Stage history"));
+  });
+
+  it("a failed trace marks only that row, never the whole page", async () => {
+    const { root } = await ready({ trace: () => ({ status: 404 }) });
+    click(rows(root)[0]);
+    await vi.waitFor(() => expect(root.textContent).toContain("History is not available right now."));
+    expect(root.querySelector("[role='alert']")).toBeNull();
+    expect(root.querySelector("[aria-label='Summary']")?.textContent).not.toContain("Offline");
+    expect(root.textContent).toContain("Sessions · 2");
   });
 
   it("offers no cd button for a path that needs shell escaping", async () => {

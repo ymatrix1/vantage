@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { VantageEvent } from "@vantage/core";
-import { Store, itemDetailView, listItems, repoKeyForCwd, runStagePass } from "../src/index.ts";
+import { Store, itemDetailView, listItems, runStagePass } from "../src/index.ts";
 
 let dir = "";
 let store: Store;
@@ -67,40 +67,6 @@ function seed(): void {
     payload: { branch: "feat/ftk-1-demo", parentSessionId: "s1" },
   });
 }
-
-describe("project of an item", () => {
-  it("is the git remote, not the worktree folder the session ran in", () => {
-    seed();
-    runStagePass(store, {}, NOW);
-    const items = listItems(store);
-    expect(items.length).toBeGreaterThan(0);
-    for (const i of items) {
-      expect(i.repo).toBe("github.com/acme/web");
-      expect(JSON.stringify(i)).not.toContain("brave-joliot");
-    }
-  });
-
-  it("falls back to what the events said when no worktree matches", () => {
-    put({
-      sessionId: "s9",
-      kind: "file.edited",
-      timestamp: "2026-01-05T09:10:00Z",
-      payload: { branch: "feat/ftk-2-x", cwd: "/elsewhere/proj", path: "/elsewhere/proj/a.ts" },
-    });
-    runStagePass(store, {}, NOW);
-    expect(listItems(store).map((i) => i.repo)).toEqual(["proj"]);
-  });
-
-  it("matches the longest worktree path, case and slash style aside", () => {
-    const index = new Map([
-      ["c:/work", "k/one#1"],
-      ["c:/work/brave", "k/two#2"],
-    ]);
-    expect(repoKeyForCwd("C:\\Work\\Brave\\pkg", index)).toBe("k/two#2");
-    expect(repoKeyForCwd("C:\\work\\bravo", index)).toBe("k/one#1");
-    expect(repoKeyForCwd("D:\\other", index)).toBeNull();
-  });
-});
 
 describe("item detail", () => {
   it("lists sessions with their parent, edited file base names, worktree and last commit", () => {

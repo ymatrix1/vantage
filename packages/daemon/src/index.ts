@@ -17,8 +17,15 @@ export * from "./git-scanner.ts";
 export * from "./git-loop.ts";
 export { linkStoredEvents, linksForItem, undoLink } from "./linking.ts";
 export type { StoredLink } from "./linking.ts";
-export { itemSessionCounts } from "./lineage.ts";
-export type { ItemSessionCounts } from "./lineage.ts";
+export { itemSessionCounts, itemTasks } from "./lineage.ts";
+export type { ItemSessionCounts, ItemTasks } from "./lineage.ts";
+export {
+  captureRequestTitle,
+  clearRequestTitles,
+  listRequestTitles,
+  requestTitleMap,
+  type StoredRequestTitle,
+} from "./titles.ts";
 export { dismissFlag, getItem, listItems, runStagePass } from "./stages.ts";
 export type {
   ItemDetail,
@@ -41,6 +48,7 @@ export {
   DEFAULT_PORT,
   HEALTH_FILE,
   readFlagWindowHours,
+  readRequestTitlesEnabled,
   readHealth,
   readRepos,
   startDaemon,
@@ -48,4 +56,4 @@ export {
 } from "./runtime.ts";
 export type { DaemonHandle, DaemonOptions, Health } from "./runtime.ts";
 export { itemDetailView } from "./item-detail.ts";
-export { remotePathOfKey, repoKeyForCwd, resolveRepo, worktreeRepos } from "./projects.ts";
+export { GIT_QUESTIONS_PER_PASS, gitRepoOfCwd, remotePathOfKey, repoForCwd, repoValue } from "./projects.ts";

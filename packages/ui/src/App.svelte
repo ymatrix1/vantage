@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import type { ItemDetailView, TraceResponse } from "@vantage/core/track";
   import { describeError, fetchItem, fetchTrace, fetchTrack } from "$lib/api";
-  import { COLLAPSED_BY_DEFAULT, GROUP_VALUES, type GroupBy, type TrackRow, type TrackView } from "$lib/contract";
+  import { COLLAPSED_BY_DEFAULT, type GroupBy, type TrackRow, type TrackView } from "$lib/contract";
   import { foldGroups } from "$lib/fold";
   import Header from "$lib/Header.svelte";
   import Legend from "$lib/Legend.svelte";
@@ -69,6 +69,7 @@
   let traces = $state<Record<string, TraceResponse>>({});
   let details = $state<Record<string, ItemDetailView>>({});
   let detailFailed = $state<Record<string, boolean>>({});
+  let traceFailed = $state<Record<string, boolean>>({});
   let showKeys = $state(false);
   let showLegend = $state(false);
   // True while the socket is open: pushes replace polling (D81).
@@ -165,9 +166,11 @@
   async function expand(id: string): Promise<void> {
     open[id] = true;
     delete detailFailed[id];
+    delete traceFailed[id];
     const [t, d] = await Promise.allSettled([fetchTrace(id), fetchItem(id)]);
     if (t.status === "fulfilled") traces[id] = t.value;
-    else error = describeError(t.reason);
+    // One row's trace failing (a 404 for an item a pass removed) must not turn the whole page offline.
+    else traceFailed[id] = true;
     if (d.status === "fulfilled") details[id] = d.value;
     else detailFailed[id] = true;
   }
@@ -202,7 +205,7 @@
     if (n >= 1 && n <= data.page.pages) go({ page: n });
   }
 
-  const KEY_GROUP: Record<string, GroupBy> = { "1": GROUP_VALUES[0], "2": GROUP_VALUES[1], "3": GROUP_VALUES[2], "4": GROUP_VALUES[3] };
+  const KEY_GROUP: Record<string, GroupBy> = { "1": "attention", "2": "repo", "3": "stage", "4": "none" };
 
   function onKey(e: KeyboardEvent): void {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -387,6 +390,7 @@
                     trace={traces[item.id] ?? null}
                     detail={details[item.id] ?? null}
                     detailFailed={detailFailed[item.id] === true}
+                    traceFailed={traceFailed[item.id] === true}
                     onselect={() => {
                       selected = item.id;
                       toggle(item.id);

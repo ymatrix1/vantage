@@ -9,7 +9,7 @@
 5. **Calm by default.** Top 3, not top 30. Interrupt only for red. Batch the rest. Say "safe to ignore" out loud.
 6. **Honest dots.** A skipped or unconfigured stage is a gray dash, never green.
 7. **Visual first.** Shape, color, size and position carry state; 2–4 word titles carry identity; about 30 words per screen. Defined in the [visual language spec](specs/visual-language.md).
-8. **Attention first, project second.** Default grouping is by what needs you, across all projects. Grouping by project is one click away.
+8. **Attention first on Focus, project first on Track.** Focus shows what needs you across all projects. Track groups by project by default; attention grouping is one click away.
 
 ## Organization: context, project, work item
 
@@ -50,7 +50,7 @@ Focus is drawn as the **landscape**: work items as dot characters, with needs-yo
 
 The main "all work" view. A table, not a board, because it stays readable with many items and keeps priority visible.
 
-- **Layout, top to bottom** (proposed D95, [web UI spec](specs/web-ui.md#track-layout)): a one-line header with counts that filter ("Last 7 days: 98 in progress, 20 need you, 37 older"), then projects, then one row per item, then the detail inline under a row. The summary line and the toolbar stay in view while scrolling; the pager is above and below the list.
+- **Layout, top to bottom** (proposed D100, [web UI spec](specs/web-ui.md#track-layout)): a one-line header with counts that filter ("Last 7 days: 98 in progress, 20 need you, 37 older"), then projects, then one row per item, then the detail inline under a row. The summary line and the toolbar stay in view while scrolling; the pager is above and below the list.
 - **Row:** title (ticket title or key, else the branch without agent prefixes, never a worktree folder), subtitle (branch and a short time), six-dot track (Asked, Built, Proven, Reviewed, Shipped, Verified) with a stage label, the flag reason in words, a session-count chip and a branch link.
 - **Inline detail:** sessions (derived ones nested), files touched, branch, last commit, stage history, proofs and actions (open branch, copy branch name, copy the `cd` command).
 - **Dot states:** filled green = done, blue ring = current, amber = at risk (for example unproven), red = needs you, a short dash = skipped or not configured.

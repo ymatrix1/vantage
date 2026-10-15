@@ -37,6 +37,7 @@ Team features are out of scope for now. The design should not prevent them later
 | P10 | **Text overload** | Reconstructing state means reading long transcripts and diffs. |
 | P11 | **Stress from constant change** | Many small updates, none batched, none marked safe to ignore. |
 | P12 | **Merged is not working** | Code ships but nobody checks it works in production; regressions surface days later. |
+| P13 | **Archived while unfinished** | A conversation is archived or closed (for example when its PR merges, or after inactivity) while follow-up work is still open: pending tasks, unproven edits, an open flag. The context is lost and the next step is forgotten. |
 
 ## 4. Goals
 
@@ -97,6 +98,7 @@ See [lifecycle spec](specs/lifecycle.md). Summary:
 | P10 | Visual language and landscape home ([visual language](specs/visual-language.md)); Explain with SCR and expandable issue trees ([Explain](specs/explain.md)) |
 | P11 | Top 3 focus, batched digest, "safe to ignore" count, evening landing, calm gamification without loss mechanics |
 | P12 | Verified stage; `shipped_unverified` and `regression` flags; follow-up cards |
+| P13 | `left_unfinished` flag from open tasks, unproven edits and open flags on a stopped or archived session; Resume with context; advice to turn off auto-archive on PR close |
 
 ## 8. Success metrics
 

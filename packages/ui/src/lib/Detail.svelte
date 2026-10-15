@@ -13,6 +13,7 @@
     trace,
     detail,
     detailFailed,
+    traceFailed,
     now,
     repoUrl,
   }: {
@@ -20,6 +21,7 @@
     trace: TraceResponse | null;
     detail: ItemDetailView | null;
     detailFailed: boolean;
+    traceFailed: boolean;
     now: Date;
     repoUrl: string | null;
   } = $props();
@@ -109,7 +111,7 @@
     <p class="text-muted-foreground">Loading…</p>
   {/if}
 
-  {#if trace}<Trace {trace} embedded />{:else}<p class="text-muted-foreground">Loading…</p>{/if}
+  {#if trace}<Trace {trace} embedded />{:else if traceFailed}<p class="text-muted-foreground">History is not available right now.</p>{:else}<p class="text-muted-foreground">Loading…</p>{/if}
 
   <section aria-label="Actions" class="flex flex-wrap items-center gap-2">
     {#if branchUrl}

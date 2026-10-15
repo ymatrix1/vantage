@@ -19,6 +19,7 @@
     trace,
     detail,
     detailFailed,
+    traceFailed,
     onselect,
   }: {
     item: TrackRow;
@@ -29,6 +30,7 @@
     trace: TraceResponse | null;
     detail: ItemDetailView | null;
     detailFailed: boolean;
+    traceFailed: boolean;
     onselect: () => void;
   } = $props();
 
@@ -77,6 +79,6 @@
     <!-- Slots for later sources: a PR link (GitHub source) and a ticket link (tracker, D90). -->
   </div>
   {#if isOpen}
-    <Detail {item} {trace} {detail} {detailFailed} {now} {repoUrl} />
+    <Detail {item} {trace} {detail} {detailFailed} {traceFailed} {now} {repoUrl} />
   {/if}
 </li>

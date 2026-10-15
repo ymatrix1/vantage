@@ -5,7 +5,7 @@ Checks:
 2. Every decision and proposal in docs/DECISIONS.md has the five required fields (D30), a valid status
    and owner, and an accepted decision is never edited or removed relative to the base branch (D69).
 3. The SQLite migration files are numbered without gaps or duplicates, named NNNN-slug.sql, and a migration
-   on the base branch is never edited, renamed or removed (D93).
+   on the base branch is never edited, renamed or removed (D98).
 4. No secrets or personal identifiers slipped into tracked text files (privacy boundary).
 
 Exits non-zero with a list of problems. Standard library only.
@@ -22,6 +22,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import decisions_check  # noqa: E402
 import migrations_check  # noqa: E402
 import plugin_check  # noqa: E402
+import releasing_check  # noqa: E402
 LINK = re.compile(r"\]\(([^)\s]+)\)")
 PRIVACY = [
     (re.compile(r"\bgh[opsu]_[A-Za-z0-9]{20,}"), "GitHub token"),
@@ -152,6 +153,12 @@ def check_plugin():
     return [f"plugin/vantage: {p}" for p in problems]
 
 
+def check_releasing():
+    path = ROOT / "RELEASING.md"
+    text = path.read_text(encoding="utf-8") if path.exists() else None
+    return [f"RELEASING.md: {p}" for p in releasing_check.check_releasing(text)]
+
+
 def check_privacy(files):
     problems = []
     for f in files:
@@ -166,7 +173,7 @@ def check_privacy(files):
 
 def main():
     files = tracked_files()
-    problems = check_links(files) + check_tables(files) + check_decisions() + check_migrations() + check_plugin() + check_privacy(files)
+    problems = check_links(files) + check_tables(files) + check_decisions() + check_migrations() + check_plugin() + check_releasing() + check_privacy(files)
     for p in problems:
         print(p)
     print(f"{len(problems)} problem(s) in {len(files)} tracked files")

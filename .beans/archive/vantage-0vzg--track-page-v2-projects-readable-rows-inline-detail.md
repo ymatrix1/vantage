@@ -37,6 +37,6 @@ PR links and ticket links (GitHub and tracker sources, later phases). Classifyin
 
 - Daemon: `projects.ts` stores an item's repo as the git remote path (via the worktree the scanner saw); `item-detail.ts` and `GET /api/items/:id` (sessions with parent, files by base name, worktree, last commit). Core: `repoUrlOf`, `projectNameOf`, `ItemDetailView`.
 - UI: `Header` (L0), project sections (L1), `Row` (L2), `Detail` (L3), `title.ts`, `links.ts`, `summary.ts`, `projects.ts`, `sessions.ts`; default group is project; sticky summary and toolbar; pager above and below; key `e`.
-- Specs: web-ui (Track layout, API, keys), UX (Track), ROADMAP; D95 proposed.
+- Specs: web-ui (Track layout, API, keys), UX (Track), ROADMAP; D100 proposed.
 - Tests: 636 repo-wide (new: names-links, track-v2, project-detail, repo-url). Real daemon with synthetic events in the browser pane.
 - Limits: projects are ordered by the rows on the page; group totals include folded rows; no PR or ticket links yet.

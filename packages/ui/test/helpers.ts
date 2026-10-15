@@ -26,6 +26,7 @@ export function item(over: Partial<TrackRow> = {}): TrackRow {
 }
 
 export const emptyFacets = (): Facets => ({
+  org: {},
   repo: {},
   branch: {},
   stage: {},

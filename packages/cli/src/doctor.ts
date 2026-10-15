@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { readHealth } from "@vantage/daemon";
+import { formatVersion, readVersionInfo } from "./version.ts";
 import {
   HOOK_EVENTS,
   MANAGED,
@@ -241,6 +242,7 @@ function sourcesCheck(home: string, env: NodeJS.ProcessEnv, userHome: string): C
 export function runChecks(env: NodeJS.ProcessEnv, now = new Date()): Check[] {
   const p = resolvePaths(env);
   return [
+    { name: "version", status: "pass", detail: formatVersion(readVersionInfo(env)) },
     ...hooksCheck(p.settings, env),
     statusLineCheck(p.settings),
     spoolCheck(p.home),

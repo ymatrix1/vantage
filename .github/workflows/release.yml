@@ -1,0 +1,245 @@
+name: release
+
+# Release delivery (D98, docs/specs/ci.md "Releasing", RELEASING.md).
+#
+#   push to main  -> if package.json holds a version with no tag (the release PR was merged): build, test,
+#                    native build, assemble, GitHub Release with artifacts and attestation, then the GATED npm publish.
+#   pull request  -> rehearsal: the same build and assembly, no release, no publish, no secrets.
+#   dispatch      -> rehearsal on the chosen ref; it can never release or publish.
+#
+# Nothing here publishes on its own. `publish-npm` needs the repository variable NPM_PUBLISH_ENABLED=true AND
+# approval in the `npm-publish` environment AND a trusted publisher configured on npmjs.com for this file.
+# There is no npm token anywhere. Without the variable the job is skipped; it stages by default (D98).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - .github/workflows/release.yml
+      - .github/workflows/release-native.yml
+      - tools/release.mjs
+      - tools/assemble-main-package.mjs
+      - tools/assemble-native-packages.mjs
+      - tools/smoke-install.mjs
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.mode.outputs.release }}
+      version: ${{ steps.mode.outputs.version }}
+      tag: ${{ steps.status.outputs.tag }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+      - name: Read version and tags
+        id: status
+        run: node tools/release.mjs status
+      - name: Decide release or rehearsal
+        id: mode
+        env:
+          EVENT: ${{ github.event_name }}
+          FORK: ${{ github.event.repository.fork }}
+          PENDING: ${{ steps.status.outputs.pending }}
+          VERSION: ${{ steps.status.outputs.version }}
+        run: |
+          # A rehearsal builds whatever version package.json holds (0.0.0 until the first release PR merges).
+          # A real release needs all of: a push to main (the trigger above), not a fork, and a version that is
+          # bumped but not yet tagged (that is what merging the release PR leaves behind).
+          if [ "$EVENT" = push ] && [ "$FORK" = false ] && [ "$PENDING" = true ]; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+            echo "### Release v$VERSION" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+            echo "### Rehearsal (no release, no publish)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  verify:
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Checks (type check, lint, format, tests, fixtures)
+        run: pnpm check
+        env:
+          VANTAGE_REQUIRE_NATIVE: "1"
+      - name: Build
+        run: pnpm build
+      - name: Assemble and pack the vantage package
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          node tools/assemble-main-package.mjs "$VERSION" main-pkg --commit "$GITHUB_SHA"
+          mkdir main-tarball
+          (cd main-pkg && npm pack --pack-destination ../main-tarball)
+      - name: Install the tarball and run it
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: node tools/smoke-install.mjs main-tarball/*.tgz "$VERSION"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: main-tarball
+          path: main-tarball/*.tgz
+          if-no-files-found: error
+
+  native:
+    needs: prepare
+    uses: ./.github/workflows/release-native.yml
+    with:
+      version: ${{ needs.prepare.outputs.version }}
+
+  assemble:
+    needs: [prepare, verify, native]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: main-tarball
+          path: assets
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: npm-packages
+          path: npm-out
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: hook-*
+          path: bins
+      - name: Collect release assets and checksums
+        run: |
+          for d in npm-out/hook-*; do
+            chmod +x "$d"/bin/* || true
+            (cd "$d" && npm pack --pack-destination ../../assets)
+          done
+          for d in bins/hook-*; do
+            t=${d#bins/hook-}
+            for f in "$d"/vantage-hook*; do
+              case "$f" in *.exe) cp "$f" "assets/vantage-hook-$t.exe" ;; *) cp "$f" "assets/vantage-hook-$t" ;; esac
+            done
+          done
+          (cd assets && sha256sum -- * > ../SHA256SUMS && mv ../SHA256SUMS SHA256SUMS && cat SHA256SUMS)
+      - name: Publish dry run for every tarball (always; no auth, nothing leaves the runner)
+        run: |
+          # ./ matters: npm reads "assets/x.tgz" as a GitHub user/repo shorthand.
+          for t in ./assets/*.tgz; do
+            npm publish "$t" --dry-run --access public
+          done
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-assets
+          path: assets
+          if-no-files-found: error
+
+  github-release:
+    # The merge of the release PR is the approval; the Release is created from that exact commit.
+    if: needs.prepare.outputs.release == 'true'
+    needs: [prepare, assemble]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release-assets
+          path: assets
+      - name: Release notes from CHANGELOG.md
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: node tools/release.mjs notes "$VERSION" > notes.md
+      - name: Build provenance attestation
+        uses: actions/attest-build-provenance@96278af6caaf10aea03fd8d33a09a777ca52d62f # v3.2.0
+        with:
+          subject-path: assets/*
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "Release $TAG already exists; uploading missing assets only"
+            gh release upload "$TAG" assets/* --clobber
+          else
+            gh release create "$TAG" assets/* --target "$GITHUB_SHA" --title "$TAG" --notes-file notes.md
+          fi
+
+  publish-npm:
+    # GATED. Skipped until the owner sets the repository variable NPM_PUBLISH_ENABLED=true (RELEASING.md).
+    # Then it waits for approval in the `npm-publish` environment (required reviewers). It holds no token:
+    # npm trusted publishing (OIDC) authenticates this exact workflow file, `release.yml`, so do not rename it
+    # without changing the trusted publisher on npmjs.com. By default it only STAGES (`npm stage publish`): the
+    # owner approves each staged package on npmjs.com with 2FA before it goes live.
+    if: needs.prepare.outputs.release == 'true' && vars.NPM_PUBLISH_ENABLED == 'true'
+    needs: [prepare, assemble, github-release]
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - name: Use an npm that can stage (11.15.0 or newer)
+        run: |
+          npm install --global npm@11.15.0
+          npm --version
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release-assets
+          path: assets
+      - name: Dry run first
+        run: |
+          for t in ./assets/*vantage-hook-*.tgz ./assets/*vantage-[0-9]*.tgz; do
+            npm publish "$t" --dry-run --access public
+          done
+      - name: Stage the native packages first, then the main package
+        env:
+          # stage (default): CI stages, the owner approves with 2FA. publish: CI publishes directly; the trusted
+          # publisher must then allow `npm publish` too. Any other value stops the job.
+          MODE: ${{ vars.NPM_PUBLISH_MODE || 'stage' }}
+        run: |
+          case "$MODE" in stage | publish) ;; *) echo "::error::NPM_PUBLISH_MODE must be stage or publish"; exit 1 ;; esac
+          for t in ./assets/*vantage-hook-*.tgz ./assets/*vantage-[0-9]*.tgz; do
+            spec=$(tar -xOzf "$t" package/package.json | node -e 'const p=JSON.parse(require("fs").readFileSync(0,"utf8"));console.log(p.name+"@"+p.version)')
+            # A re-run after a partial run must not fail on what is already live.
+            if npm view "$spec" version > /dev/null 2>&1; then
+              echo "$spec is already published; skipping"
+              continue
+            fi
+            if [ "$MODE" = stage ]; then npm stage publish "$t" --access public; else npm publish "$t" --access public; fi
+          done

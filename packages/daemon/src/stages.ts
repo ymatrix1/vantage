@@ -2,14 +2,17 @@
 // work_items, proofs, flags and stage_changes (docs/specs/data-schema.md). Every pass replays all
 // events, so the tables are derived state and can be rebuilt at any time. Also the read side the
 // Stop gate, status line and Track page call.
-import { computeStages, fallbackTitle } from "@vantage/core";
+import { computeStages, fallbackTitle, projectNameOf } from "@vantage/core";
 import type { ItemState, LinkOptions, StageOptions } from "@vantage/core";
 import { linkStoredEvents, loadEvents } from "./linking.ts";
-import { resolveRepo, worktreeRepos } from "./projects.ts";
+import { GIT_QUESTIONS_PER_PASS, resolveRepo, worktreeRepos } from "./projects.ts";
 import type { Store } from "./store.ts";
+import { requestTitleMap } from "./titles.ts";
 
 export interface StagePassOptions extends StageOptions {
   link?: Omit<LinkOptions, "undone">;
+  /** Use stored first-request titles for provisional session items (default on, D95). */
+  requestTitles?: boolean;
 }
 
 export interface StagePassResult {
@@ -29,16 +32,27 @@ const textOrNull = (r: Row, c: string): string | null => {
 const num = (r: Row, c: string): number => Number(r[c] ?? 0);
 
 /** Title and repo from the item key; an item with no name of its own gets a title from repo, branch and date. */
-function titleOf(item: ItemState): { title: string; repo: string | null } {
+type TitleSource = "anchor" | "request" | "fallback";
+
+function titleOf(
+  item: ItemState,
+  requests: ReadonlyMap<string, string>,
+): { title: string; repo: string | null; source: TitleSource } {
   const [kind = "", ...rest] = item.itemKey.split(":");
   const value = rest.join(":");
-  if (kind === "issue") return { title: value, repo: item.repo };
+  if (kind === "issue") return { title: value, repo: item.repo, source: "anchor" };
   if (kind === "branch") {
     const i = value.indexOf(":");
-    return { title: value.slice(i + 1), repo: i > 0 ? value.slice(0, i) : item.repo };
+    return { title: value.slice(i + 1), repo: i > 0 ? value.slice(0, i) : item.repo, source: "anchor" };
   }
   if (kind === "worktree")
-    return { title: value.replaceAll("\\", "/").split("/").pop() ?? value, repo: item.repo };
+    return {
+      title: value.replaceAll("\\", "/").split("/").pop() ?? value,
+      repo: item.repo,
+      source: "anchor",
+    };
+  const requested = requests.get(value);
+  if (requested) return { title: requested, repo: item.repo, source: "request" };
   return {
     title: fallbackTitle({
       repo: item.repo,
@@ -47,12 +61,15 @@ function titleOf(item: ItemState): { title: string; repo: string | null } {
       id: value,
     }),
     repo: item.repo,
+    source: "fallback",
   };
 }
 
 /** Links every stored event, evaluates every item, and rewrites the derived tables. */
 export function runStagePass(store: Store, opts: StagePassOptions = {}, now = new Date()): StagePassResult {
-  const { link, ...stageOpts } = opts;
+  const { link, requestTitles, ...stageOpts } = opts;
+  const requests: ReadonlyMap<string, string> =
+    requestTitles === false ? new Map<string, string>() : requestTitleMap(store);
   const linked = linkStoredEvents(store, link ?? {}, now);
   const { ids, events } = loadEvents(store);
   const firstSeen = new Map<string, string>();
@@ -77,15 +94,32 @@ export function runStagePass(store: Store, opts: StagePassOptions = {}, now = ne
       db.prepare("DELETE FROM work_items WHERE id = ?").run(id);
     }
     const worktrees = worktreeRepos(store);
+    const gitBudget = { left: GIT_QUESTIONS_PER_PASS };
     for (const item of items) {
-      const { title, repo: named } = titleOf(item);
-      // The project a person knows (git remote), not the worktree folder an agent session ran in.
-      const repo = resolveRepo(store, item.itemKey, named, worktrees);
+      const named = titleOf(item, requests);
+      const { source } = named;
+      // The repo a person knows (git identity), never the worktree folder an agent session ran in.
+      const repo = resolveRepo(store, item.itemKey, named.repo, worktrees, gitBudget);
+      // A detached HEAD has no branch name to show; the repo is the next best thing.
+      const shown = repo ? (projectNameOf(repo) ?? repo) : null;
+      let title = named.title;
+      // An untitled session reads from the resolved repo, never from the folder it ran in.
+      if (named.source === "fallback") {
+        title = fallbackTitle({
+          repo: shown,
+          branch: item.branch,
+          firstActivity: item.firstActivity,
+          id: item.itemKey.split(":").slice(1).join(":"),
+        });
+      }
+      // A worktree item is titled with a folder name; its branch is a better name.
+      if (item.itemKey.startsWith("worktree:") && item.branch) title = item.branch;
+      if (title === "HEAD") title = `detached HEAD${shown ? ` in ${shown}` : ""}`;
       db.prepare(
-        `INSERT INTO work_items (item_key, title, repo, branch, has_edits, stage, proof_status, proof_level, docs_only,
+        `INSERT INTO work_items (item_key, title, title_source, repo, branch, has_edits, stage, proof_status, proof_level, docs_only,
            first_activity, last_activity, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT (item_key) DO UPDATE SET title = excluded.title, repo = excluded.repo,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT (item_key) DO UPDATE SET title = excluded.title, title_source = excluded.title_source, repo = excluded.repo,
            branch = excluded.branch, has_edits = excluded.has_edits,
            stage = excluded.stage, proof_status = excluded.proof_status,
            proof_level = excluded.proof_level, docs_only = excluded.docs_only,
@@ -94,6 +128,7 @@ export function runStagePass(store: Store, opts: StagePassOptions = {}, now = ne
       ).run(
         item.itemKey,
         title,
+        source,
         repo,
         item.branch,
         item.codeEdits > 0 ? 1 : 0,
@@ -207,6 +242,8 @@ export interface ItemSummary {
   proofLevel: number;
   docsOnly: boolean;
   branch: string | null;
+  /** Where the title came from: its key (`anchor`), a stored first request, or repo, branch and date. */
+  titleSource: string;
   /** False when no code edit is linked (a conversation, or documentation only). */
   hasEdits: boolean;
   firstActivity: string;
@@ -243,6 +280,7 @@ export function summary(store: Store, r: Row): ItemSummary {
     proofLevel: num(r, "proof_level"),
     docsOnly: num(r, "docs_only") === 1,
     branch: textOrNull(r, "branch"),
+    titleSource: text(r, "title_source") || "fallback",
     hasEdits: num(r, "has_edits") === 1,
     firstActivity: text(r, "first_activity"),
     lastActivity: text(r, "last_activity"),

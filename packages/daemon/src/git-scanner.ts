@@ -8,6 +8,7 @@ import {
   parseLog,
   parseStatus,
   parseWorktreeList,
+  repoInfoOf,
   repoKey,
   type GitCommit,
   type ScanState,
@@ -104,7 +105,11 @@ export function createGitScanner(options: GitScannerOptions): GitScanner {
       const seen = new Set<string>();
       const emitted = new Set<string>();
       for (const registered of options.repos) {
-        for (const wt of await discoverWorktrees(registered, env)) {
+        const worktrees = await discoverWorktrees(registered, env);
+        // `git worktree list` names the main worktree first: its folder names a repo with no remote.
+        const mainFolder =
+          (worktrees[0]?.path ?? registered).replaceAll("\\", "/").split("/").filter(Boolean).pop() ?? "";
+        for (const wt of worktrees) {
           if (seen.has(wt.path)) continue;
           seen.add(wt.path);
           if (scanOptions.due && !scanOptions.due(wt.path)) continue;
@@ -114,8 +119,10 @@ export function createGitScanner(options: GitScannerOptions): GitScanner {
           const identity = await readRepoIdentity(wt.path, env);
           if (!identity) continue;
           const prev = states.get(wt.path) ?? null;
+          const repo = repoInfoOf(identity.remote, identity.firstCommit, mainFolder);
           const result = diffScan(prev, {
             repoKey: identity.key,
+            ...(repo ? { repo } : {}),
             worktreePath: wt.path,
             status,
             newCommits: await newCommits(wt.path, prev, status.head),

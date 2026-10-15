@@ -36,6 +36,7 @@
   };
   const GROUP_LABEL: Record<GroupBy, string> = {
     attention: "Attention",
+    org: "Organization",
     repo: "Repo",
     stage: "Stage",
     none: "No grouping",

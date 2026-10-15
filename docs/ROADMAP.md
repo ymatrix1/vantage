@@ -43,7 +43,7 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 - [x] Live updates over WebSocket (`vantage-tizy`, D81 proposed). Delivered: `GET /api/live` upgrade with Host, Origin and token checks before the 101 (token in `Sec-WebSocket-Protocol`), pushes of `item.changed`, `flag.raised`, `source.health` and `resync` after each stage pass, ping and 8-connection cap, and a Track page that applies pushes, polls only while the socket is down and reconnects with backoff. Measured: stage pass to client message in a few milliseconds on loopback.
 - [x] Track page controls: debounced search, filter chips with live counts, sort, group-by, pagination, collapsible groups, view state in the URL, keys `/`, `[`, `]`, `1` to `4` (`vantage-4ty4`, D85 proposed). Delivered in `packages/ui`, built against the `GET /api/track` query contract of the API session.
 - [x] Readable dots: a "What the dots mean" legend, a stage label beside each row's dots, and a dash (not a dashed ring) for skipped, in the page and the status line (`vantage-7f0z`, D91 proposed).
-- [x] Track v2 (`vantage-0vzg`, D95 proposed): one-line header whose counts filter, projects from the git remote, rows named by branch and never by a worktree folder, inline detail (sessions, files, proofs, actions), branch and commit links, `GET /api/items/:id`, pager above and below, sticky toolbar, key `e`. Remaining: PR and ticket links (GitHub source, tracker), project paging in the API.
+- [x] Track v2 (`vantage-0vzg`, D100 proposed): one-line header whose counts filter, projects from the git remote, rows named by branch and never by a worktree folder, inline detail (sessions, files, proofs, actions), branch and commit links, `GET /api/items/:id`, pager above and below, sticky toolbar, key `e`. Remaining: PR and ticket links (GitHub source, tracker), project paging in the API.
 - [x] `vantage add` (dry run, backup, idempotent merge, opt-in git hook chaining), `vantage remove`, `vantage uninstall` and `vantage doctor` (`vantage-p9x2`, D79). Tested only in temp directories; never run against a real machine.
 - [x] The installer registers the native hook and `vantage doctor` reports it (`vantage-ijmb`, D80 proposed): package, then local build, then Node; dry run says which; doctor warns when Node is registered while native is available. Tested with fake binaries in temp directories; never run against a real machine.
 - [ ] Install with a prompt: `docs/install-for-agents.md` works end to end in Claude Code and Codex on a fresh machine. The guide is updated for Claude Code; the fresh-machine run, the Codex steps and the `npx vantage` entry are not done (`vantage-o06l`).
@@ -52,6 +52,9 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 - [x] Track query API (`vantage-r0kv`, D84 proposed): `thrashing` and `unproven_claim` only for items active in the last 48 hours (`flag_window_hours`), flag reasons naming files by base name, and `GET /api/track` with filters, sort, grouping, paging and live facet counts, validated and read-only, plus a fallback title from repo, branch and date. Remaining: the page controls (`vantage-4ty4`).
 - [x] `vantage stats`: read-only, aggregates-only numbers on how useful the Track page is, with `--json`, `--since`, `--repo` and a per-day `--days N` view for the exit week (`vantage-v1o3`, D88 proposed). Goals stay constants; making them configurable is a follow-up bean.
 - [x] `forgotten` is its own low-urgency group, no `forgotten` flag on backfilled conversations, and `sessionCount` and `derivedCount` on Track items (`vantage-hs1y`, `vantage-e0rt`, D94 proposed).
+- [x] Item titles from the first request (`vantage-grkz`, D95 proposed): cleaned first sentence of a session's first request titles its provisional item, stored only locally, `item_titles_from_requests` switch, `title_source`, `vantage titles` and `vantage titles clear`.
+- [x] Release delivery built (`vantage-a6hi`, D98 proposed): release PR from Conventional Commits (`tools/release.mjs`), one npm package `@ymatrix1/vantage` (bin `vantage`, built packages bundled, native packages optional), `vantage --version` and a doctor version row, a release workflow (build, test, 5 native targets, GitHub Release with `SHA256SUMS` and attestation) and a gated npm publish (trusted publishing, staged, no token). Verified by `npm pack`, installing the tarball and running it, and workflow lint; the release workflow has not run on `main`.
+- [ ] First release: the owner confirms the npm names, creates the packages once, adds trusted publishers, sets up the `npm-publish` environment and `NPM_PUBLISH_ENABLED`, then merges the first release PR ([RELEASING.md](../RELEASING.md), `vantage-d28s`).
 - [ ] **Exit:** used every day for a week, and the morning catch-up happens on the Track page instead of in terminals.
 
 ## Phase 2: work items and board
@@ -60,6 +63,8 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 - [x] Stage machine for Asked, Built and Proven. Delivered in Phase 1 (`vantage-lxud`, D71).
 - [x] Derived sessions grouped under their parent's item (`vantage-o3s3`, D86 proposed): `session.derived` from copied transcript history, linker rule, `item_sessions` counts, [measurements](research/session-lineage.md). Remaining: show `sessionCount`, `derivedCount` and `subagentCount` in the Track view (follow-up bean); heuristic grouping waits on D87.
 - [x] Transcript branch on tool events (`vantage-j9ea`, D92 proposed): edits and commands carry the branch in force, the linker anchors on it, a one-shot backfill covers stored events. On the real store (137 sessions with edits) sessions with a branch, key or worktree anchored edit went from 12 to 129, `Session` items from 130 to 33.
+- [x] The agent's task list and sub-agent runs per item (`vantage-udzy`, D96 proposed): `task.list.updated` from `TodoWrite` (counts, plus the cleaned current task, 80 characters, same switch as request titles) and `subagent.run`, read through `itemTasks` and `itemSessionCounts`. Remaining: show the fields on Track (API session), `TaskCreate` and `TaskUpdate`, sub-agent run descriptions (follow-up beans). On this machine no session uses `TodoWrite`.
+- [x] Fork and resume counts per item (`vantage-i7gx`, D97 proposed): `forkCount` and `resumeCount` from the hook source, `forkHintCount` from timing as a hint only; they fill as hooks record `SessionStart` sources.
 - [ ] Local web UI: Track (attention and project grouping), Item and Journal; "since yesterday" filter.
 - [ ] Ghost proposals from sessions with no edits.
 - [ ] **Exit:** the morning catch-up uses the board instead of terminals.
@@ -76,7 +81,7 @@ Draft epic `vantage-nqh6`. It starts after the Phase 1 exit (a week of daily use
 
 - [ ] Priority, difficulty, spread, staleness.
 - [ ] Focus drawn as the landscape (dot characters, bands, shelf, sky), with the Track page as fallback.
-- [ ] Toasts for red items; `waiting_on_you` and `forgotten` flags.
+- [ ] Toasts for red items; `waiting_on_you`, `forgotten` and `left_unfinished` flags (P13: conversations archived while work is open).
 - [ ] Contexts (Work, Personal) and project settings on the Sources page.
 - [ ] **Exit:** the morning catch-up starts on the landscape for a week, and the user can say what needs them without opening a terminal.
 

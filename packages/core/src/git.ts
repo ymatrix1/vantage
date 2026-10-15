@@ -1,6 +1,7 @@
 // Pure git logic: parsers, repo identity, event diffing, scan cadence.
 // Adapter rules: docs/specs/ingestion.md (git row, event catalog, polling budget).
 import type { EventKind, VantageEvent } from "./events.ts";
+import { repoUrlOf } from "./track.ts";
 
 export interface WorktreeInfo {
   path: string;
@@ -100,17 +101,32 @@ export function parseLog(output: string): GitCommit[] {
   return commits;
 }
 
-/** Strips scheme, credentials, `.git` and case so ssh and https forms of one remote match. */
-export function normalizeRemoteUrl(url: string): string {
+/** Scheme, credentials, port, `.git` and trailing slashes stripped; case kept. */
+function stripRemote(url: string): string {
   let u = url.trim();
   const scp = /^[^@/\s]+@([^:/\s]+):(.+)$/.exec(u);
   if (scp) u = `${scp[1]}/${scp[2]}`;
   else u = u.replace(/^[a-z+]+:\/\//i, "").replace(/^[^@/]+@/, "");
-  u = u
+  return u
     .replace(/^([^/]+):\d+\//, "$1/")
     .replace(/\/+$/, "")
     .replace(/\.git$/, "");
-  return u.toLowerCase();
+}
+
+/** Strips scheme, credentials, `.git` and case so ssh and https forms of one remote match. */
+export function normalizeRemoteUrl(url: string): string {
+  return stripRemote(url).toLowerCase();
+}
+
+/**
+ * Host, owner and repo of a remote, with the case the remote was written in (display keeps `Flip-to`;
+ * matching uses the lower-cased key). The owner is the first path segment and the repo the rest, so a
+ * GitLab subgroup stays part of the repo. Null without a host, an owner and a repo.
+ */
+export function remoteParts(url: string | null): { host: string; org: string; repoName: string } | null {
+  if (!url) return null;
+  const m = /^([^/]+)\/([^/]+)\/(.+)$/.exec(stripRemote(url));
+  return m?.[1] && m[2] && m[3] ? { host: m[1], org: m[2], repoName: m[3] } : null;
 }
 
 /**
@@ -130,8 +146,45 @@ export interface ScanState {
   dirtyKey: string | null;
 }
 
+/** Who a repo is, carried on `worktree.scanned` so a path can be mapped to its repo later (read time). */
+export interface RepoInfo {
+  key: string;
+  /** `org/repo` from the remote, case kept; the main worktree's folder name when there is no remote. */
+  name: string;
+  /** The owner (first path segment of the remote), case kept; `local` for a repo with no remote. */
+  org: string;
+  /** The repo without its owner; the main worktree's folder name when there is no remote. */
+  repoName: string;
+  /** The remote's host, or null without a remote. */
+  host: string | null;
+  /** `https://host/owner/repo`, or null for no remote or an odd one. */
+  remoteUrl: string | null;
+}
+
+/** Repo identity from a remote and the first commit; never from a linked worktree's folder. */
+export function repoInfoOf(
+  remote: string | null,
+  firstCommit: string | null,
+  mainFolder: string,
+): RepoInfo | null {
+  const key = repoKey(remote, firstCommit);
+  if (!key) return null;
+  const parts = remoteParts(remote);
+  const path = remote ? normalizeRemoteUrl(remote) : "";
+  return {
+    key,
+    name: parts ? `${parts.org}/${parts.repoName}` : mainFolder,
+    org: parts?.org ?? "local",
+    repoName: parts?.repoName ?? mainFolder,
+    host: parts?.host ?? null,
+    remoteUrl: repoUrlOf(path),
+  };
+}
+
 export interface ScanInput {
   repoKey: string;
+  /** Added to `worktree.scanned` payloads when known. */
+  repo?: RepoInfo;
   worktreePath: string;
   status: WorktreeStatus;
   /** Commits reachable from HEAD and not from the previous head, newest first. */
@@ -204,7 +257,13 @@ export function diffScan(prev: ScanState | null, input: ScanInput): ScanResult {
       source: "git",
       kind: "worktree.scanned",
       timestamp: now,
-      payload: { worktree: worktreePath, branch: status.branch, head: status.head, dirty: status.dirty },
+      payload: {
+        worktree: worktreePath,
+        branch: status.branch,
+        head: status.head,
+        dirty: status.dirty,
+        ...(input.repo ? { repo: input.repo } : {}),
+      },
     });
   }
 
