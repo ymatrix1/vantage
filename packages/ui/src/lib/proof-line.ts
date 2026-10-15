@@ -37,18 +37,38 @@ export function proofLine(p: Proof, now: Date): ProofLine {
   };
 }
 
-/** "Asked by session a1b2c3d4 on branch feat/x, 2 days ago": ids and times only, never prompt text (D132). */
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** `Oct 14, 10:32` in the viewer's time zone, with the year when it is not the current one. */
+export function absoluteTime(iso: string, now: Date): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "time unknown";
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  const year = d.getFullYear() === now.getFullYear() ? "" : ` ${d.getFullYear()}`;
+  return `${MONTHS[d.getMonth()] ?? ""} ${d.getDate()}${year}, ${hh}:${mm}`;
+}
+
+/** The session's name, else a short id: what a person can recognise (D191). */
+export const sessionLabel = (name: string | null | undefined, id: string): string =>
+  name && name !== "" ? name : `Session ${id.slice(0, 8)}`;
+
+/**
+ * "Fix login redirect · branch feat/login · Oct 14, 10:32 (21 min ago)": the session's name, the anchor type
+ * with its value, and the time both ways. Names, keys and times only, never prompt text (D132, D192).
+ */
 export function askedLine(a: AskedEvidence, now: Date): string {
-  const by = a.sessionId ? `session ${a.sessionId.slice(0, 8)}` : "no session recorded";
+  const by = a.sessionId ? sessionLabel(a.sessionName, a.sessionId) : "No session recorded";
+  const value = a.anchorValue ? ` ${a.anchorValue}` : "";
   const anchor =
     a.anchorKind === "issue_key"
-      ? `issue ${a.anchorValue ?? ""}`.trim()
+      ? `issue${value}`
       : a.anchorKind === "branch"
-        ? `branch ${a.anchorValue ?? ""}`.trim()
+        ? `branch${value}`
         : a.anchorKind === "worktree"
-          ? "a new worktree"
+          ? `worktree${value}`
           : a.anchorKind === "session"
             ? "the session itself"
             : "an unknown anchor";
-  return `${by}, anchored on ${anchor}, ${ago(a.at, now)}`;
+  return `${by} · ${anchor} · ${absoluteTime(a.at, now)} (${ago(a.at, now)})`;
 }

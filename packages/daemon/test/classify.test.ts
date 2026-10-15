@@ -128,6 +128,15 @@ function seed(): void {
   runStagePass(store, {}, NOW);
 }
 
+const injectedLine = (uuid: string, text: string): string =>
+  JSON.stringify({
+    type: "user",
+    sessionId: "s1",
+    uuid,
+    timestamp: "2026-01-05T09:00:00Z",
+    message: { content: text },
+  });
+
 const fake =
   (mode: string, extra: Record<string, string> = {}): Spawner =>
   (req) =>
@@ -237,6 +246,27 @@ describe("dry run and payload", () => {
     expect(
       planRun(store, { ...ON, settleMinutes: 30 }, projects, new Date("2026-01-05T09:31:00Z")).items,
     ).toBeLessThan(5);
+  });
+
+  it("injected first messages (worktree notice, system reminder) never reach `claude` as the request (D194)", async () => {
+    seed();
+    const d = join(projects, "p1");
+    writeFileSync(
+      join(d, "s1.jsonl"),
+      [
+        injectedLine("u0", "You are operating in a git worktree. NOTICEMARKER"),
+        injectedLine("u00", "<system-reminder>REMINDERMARKER</system-reminder>"),
+        injectedLine("u1", "Fix the flaky login test. Then more."),
+      ].join("\n") + "\n",
+    );
+    await run(fake("ok"));
+    const sent = calls()
+      .map((c) => c.input)
+      .join("\n");
+    expect(sent).toContain("Fix the flaky login test");
+    expect(sent).not.toContain("NOTICEMARKER");
+    expect(sent).not.toContain("REMINDERMARKER");
+    expect(sent).not.toContain("operating in a git worktree");
   });
 
   it("what reaches `claude` holds only the allowed fields: no secrets, paths, commands or later sentences", async () => {

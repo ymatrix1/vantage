@@ -102,7 +102,7 @@ export const PROOF_STATES = ["none", "fresh", "expired", "failed", "weak", "not_
 export const FLAG_FILTERS = ["thrashing", "unproven_claim", "forgotten", "none"] as const;
 export const SINCE_VALUES = ["24h", "7d", "30d", "all"] as const;
 export const SORT_KEYS = ["activity", "stage", "title", "repo", "flags"] as const;
-export const GROUP_KEYS = ["attention", "org", "repo", "stage", "none"] as const;
+export const GROUP_KEYS = ["attention", "org", "repo", "branch", "stage", "none"] as const;
 export const AGE_BUCKETS = ["today", "week", "older"] as const;
 export const MAX_PAGE_SIZE = 100;
 export const DEFAULT_PAGE_SIZE = 25;
@@ -352,10 +352,12 @@ export interface TraceResponse {
 export interface AskedEvidence {
   at: string;
   anchorKind: "issue_key" | "branch" | "worktree" | "session" | null;
-  /** The issue key or branch name; null for a worktree (a path) or when unknown. */
+  /** The issue key or branch name, or the folder name of a worktree; null when unknown. */
   anchorValue: string | null;
-  /** The session that started the item, as stored; the page shows its first 8 characters. */
+  /** The session that started the item, as stored (the full id, for the resume command). */
   sessionId: string | null;
+  /** That session's name (D191); null when none is stored. */
+  sessionName?: string | null;
 }
 export interface DiagnosticsResponse {
   generatedAt: string;
@@ -387,6 +389,10 @@ export function projectNameOf(repo: string | null | undefined): string | null {
 /** One session of an item; a derived session names the session it continues. */
 export interface ItemSession {
   id: string;
+  /** The name Claude Code gave the session, else the first sentence of its first request (D191); null when neither is stored. */
+  name?: string | null;
+  /** The folder the session last ran in; used to build the resume command (D193). */
+  cwd?: string | null;
   parentId: string | null;
   firstAt: string;
   lastAt: string;

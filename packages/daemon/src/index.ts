@@ -21,6 +21,9 @@ export { itemSessionCounts, itemTasks } from "./lineage.ts";
 export type { ItemSessionCounts, ItemTasks } from "./lineage.ts";
 export {
   captureRequestTitle,
+  captureSessionName,
+  clearSessionNames,
+  sessionNameMap,
   clearRequestTitles,
   listRequestTitles,
   requestTitleMap,

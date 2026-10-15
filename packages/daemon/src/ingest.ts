@@ -15,7 +15,7 @@ import type { IngestContext, TranscriptLine, VantageEvent } from "@vantage/core"
 import type { Store } from "./store.ts";
 import { tailLines } from "./tail.ts";
 import { headLines } from "./titles.ts";
-import { captureRequestTitle } from "./titles.ts";
+import { captureRequestTitle, captureSessionName, repairRequestTitles } from "./titles.ts";
 
 export interface IngestResult {
   files: number;
@@ -196,6 +196,7 @@ export function backfillTranscripts(
   const cutoff = now.getTime() - days * 86_400_000;
   const result: IngestResult = { files: 0, inserted: 0 };
   const ctx: IngestContext = { repoRoots: knownRepoRoots(store), taskText: store.captureTaskText };
+  repairRequestTitles(store, stamp);
   backfillEventBranches(store, projectsDir, now, days, workDir);
   for (const path of jsonlFiles(projectsDir)) {
     if (statSync(path).mtimeMs < cutoff) continue;
@@ -208,6 +209,7 @@ export function backfillTranscripts(
     if (requestTitles && own) captureRequestTitle(store, path, key, own, stamp);
     const { lines, nextOffset } = tailLines(path, before);
     if (lines.length === 0 && nextOffset === before) continue;
+    if (requestTitles && own) captureSessionName(store, lines, own, stamp);
     const parsed: TranscriptLine[] = [];
     const all: TranscriptLine[] = [];
     for (const l of lines) {
