@@ -16,11 +16,12 @@ import {
   type Sort,
 } from "./contract";
 
-export type FilterKey = "repo" | "branch" | "stage" | "proof" | "flag";
-export const FILTER_KEYS: readonly FilterKey[] = ["repo", "branch", "stage", "proof", "flag"];
+export type FilterKey = "org" | "repo" | "branch" | "stage" | "proof" | "flag";
+export const FILTER_KEYS: readonly FilterKey[] = ["org", "repo", "branch", "stage", "proof", "flag"];
 
 export interface ViewState {
   q: string;
+  org: string[];
   repo: string[];
   branch: string[];
   stage: string[];
@@ -38,6 +39,7 @@ export interface ViewState {
 
 export const DEFAULT_VIEW: ViewState = {
   q: "",
+  org: [],
   repo: [],
   branch: [],
   stage: [],
@@ -72,7 +74,7 @@ function list(v: string | null, key: FilterKey): string[] {
   for (const part of v.split(",")) {
     const s = part.trim().slice(0, MAX_VALUE_LEN);
     if (!s || out.includes(s)) continue;
-    const allowed = key === "repo" || key === "branch" ? null : ALLOWED[key];
+    const allowed = key === "org" || key === "repo" || key === "branch" ? null : ALLOWED[key];
     if (allowed && !allowed.includes(s)) continue;
     out.push(s);
     if (out.length >= MAX_VALUES) break;
@@ -94,6 +96,7 @@ export function parseView(search: string): ViewState {
   const he = p.get("hasEdits");
   return {
     q: (p.get("q") ?? "").trim().slice(0, Q_MAX),
+    org: list(p.get("org"), "org"),
     repo: list(p.get("repo"), "repo"),
     branch: list(p.get("branch"), "branch"),
     stage: list(p.get("stage"), "stage"),

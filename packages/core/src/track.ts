@@ -338,7 +338,22 @@ export interface TraceResponse {
     weakReason: string | null;
     command: string;
     ranAt: string;
+    /** What the command was classified as (`test`, `data_check`). */
+    type: string;
+    /** True when a later code edit made this proof out of date (D131). */
+    stale: boolean;
   }[];
+  /** What made the item Asked (D132); null when no stage change recorded it. Metadata only, never prompt text. */
+  asked: AskedEvidence | null;
+}
+/** The anchor and session behind "Asked": ids and times, never transcript text. */
+export interface AskedEvidence {
+  at: string;
+  anchorKind: "issue_key" | "branch" | "worktree" | "session" | null;
+  /** The issue key or branch name; null for a worktree (a path) or when unknown. */
+  anchorValue: string | null;
+  /** The session that started the item, as stored; the page shows its first 8 characters. */
+  sessionId: string | null;
 }
 export interface DiagnosticsResponse {
   generatedAt: string;

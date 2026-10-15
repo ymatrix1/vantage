@@ -52,7 +52,7 @@ The main "all work" view. A table, not a board, because it stays readable with m
 
 - **Layout, top to bottom** (proposed D100, [web UI spec](specs/web-ui.md#track-layout)): a one-line header with counts that filter ("Last 7 days: 98 in progress, 20 need you, 37 older"), then projects, then one row per item, then the detail inline under a row. The summary line and the toolbar stay in view while scrolling; the pager is above and below the list.
 - **Row:** title (ticket title or key, else the branch without agent prefixes, never a [worktree](GLOSSARY.md#worktree) folder), subtitle (branch and a short time), six-dot track (Asked, Built, Proven, Reviewed, Shipped, Verified) with a stage label, the [flag](GLOSSARY.md#flag) reason in words, a session-count chip and a branch link.
-- **Inline detail:** sessions (derived ones nested), files touched, branch, last commit, stage history, proofs and actions (open branch, copy branch name, copy the `cd` command).
+- **Inline detail:** sessions (derived ones nested), files touched, branch, last commit, what made it Asked (session, [anchor](GLOSSARY.md#anchor), time; no prompt text, D132), stage history, proofs as one line each (result icon, kind, age, edited since, D131) and actions (open branch, copy branch name, copy the `cd` command).
 - **Dot states:** filled green = done, blue ring = current, amber = at risk (for example unproven), red = needs you, a short dash = skipped or not configured.
 - **Short tracks:** `review_request` and `commitment` items show only their relevant dots.
 - **Group by** toggle:

@@ -207,6 +207,24 @@ describe("L2 rows", () => {
     expect(row).toMatch(/docs\/agents-compact · \d+ (min|h|d) ago|docs\/agents-compact · just now/);
   });
 
+  it("shows the organization before the branch, 'Local' for a repo with no remote, and offers an Organization filter (D130)", async () => {
+    const a = item({ id: "a", repo: "github.com/Flip-to/app", org: "Flip-to", branch: "feat/a" });
+    const b = item({ id: "b", repo: "scratch", org: "local", branch: "feat/b" });
+    fakeApi({
+      track: () => ({
+        body: track([a, b], {
+          groups: [group("repo:x", "x", [a, b])],
+          facets: { ...facets, org: { "Flip-to": 1, local: 1 } },
+        }),
+      }),
+    });
+    const root = renderApp();
+    await vi.waitFor(() => expect(rows(root)).toHaveLength(2));
+    expect(squash(rows(root)[0]?.textContent)).toMatch(/^.*Flip-to · feat\/a/);
+    expect(squash(rows(root)[1]?.textContent)).toContain("Local · feat/b");
+    expect(root.querySelector("ul[aria-label='Organization filter']")?.textContent).toContain("Flip-to");
+  });
+
   it("a fallback title becomes the cleaned branch; a flagged row says why in words; a session chip counts", async () => {
     const { root } = await ready();
     const row = squash(rows(root).find((r) => r.textContent?.includes("claude/retry-0a1b2c"))?.textContent);

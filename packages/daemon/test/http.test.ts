@@ -213,7 +213,16 @@ describe("read-only API over a synthetic store", () => {
     expect(t.events.length).toBe(2);
     expect(t.events[0]).toMatchObject({ kind: "file.edited", rule: "issue-key-branch", undone: false });
     expect(t.transitions.map((x: { to: string }) => x.to)).toContain("proven");
-    expect(t.proofs[0]).toMatchObject({ state: "fresh", command: "vitest run a" });
+    expect(t.proofs[0]).toMatchObject({
+      state: "fresh",
+      command: "vitest run a",
+      type: "test",
+      stale: false,
+    });
+    // D132: ids and times only: the first event's session and anchor, no prompt text.
+    expect(t.asked).toMatchObject({ anchorKind: "issue_key", anchorValue: "FTK-1" });
+    expect(typeof t.asked.at).toBe("string");
+    expect(JSON.stringify(t.asked)).not.toMatch(/prompt|text/i);
   });
 
   it("returns 404 for an unknown item and a bad escape", async () => {
