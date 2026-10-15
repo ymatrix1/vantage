@@ -447,8 +447,9 @@ describe("recent-flag window through the stage pass (fake clock)", () => {
     runStagePass(store, {}, NOW);
     const [item] = view("since=all&group=none").groups[0]?.items ?? [];
     expect(item).toMatchObject({
-      title: "claude-code · main · Jan 5",
-      repo: "claude-code",
+      // No scanned worktree contains /home/u/claude-code, so it has no repo and the folder is not shown.
+      title: "main · Jan 5",
+      repo: null,
       branch: "main",
       hasEdits: false,
     });
@@ -470,7 +471,7 @@ describe("recent-flag window through the stage pass (fake clock)", () => {
     );
     putDocEdit("abcdef1234567890");
     runStagePass(store, {}, NOW);
-    expect(view("since=all&group=none").groups[0]?.items[0]?.title).toBe("claude-code · main · Jan 5");
+    expect(view("since=all&group=none").groups[0]?.items[0]?.title).toBe("main · Jan 5");
   });
 });
 

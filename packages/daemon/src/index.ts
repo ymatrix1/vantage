@@ -55,4 +55,5 @@ export {
   vantageHomeDir,
 } from "./runtime.ts";
 export type { DaemonHandle, DaemonOptions, Health } from "./runtime.ts";
+export { GIT_QUESTIONS_PER_PASS, gitRepoOfCwd, remotePathOfKey, repoForCwd, repoValue } from "./projects.ts";
 export { editedPaths, classifyPaths, newScratchCache, type ScratchCache } from "./scratch.ts";
