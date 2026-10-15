@@ -63,8 +63,8 @@ Nenhuma checagem rodou depois da sua última edição de código, ou a checagem 
 **2. O que é uma flag?**
 Um aviso num item, com uma ação sugerida. A [lista de flags](../specs/flags.md) (em inglês) nomeia todas. Âmbar espera o resumo; vermelho interrompe.
 
-**3. Por que existe um item chamado "Session abc12345"?**
-Aquela sessão teve edições, mas nenhum ticket, branch ou primeiro pedido legível para dar nome. O nome são os primeiros caracteres do id da sessão. Uma sessão que só continua outra (um resume ou um clear) entra no item da sessão original.
+**3. Por que existe um item chamado "Untitled session"?**
+Aquela sessão teve edições, mas nenhum ticket, branch ou primeiro pedido legível para dar nome. O nome é "Untitled session" com a data, ou o repo e o branch quando são conhecidos; o Vantage nunca mostra o id bruto da sessão como nome. Uma sessão que só continua outra (um resume ou um clear) entra no item da sessão original.
 
 **4. Por que meu item Proven voltou para Built?**
 A prova pertence ao código que ela checou. Você editou o código depois, então a prova expirou. Rode a checagem de novo.

@@ -182,7 +182,7 @@ Os docs usam algumas ideias da consultoria de gestão por um único motivo: **qu
 
 ### Session (sessão)
 **Simples:** uma conversa com um agente como o Claude Code.
-**Exemplo:** uma sessão intitulada pelo primeiro pedido: "adicione uma nova tentativa no upload". Sem um nome melhor, o item aparece como "Session abc12345", os primeiros caracteres do id.
+**Exemplo:** uma sessão intitulada pelo primeiro pedido: "adicione uma nova tentativa no upload". Sem um nome melhor, o item aparece como "Untitled session" com a data, ou o repo e o branch quando conhecidos.
 **Definido em:** [Work item model](../specs/work-item-model.md#entities)
 
 ### Shipped (entregue)

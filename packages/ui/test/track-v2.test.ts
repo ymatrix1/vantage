@@ -431,9 +431,9 @@ describe("pager and toolbar", () => {
     const navs = [...root.querySelectorAll("nav")];
     expect(navs.map((n) => n.getAttribute("aria-label"))).toEqual(["Pages, top of list", "Pages"]);
     for (const n of navs) expect(squash(n.textContent)).toContain("1 to 25 of 60");
-    expect(root.querySelectorAll("select").length).toBeGreaterThan(0);
-    expect(navs[0]?.querySelector("select")).toBeNull();
-    expect(navs[1]?.querySelector("select")).not.toBeNull();
+    expect(root.querySelectorAll("button[role='combobox']").length).toBeGreaterThan(0);
+    expect(navs[0]?.querySelector("button[role='combobox']")).toBeNull();
+    expect(navs[1]?.querySelector("button[role='combobox']")).not.toBeNull();
     const sticky = root.querySelector("[data-testid='sticky-top']");
     expect(sticky?.classList.contains("md:sticky")).toBe(true);
     expect(sticky?.querySelector("input[type='search']")).not.toBeNull();

@@ -74,7 +74,7 @@ export const en: TourText = {
         "                                                         ^ the six dots",
         "Click a row on the Track page to see the evidence behind each dot:",
         "the edit it saw, the command that ran, its exit code, and why it sits where it does.",
-        'A row called "Session abc12345" is a session with edits and no ticket, branch or readable request.',
+        'A row called "Untitled session" is a session with edits and no ticket, branch or readable request.',
       ],
     },
     {
