@@ -23,6 +23,7 @@ export {
   captureRequestTitle,
   captureSessionName,
   captureSessionNameFromFile,
+  DEEP_READS_PER_PASS,
   clearSessionNames,
   sessionNameMap,
   clearRequestTitles,

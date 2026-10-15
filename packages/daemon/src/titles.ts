@@ -17,6 +17,16 @@ const DEEP_BYTES = 6 * 1024 * 1024;
 const NAME_HEAD_BYTES = 1024 * 1024;
 const NAME_TAIL_BYTES = 2 * 1024 * 1024;
 
+/**
+ * How many one-time deep reads (names, deeper requests) one backfill pass may do. Measured on a copy of a real
+ * store (about 500 transcripts): all of them in one pass took 9 s on the daemon's only thread, so they are spread
+ * over passes; a file that has to wait keeps its marker unset and is picked up by a later pass.
+ */
+export const DEEP_READS_PER_PASS = 60;
+export interface DeepBudget {
+  left: number;
+}
+
 /** Complete lines from the last `maxBytes` of a file (the first, probably partial, line is dropped). */
 export function tailWindowLines(path: string, maxBytes: number): string[] {
   const fd = openSync(path, "r");
@@ -67,7 +77,14 @@ export function headLines(path: string, maxBytes: number = HEAD_BYTES): string[]
  * the file is not read again; a file with no user request yet is retried on the next pass.
  * Re-running is idempotent: the session id is the key and an existing title is kept.
  */
-export function captureRequestTitle(store: Store, path: string, key: string, own: string, now: string): void {
+export function captureRequestTitle(
+  store: Store,
+  path: string,
+  key: string,
+  own: string,
+  now: string,
+  budget?: DeepBudget,
+): void {
   // `titles2:` replaced `titles:` when injected text stopped counting as a request (D194): every head is read once more.
   const marker = `titles2:${key}`;
   if (store.getCursor(marker) !== 0) return;
@@ -82,6 +99,10 @@ export function captureRequestTitle(store: Store, path: string, key: string, own
     // at all would otherwise be re-read on every pass).
     const deep = `titles-deep:${key}`;
     if (store.getCursor(deep) !== 0) return;
+    if (budget) {
+      if (budget.left <= 0) return;
+      budget.left--;
+    }
     first = firstRequestTitle(read(DEEP_BYTES), own);
     store.setCursor(deep, 1, now);
     if (!first.found) return;
@@ -169,9 +190,14 @@ export function captureSessionNameFromFile(
   key: string,
   own: string,
   now: string,
+  budget?: DeepBudget,
 ): void {
   const marker = `names1:${key}`;
   if (store.getCursor(marker) !== 0) return;
+  if (budget) {
+    if (budget.left <= 0) return;
+    budget.left--;
+  }
   const lines = [...headLines(path, NAME_HEAD_BYTES), ...tailWindowLines(path, NAME_TAIL_BYTES)];
   store.transaction(() => {
     upsertSessionName(store, latestSessionName(lines, own), own, now);

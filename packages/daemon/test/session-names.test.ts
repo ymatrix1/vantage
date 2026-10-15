@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { parseTrackQuery } from "@vantage/core";
 import {
   Store,
+  DEEP_READS_PER_PASS,
   backfillTranscripts,
   itemDetailView,
   listItems,
@@ -244,5 +245,29 @@ describe("untitled sessions never read the same", () => {
     runStagePass(store, {}, NOW);
     const again = listItems(store).map((i) => i.title);
     expect(new Set(again).size).toBe(2);
+  });
+});
+
+describe("one-time deep reads are spread over passes", () => {
+  it("stops after DEEP_READS_PER_PASS deep reads in a pass and finishes on later passes", () => {
+    const total = DEEP_READS_PER_PASS + 3;
+    for (let i = 0; i < total; i++) {
+      const id = `${String(i).padStart(8, "0")}-3456-7890-abcd-ef1234567890`;
+      const line = JSON.stringify({ type: "custom-title", customTitle: `Name ${i}`, sessionId: id });
+      writeFileSync(join(projects, "demo", `${id}.jsonl`), line + "\n");
+    }
+    const count = (): number =>
+      Number(store.db.prepare("SELECT COUNT(*) AS n FROM session_names").get()?.["n"]);
+    backfillTranscripts(store, projects, NOW, undefined, true);
+    expect(count()).toBeLessThanOrEqual(DEEP_READS_PER_PASS + total); // incremental lines also name them
+    // The edge scan is the budgeted part: its markers are set for at most the budget on the first pass.
+    const marked = (): number =>
+      Number(store.db.prepare("SELECT COUNT(*) AS n FROM cursors WHERE source LIKE 'names1:%'").get()?.["n"]);
+    // A file with no typed request needs two deep reads (request, then name), so the budget covers fewer files.
+    expect(marked()).toBeGreaterThan(0);
+    expect(marked()).toBeLessThan(total);
+    for (let i = 0; i < 5; i++) backfillTranscripts(store, projects, NOW, undefined, true);
+    expect(marked()).toBe(total);
+    expect(count()).toBe(total);
   });
 });
