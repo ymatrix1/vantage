@@ -1,5 +1,7 @@
 export type { VantageEvent } from "@vantage/core";
 export { openUrl, runCli, trackUrl } from "./cli.ts";
+export { runTour, detectLang, TOURS, TOUR_STEPS } from "./tour/tour.ts";
+export { DEMO_ITEMS, seedDemoHome } from "./tour/demo.ts";
 export type { CliIo } from "./cli.ts";
 export { runChecks, runDoctor } from "./doctor.ts";
 export type { Check, CheckStatus } from "./doctor.ts";

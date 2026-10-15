@@ -148,6 +148,14 @@ describe("vantage add --dry-run", () => {
 });
 
 describe("vantage add", () => {
+  it("ends with a pointer to the tour, and a dry run does not", async () => {
+    expect(await cli(["add", "--dry-run"])).toBe(0);
+    expect(out.join(" ")).not.toContain("vantage tour");
+    out = [];
+    expect(await cli(["add", "--yes"])).toBe(0);
+    expect(out.at(-1)).toBe("New here? Run `vantage tour`");
+  });
+
   it("registers eight hooks (Stop synchronous), the status line and the repo, with a manifest", async () => {
     expect(await cli(["add", "--yes"])).toBe(0);
     const s = readSettings();

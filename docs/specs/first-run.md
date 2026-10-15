@@ -52,7 +52,7 @@ The end-goal install is a prompt the user pastes into their agent (Claude Code o
 
 ## The guided tour
 
-> **Status:** planned (bean `vantage-u1hk`). Text for the Track page's first-run state is specified here so the Track UI can build it.
+> **Status:** built in the CLI (bean `vantage-u1hk`, D106 proposed): `packages/cli/src/tour/`. The Track page's first-run text below is specified for the Track UI, which owns the page and has not built it yet.
 
 `vantage tour` is an interactive walkthrough in the terminal. It needs no network and no real data, and uses only synthetic examples.
 
@@ -67,7 +67,7 @@ The end-goal install is a prompt the user pastes into their agent (Claude Code o
 | 7 | Daily commands: `start`, `open`, `doctor`, `stats`, `add`, `remove` |
 | 8 | Where your data lives, what leaves the machine (nothing by default) and how to undo |
 
-Each step is about 8 lines, shows a small synthetic example and waits for Enter.
+Each step is about 8 lines, shows a small synthetic example and waits for Enter (when there is no terminal, it prints everything).
 
 | Option | Effect |
 |---|---|
@@ -76,7 +76,7 @@ Each step is about 8 lines, shows a small synthetic example and waits for Enter.
 | `--step N` | Start at step N |
 | `--demo` | Build a temporary synthetic Vantage home, start the daemon on a free port against it, print the URL (token in the fragment) and clean up on exit |
 
-The demo home holds about 12 invented items: every stage, a thrashing flag, an unproven claim, a group of derived sessions and a forgotten item, all with clearly fake names and repos. It never reads or writes the real `VANTAGE_HOME`. The tour text lives in one data file per language (`packages/cli/src/tour/`), so it can be tested and translated. `vantage add` ends with one line: "New here? Run `vantage tour`".
+The demo home holds about 12 invented items: every stage, a thrashing flag, an unproven claim, a group of derived sessions and a forgotten item, all with clearly fake names and repos. It never reads or writes the real `VANTAGE_HOME`: the daemon gets a clean environment (no real `VANTAGE_HOME`, `VANTAGE_REPOS` or `VANTAGE_PROJECTS_DIR`), an empty transcripts folder and no repos. The temp folder is deleted on exit, and only a folder with the demo name prefix inside the temp dir is ever deleted. `--port N` picks the port (default: a free one); a port in use is reported and nothing is left behind. The tour text lives in one data file per language (`packages/cli/src/tour/en.ts` and `pt.ts`), so it can be tested and translated. `vantage add` ends with one line: "New here? Run `vantage tour`".
 
 ### First-run state of the Track page
 

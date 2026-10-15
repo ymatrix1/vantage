@@ -17,11 +17,20 @@ const confirm = process.stdin.isTTY
     }
   : undefined;
 
+const pause = process.stdin.isTTY
+  ? async (prompt: string): Promise<void> => {
+      const rl = createInterface({ input: process.stdin, output: process.stdout });
+      await new Promise<string>((resolve) => rl.question(`${prompt} `, resolve));
+      rl.close();
+    }
+  : undefined;
+
 const code = await runCli(process.argv.slice(2), {
   out: (l) => process.stdout.write(`${l}\n`),
   err: (l) => process.stderr.write(`${l}\n`),
   env: process.env,
   stopSignal,
   ...(confirm ? { confirm } : {}),
+  ...(pause ? { pause } : {}),
 });
 process.exit(code);
