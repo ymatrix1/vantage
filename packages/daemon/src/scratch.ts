@@ -2,7 +2,7 @@
 // keeps the answers for a while; a repo or path git cannot answer for stays unclassified, which means
 // "counts as code" in the stage machine. Read-only: only `rev-parse` and `check-ignore` run.
 import { execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, realpathSync } from "node:fs";
 import { dirname } from "node:path";
 import { normalizeEditPath } from "@vantage/core";
 import type { VantageEvent } from "@vantage/core";
@@ -89,11 +89,30 @@ export interface GitClassification {
   relative: Map<string, string>;
 }
 
-/** Path of `path` inside `root` (forward slashes), or the path itself when it is not under it. */
+/**
+ * Path of `path` inside `root` (forward slashes), or the path itself when it is not under it. Git prints
+ * the real path of the repo root, while an event may carry another spelling of the same folder (a
+ * Windows 8.3 short name such as `RUNNER~1`, or a symlink), so a miss is retried with the path's
+ * existing folder resolved.
+ */
 function relativeTo(path: string, root: string): string {
-  const p = path.replaceAll("\\", "/");
-  const r = root.replaceAll("\\", "/").replace(/\/$/, "");
-  return p.toLowerCase().startsWith(`${r.toLowerCase()}/`) ? p.slice(r.length + 1) : p;
+  const slashed = (x: string): string => x.replaceAll("\\", "/");
+  const r = slashed(root).replace(/\/$/, "").toLowerCase();
+  const inside = (p: string): string | null =>
+    p.toLowerCase().startsWith(`${r}/`) ? p.slice(r.length + 1) : null;
+  const direct = inside(slashed(path));
+  if (direct !== null) return direct;
+  const dir = existingDir(path);
+  if (dir !== null) {
+    try {
+      const real = slashed(realpathSync.native(dir));
+      const rest = slashed(path).slice(slashed(dir).length);
+      return inside(real + rest) ?? slashed(path);
+    } catch {
+      // fall through: the path stays as given
+    }
+  }
+  return slashed(path);
 }
 
 /**
