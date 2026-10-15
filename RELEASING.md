@@ -1,6 +1,6 @@
 # Releasing Vantage
 
-For the maintainer. A release is one merge you choose to make. Nothing goes live by itself: the npm packages are only **staged** by CI, and you approve each one with 2FA. Design and reasons: [CI/CD spec](docs/specs/ci.md#releasing) and D96 in [decisions](docs/DECISIONS.md).
+For the maintainer. A release is one merge you choose to make. Nothing goes live by itself: the npm packages are only **staged** by CI, and you approve each one with 2FA. Design and reasons: [CI/CD spec](docs/specs/ci.md#releasing) and D98 in [decisions](docs/DECISIONS.md).
 
 ## How a release happens
 

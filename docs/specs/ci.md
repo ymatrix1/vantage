@@ -36,7 +36,7 @@ Runs on every push to `main` and every PR. Run locally with `pnpm check`.
 
 ## Releasing
 
-Proposed in D96 (not accepted yet). The maintainer's checklist is in [RELEASING.md](../../RELEASING.md).
+Proposed in D98 (not accepted yet). The maintainer's checklist is in [RELEASING.md](../../RELEASING.md).
 
 ```text
 feat/fix commits on main

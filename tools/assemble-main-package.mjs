@@ -1,4 +1,4 @@
-// Assembles the one installable Vantage npm package (D96). Does not publish.
+// Assembles the one installable Vantage npm package (D98). Does not publish.
 // Usage: node tools/assemble-main-package.mjs <version> <outDir> [--commit <sha>]
 //
 // The workspace packages are not published on their own. Their built output is staged under the package's own
@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 import { optionalDependencies } from "./assemble-native-packages.mjs";
 import { MAIN_NAME, REPOSITORY_URL } from "./package-names.mjs";
 
-/** npm name of the product package; `vantage` is taken on npm, so it is scoped (D96). The names live in package-names.mjs. */
+/** npm name of the product package; `vantage` is taken on npm, so it is scoped (D98). The names live in package-names.mjs. */
 export const PACKAGE_NAME = MAIN_NAME;
 /** Workspace packages staged inside the tarball, in `packages/` order. */
 export const BUNDLED = ["cli", "core", "daemon", "hooks", "ui"];

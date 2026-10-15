@@ -83,7 +83,7 @@ export interface NativeBinary {
   source: "package" | "local";
 }
 
-/** npm scope of the native hook packages (D96; tools/package-names.mjs holds the source of truth). */
+/** npm scope of the native hook packages (D98; tools/package-names.mjs holds the source of truth). */
 export const NATIVE_SCOPE = "@ymatrix1";
 
 /**

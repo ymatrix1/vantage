@@ -1,6 +1,6 @@
 name: release-pr
 
-# Keeps one release PR (branch release/next) up to date from the Conventional Commits on main (D96).
+# Keeps one release PR (branch release/next) up to date from the Conventional Commits on main (D98).
 # The PR changes only package.json (version) and CHANGELOG.md. Merging it is the release decision;
 # release.yml then tags, builds and publishes. This workflow never tags, releases or publishes.
 #
