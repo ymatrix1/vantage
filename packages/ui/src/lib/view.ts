@@ -47,7 +47,7 @@ export const DEFAULT_VIEW: ViewState = {
   hasEdits: null,
   sort: "activity",
   order: "desc",
-  group: "attention",
+  group: "repo",
   page: 1,
   pageSize: 25,
 };

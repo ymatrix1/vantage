@@ -6,7 +6,7 @@ import { emptyFacets } from "./helpers";
 describe("toQuery and parseView", () => {
   it("the default view is an empty URL and a full API request", () => {
     expect(toQuery(DEFAULT_VIEW)).toBe("");
-    expect(toQuery(DEFAULT_VIEW, true)).toBe("since=7d&sort=activity&order=desc&group=attention&pageSize=25");
+    expect(toQuery(DEFAULT_VIEW, true)).toBe("since=7d&sort=activity&order=desc&group=repo&pageSize=25");
   });
 
   it("round-trips every control, writing only what differs from the default", () => {
@@ -22,13 +22,13 @@ describe("toQuery and parseView", () => {
       hasEdits: true,
       sort: "title" as const,
       order: "desc" as const,
-      group: "repo" as const,
+      group: "stage" as const,
       page: 3,
       pageSize: 50,
     };
     const q = toQuery(v);
     expect(q).toBe(
-      "repo=acme%2Fsync,acme%2Fweb&branch=feat%2Fa%20b&stage=built,proven&proof=none&flag=thrashing,none&q=retry%20sync&since=30d&hasEdits=true&sort=title&order=desc&group=repo&page=3&pageSize=50",
+      "repo=acme%2Fsync,acme%2Fweb&branch=feat%2Fa%20b&stage=built,proven&proof=none&flag=thrashing,none&q=retry%20sync&since=30d&hasEdits=true&sort=title&order=desc&group=stage&page=3&pageSize=50",
     );
     expect(parseView(q)).toEqual(v);
   });
@@ -47,7 +47,7 @@ describe("toQuery and parseView", () => {
     expect([v.since, v.sort, v.group, v.page, v.pageSize, v.hasEdits, v.order]).toEqual([
       "7d",
       "activity",
-      "attention",
+      "repo",
       1,
       25,
       null,

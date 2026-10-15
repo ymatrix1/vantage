@@ -1236,6 +1236,21 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** Store the repo on every event at ingest (cannot fix history; the hook has a 100 ms budget, D67). Group by the folder's parent (still wrong for worktrees). Ask only the scanner's worktrees (misses repos the scanner was never told about: on the real copy that left 350 of 463 items with no repo, against 189 with the git fallback).
 - **Impact:** `RepoInfo` and `repoInfoOf` in core, `projects.ts` in the daemon, a stage-pass step, `repoUrl` on the Track item. On a copy of the real store the distinct repos go from 148 to 8, with 189 items having no repo (folders that are gone or are not repos). A first pass after upgrade resolves 12 folders at a time, so repos fill in over a few passes. Revisit if asking git per folder proves too slow, or if projects get a config mapping.
 
+### D100. Track page v2: projects first, rows named by branch, detail inline, repo from the git remote
+
+- **Status:** proposed
+- **Context:** On the real page the user found names hard to read (a row titled with a branch and subtitled with a worktree folder such as `brave-joliot-995ebc`), no links, rows that cannot expand, and a layout that is not organised top-down. The repo of an agent-only item was the last folder of the session's `cwd`, which for a worktree is a random folder name.
+- **Decision:**
+  1. **Layout, top to bottom, each level one question:** L0 one-line header ("Last 7 days: N in progress, M need you (a unproven, b stuck), K older", range, Stale or Offline badge; each number filters). L1 projects, the default grouping, each collapsible with its counts, last activity and a repo link, projects with the most "needs you" first. L2 one row per item. L3 inline detail on click or `Enter` (`Esc` closes all, `e` opens every row of the group).
+  2. **Row naming:** title is the ticket title or key, else the branch without an agent prefix (`claude/`) and a random six-hex suffix, else the fallback title; subtitle is the branch and a short relative time. The worktree folder is shown only in the expanded detail.
+  3. **Repo from the remote:** the stage pass stores an item's `repo` as the normalised remote path (`host/owner/repo`) when the item's `cwd` lies in a worktree the git scanner saw, else what the events named. No schema change. The page shows `owner/repo` and links only a real remote (`https://host/owner/repo`).
+  4. **Links** are built only from that remote, a branch name (escaped per segment) and a hex commit sha, `https` only, `target="_blank"` with `rel="noopener noreferrer"`. No PR or ticket link is invented; slots wait for the GitHub source and the tracker (D90).
+  5. **Detail:** a new read-only `GET /api/items/:id` returns repo, repo URL, branch, worktree path, last commit sha, sessions (with their parent) and edited files by base name; the trace endpoint supplies stage history and proofs. Nothing is sent to an outside service.
+  6. **Header counts** come from a second request with the same filters, grouped by attention, one row.
+- **Why:** The first question is "how is my work", the second "which project", the third "which item"; the evidence belongs one click away. Titling by branch uses the name a person chose; the remote is the one stable identity of a project (D17 repo keys).
+- **Alternatives:** Keep grouping by attention (mixes projects, hides which repo needs you). Store the project in a new column (a migration for what the stage pass can rewrite). Build PR links from branch names (invents a link that may not exist). Show the worktree folder as the subtitle (what the user disliked).
+- **Impact:** Adds `projects.ts` and `item-detail.ts` to the daemon, a route in `http.ts`, and `Header`, `Row`, `Detail`, title, link and project helpers to the UI; changes the default Track grouping to project; updates the web-ui and UX specs. Limits: projects are ordered by the rows on the current page (the API pages rows, not projects), and group totals include rows the page folds into "Conversations without code". Revisit when the API can sort and page by project.
+
 ### D102. Edits to scratch and git-ignored files are not code edits
 
 - **Status:** proposed
