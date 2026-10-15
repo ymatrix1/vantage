@@ -36,9 +36,28 @@ Every page and panel handles all five states.
 | `z` | Park item |
 | `r` | Resume with context |
 | `a` | Ask for proof |
-| `e` | Explain the selected item, project or week |
+| `e` | On Track: open every row of the selected group. Elsewhere (later): explain the selected item, project or week |
 | `1` / `2` / `3` / `4` | Group Track by attention / repo / stage / no grouping (proposed D85; no `g` chords, since `g s` is Sources) |
 | `?` | Show this map and the dot legend |
+
+## Track layout
+
+Proposed D95. Each level answers one question; the evidence is one click away.
+
+| Level | Question | What it shows |
+|---|---|---|
+| L0 header | How is it going? | One sticky line: "Last 7 days: 98 in progress, 20 need you (12 unproven, 5 stuck), 37 older", the date range and a Stale or Offline badge. Each number filters the list when clicked |
+| L1 projects | Which project? | The default grouping. One collapsible section per repo (`owner/repo` from the git remote, never a worktree folder) with "N need you, M in progress, last active X ago" and a repo link; most "needs you" first, then most recent |
+| L2 rows | Which item? | Title: ticket title or key, else the branch without `claude/` and a random six-hex suffix, else the fallback title. Subtitle: branch and a short time (never the worktree folder). The six dots with the stage label, the flag reason in words, a "N sessions" chip when above 1 and a branch link icon |
+| L3 detail | Why, and what is behind it? | Inline under the row (click or `Enter`; `Esc` closes all; `e` opens every row of the group): why it needs you, sessions (derived ones nested), files touched by base name, branch, last commit and folder, stage history, proofs, linked events, and actions: open branch, open last commit, copy branch name, copy the `cd` command |
+
+**Links** come only from the remote, the branch and a hex sha: `https://host/owner/repo`, `/tree/<branch>`, `/commit/<sha>`, each segment escaped, `target="_blank"`, `rel="noopener noreferrer"`. No PR or ticket link is invented: the slots wait for the GitHub source and the tracker (D90). A path with a quote, `$` or a backtick gets no `cd` button.
+
+**Pager and toolbar.** The summary line and the toolbar are sticky. The pager ("26 to 50 of 312", first, previous, next, last) shows above and below the list; the page-size selector is at the bottom. `[` and `]` page.
+
+**Header counts** need totals for the same filters grouped by attention, so the page makes a second request (`group=attention&pageSize=1`) next to the list request.
+
+**Known limits.** The API pages rows, not projects, so a project shows only its rows on the current page and projects are ordered by those rows. Group totals include the rows the page folds into "Conversations without code".
 
 ## Track controls
 
@@ -77,7 +96,7 @@ HTTP on `127.0.0.1`, token required on every `/api/*` call as `Authorization: Be
 |---|---|
 | `GET /api/focus` | Top 3 items plus digest groups |
 | `GET /api/track` | Track rows: filtered, sorted, paged and grouped, with `page`, `facets`, `lastPassAt`, `stale` and per-source health. Parameters below (proposed [D84](../DECISIONS.md)) |
-| `GET /api/items/:id` | Item detail: stage, behaviors, proofs, review, after-ship, history, links |
+| `GET /api/items/:id` | Item detail. Phase 1 (proposed D95): repo and repo URL, branch, worktree path, last commit sha, sessions with their parent, edited files by base name. Later: behaviors, review, after-ship, links |
 | `GET /api/journal?since=` | Timeline entries |
 | `GET /api/inbox` | Mentions, review requests, commitments by person |
 | `GET /api/sources` | Health per source |
@@ -99,7 +118,7 @@ HTTP on `127.0.0.1`, token required on every `/api/*` call as `Authorization: Be
 | `GET /api/items/:id/trace` | Why this item changed: events, rules fired, resulting changes |
 | `GET /api/live` (WebSocket) | Pushes `item.changed`, `flag.raised`, `source.health` events |
 
-Phase 1 ships only `GET /api/track`, `GET /api/items/:id/trace`, `GET /api/diagnostics` and `GET /api/live`; the item id is the URL-encoded `item_key` (for example `issue%3AFTK-2`). `/api/live` (proposed D81) passes the same Host, Origin and token checks as every route before the upgrade; the token rides in the `Sec-WebSocket-Protocol` header (`vantage.v1, <token>`), never the URL. It pushes `item.changed` (id and changed fields), `flag.raised` (id, kind, severity), `source.health` and `resync` after each stage pass, with no transcript or command text, and caps at 8 connections with a 15 s ping. The page refetches `/api/track` on every connect and polls it every 5 seconds only while the socket is down, reconnecting with backoff from 1 s to 30 s.
+Phase 1 ships only `GET /api/track`, `GET /api/items/:id`, `GET /api/items/:id/trace`, `GET /api/diagnostics` and `GET /api/live`; the item id is the URL-encoded `item_key` (for example `issue%3AFTK-2`). `/api/live` (proposed D81) passes the same Host, Origin and token checks as every route before the upgrade; the token rides in the `Sec-WebSocket-Protocol` header (`vantage.v1, <token>`), never the URL. It pushes `item.changed` (id and changed fields), `flag.raised` (id, kind, severity), `source.health` and `resync` after each stage pass, with no transcript or command text, and caps at 8 connections with a 15 s ping. The page refetches `/api/track` on every connect and polls it every 5 seconds only while the socket is down, reconnecting with backoff from 1 s to 30 s.
 
 ### `GET /api/track` parameters
 

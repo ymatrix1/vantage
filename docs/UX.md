@@ -50,12 +50,14 @@ Focus is drawn as the **landscape**: work items as dot characters, with needs-yo
 
 The main "all work" view. A table, not a board, because it stays readable with many items and keeps priority visible.
 
-- **Row:** priority chip, title, project or repo with one line of evidence, six-dot track (Asked, Built, Proven, Reviewed, Shipped, Verified), main flag, last activity.
+- **Layout, top to bottom** (proposed D95, [web UI spec](specs/web-ui.md#track-layout)): a one-line header with counts that filter ("Last 7 days: 98 in progress, 20 need you, 37 older"), then projects, then one row per item, then the detail inline under a row. The summary line and the toolbar stay in view while scrolling; the pager is above and below the list.
+- **Row:** title (ticket title or key, else the branch without agent prefixes, never a worktree folder), subtitle (branch and a short time), six-dot track (Asked, Built, Proven, Reviewed, Shipped, Verified) with a stage label, the flag reason in words, a session-count chip and a branch link.
+- **Inline detail:** sessions (derived ones nested), files touched, branch, last commit, stage history, proofs and actions (open branch, copy branch name, copy the `cd` command).
 - **Dot states:** filled green = done, blue ring = current, amber = at risk (for example unproven), red = needs you, a short dash = skipped or not configured.
 - **Short tracks:** `review_request` and `commitment` items show only their relevant dots.
 - **Group by** toggle:
-  - **Attention** (default): Needs you, In progress, Waiting on others, Done this week (collapsed).
-  - **Project:** one collapsible header per project with a stage health bar (share of items per stage) and a one-word summary ("2 need you", "1 at risk", "calm").
+  - **Project** (default): one collapsible header per project (the repo from the git remote) with "N need you, M in progress", last activity and a repo link, most "needs you" first. A stage health bar is later.
+  - **Attention:** Needs you, In progress, Waiting on others, Done this week (collapsed).
   - **Stage:** rows grouped by current stage.
 - **Filters:** context, project, flag, agent, item kind, and proof state (`unproven`, `expired proof`, `failed proof`, `weak proof`).
 - **"Moved since yesterday"** marker on rows whose stage changed.

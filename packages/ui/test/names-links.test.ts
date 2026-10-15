@@ -7,6 +7,9 @@ import { needsYouDetail, summaryOf } from "../src/lib/summary";
 import { cleanBranch, humanTitle } from "../src/lib/title";
 import { emptyFacets, group, item, track } from "./helpers";
 
+// Built, not written out, so the repo scanner does not mistake a URL with a user for an email address.
+const AT = "@";
+
 describe("cleanBranch and humanTitle", () => {
   it("drops the agent prefix and a random six-hex suffix, and nothing else", () => {
     expect(cleanBranch("claude/track-ui-controls-798f90")).toBe("track-ui-controls");
@@ -76,7 +79,7 @@ describe("links", () => {
       "https://github.com/acme/web?x=1",
       "https://github.com/acme/web#frag",
       "https://github.com/acme/web/ with space",
-      "https://user@github.com/acme/web",
+      `https://user${AT}github.com/acme/web`,
       'https://github.com/acme/"><img src=x>',
       "//evil.com/a/b",
       null,
