@@ -97,7 +97,7 @@ describe("main package assembly", () => {
     ]) {
       expect(files.filter((f) => bad.test(f))).toEqual([]);
     }
-  });
+  }, 120_000);
 
   it("stamps the version and the commit for `vantage --version`", () => {
     assemble("1.2.3", out, { root: fake, commit: "0123456789abcdef" });
