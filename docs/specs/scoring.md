@@ -38,6 +38,7 @@ Unit: active minutes when available, otherwise event count. Hover shows per-sess
 
 - `last_activity` = latest linked event of any kind.
 - `forgotten` when stage is Asked or Built and `now - last_activity > N days` (default 5).
+- **Not for backfilled conversations (proposed D94):** no `forgotten` for an item with no code edit whose last activity was already older than N days when Vantage first saw it (`work_items.created_at`). It is its own low-urgency group, not "Needs you".
 - Commitments ("I'll check", "will fix", "on it") by the user with no linked activity within N days are also `forgotten`.
 
 ## Digest batching

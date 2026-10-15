@@ -2,6 +2,10 @@
   "name": "@vantage/daemon",
   "version": "0.0.0",
   "private": true,
+  "files": [
+    "dist",
+    "migrations"
+  ],
   "type": "module",
   "exports": {
     ".": {

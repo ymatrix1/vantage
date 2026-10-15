@@ -87,6 +87,13 @@ export interface StageOptions {
    * Without `now` the window cannot be applied and every flag is raised as before.
    */
   flagWindowHours?: number;
+  /**
+   * When each item was first seen (item key to ISO time; the stage pass passes `work_items.created_at`).
+   * `forgotten` is not raised for an item with no code edit whose last activity was already older than
+   * the threshold at that moment: a backfilled conversation, not work that was dropped (proposed D94).
+   * An item missing from the map counts as first seen at `now`.
+   */
+  firstSeen?: ReadonlyMap<string, string>;
 }
 
 export const DEFAULT_FLAG_WINDOW_HOURS = 48;
@@ -371,7 +378,9 @@ function evaluate(itemKey: string, events: readonly VantageEvent[], opts: StageO
   const days = opts.forgottenDays ?? 5;
   if (opts.now && stage !== "proven" && lastActivity) {
     const idle = (opts.now.getTime() - Date.parse(lastActivity)) / 86_400_000;
-    if (idle > days) {
+    const seen = Date.parse(opts.firstSeen?.get(itemKey) ?? opts.now.toISOString());
+    const bornStale = codeEdits === 0 && (seen - Date.parse(lastActivity)) / 86_400_000 > days;
+    if (idle > days && !bornStale) {
       flags.push({
         kind: "forgotten",
         severity: "amber",
@@ -429,4 +438,34 @@ export function computeStages(
     }
   }
   return [...groups.keys()].toSorted().map((key) => evaluate(key, groups.get(key) ?? [], opts));
+}
+
+export type ProofFamily =
+  | "vitest"
+  | "jest"
+  | "pytest"
+  | "go_test"
+  | "dotnet_test"
+  | "dbt"
+  | "cargo_test"
+  | "other_test_runner"
+  | "data_tool";
+
+/**
+ * Which recognised check family a command belongs to, or null when the stage machine would not count it
+ * as a check. Uses the same allowlist as proof detection, so measurements and the machine cannot drift.
+ */
+export function proofFamily(command: string): ProofFamily | null {
+  const hit = classify(command);
+  if (!hit) return null;
+  if (hit.type === "data_check") return "data_tool";
+  const s = hit.segment;
+  if (/^(?:npx\s+|pnpm\s+(?:exec\s+)?|yarn\s+(?:run\s+)?|bunx?\s+)?vitest\b/.test(s)) return "vitest";
+  if (/^(?:npx\s+|pnpm\s+(?:exec\s+)?|yarn\s+(?:run\s+)?|bunx?\s+)?jest\b/.test(s)) return "jest";
+  if (/^(?:python3?\s+-m\s+)?pytest\b/.test(s)) return "pytest";
+  if (/^go\s+test\b/.test(s)) return "go_test";
+  if (/^dotnet\s+test\b/.test(s)) return "dotnet_test";
+  if (/^dbt\b/.test(s)) return "dbt";
+  if (/^cargo\s+test\b/.test(s)) return "cargo_test";
+  return "other_test_runner";
 }

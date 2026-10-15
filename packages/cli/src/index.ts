@@ -13,3 +13,5 @@ export {
   runRemove,
   stripSettings,
 } from "./install.ts";
+export { GOALS, computeStats, renderStats, runStats } from "./stats.ts";
+export type { Stats, StatsOptions } from "./stats.ts";

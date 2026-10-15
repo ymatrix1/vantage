@@ -4,7 +4,9 @@ Checks:
 1. Relative Markdown links point to files that exist.
 2. Every decision and proposal in docs/DECISIONS.md has the five required fields (D30), a valid status
    and owner, and an accepted decision is never edited or removed relative to the base branch (D69).
-3. No secrets or personal identifiers slipped into tracked text files (privacy boundary).
+3. The SQLite migration files are numbered without gaps or duplicates, named NNNN-slug.sql, and a migration
+   on the base branch is never edited, renamed or removed (D93).
+4. No secrets or personal identifiers slipped into tracked text files (privacy boundary).
 
 Exits non-zero with a list of problems. Standard library only.
 """
@@ -18,6 +20,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import decisions_check  # noqa: E402
+import migrations_check  # noqa: E402
 import plugin_check  # noqa: E402
 LINK = re.compile(r"\]\(([^)\s]+)\)")
 PRIVACY = [
@@ -112,6 +115,28 @@ def check_decisions():
     return problems
 
 
+def git_base(*args):
+    """Output of a git command against origin/<base>, or None when it fails (for example a shallow clone)."""
+    out = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
+    return out.stdout if out.returncode == 0 else None
+
+
+def check_migrations():
+    folder = ROOT / migrations_check.DIR
+    head = {f.name: f.read_text(encoding="utf-8") for f in sorted(folder.iterdir()) if f.is_file()} if folder.is_dir() else {}
+    problems = migrations_check.check_names(list(head))
+    base = os.environ.get("GITHUB_BASE_REF") or "main"
+    listing = git_base("ls-tree", "--name-only", f"origin/{base}", f"{migrations_check.DIR}/")
+    if listing is not None:
+        base_files = {}
+        for path in listing.splitlines():
+            text = git_base("show", f"origin/{base}:{path}")
+            if text is not None:
+                base_files[path.rsplit("/", 1)[-1]] = text
+        problems += migrations_check.check_freeze(base_files, head)
+    return problems
+
+
 def check_plugin():
     base = ROOT / "plugin" / "vantage"
     commands = sorted((base / "commands").glob("*.md"))
@@ -141,7 +166,7 @@ def check_privacy(files):
 
 def main():
     files = tracked_files()
-    problems = check_links(files) + check_tables(files) + check_decisions() + check_plugin() + check_privacy(files)
+    problems = check_links(files) + check_tables(files) + check_decisions() + check_migrations() + check_plugin() + check_privacy(files)
     for p in problems:
         print(p)
     print(f"{len(problems)} problem(s) in {len(files)} tracked files")
