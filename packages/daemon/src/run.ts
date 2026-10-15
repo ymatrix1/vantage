@@ -3,6 +3,7 @@ import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { backfillTranscripts, ingestSpool } from "./ingest.ts";
+import { readRequestTitlesEnabled } from "./runtime.ts";
 import { Store } from "./store.ts";
 
 export interface RunOptions {
@@ -20,7 +21,13 @@ export function runOnce(opts: RunOptions = {}): { spool: number; transcripts: nu
   const store = new Store(join(home, "vantage.db"));
   try {
     const spool = ingestSpool(store, join(home, "spool"), opts.now);
-    const transcripts = backfillTranscripts(store, projectsDir, opts.now);
+    const transcripts = backfillTranscripts(
+      store,
+      projectsDir,
+      opts.now,
+      undefined,
+      readRequestTitlesEnabled(home),
+    );
     return { spool: spool.inserted, transcripts: transcripts.inserted };
   } finally {
     store.close();

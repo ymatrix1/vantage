@@ -12,6 +12,7 @@ import {
 import type { IngestContext, TranscriptLine, VantageEvent } from "@vantage/core";
 import type { Store } from "./store.ts";
 import { tailLines } from "./tail.ts";
+import { captureRequestTitle } from "./titles.ts";
 
 export interface IngestResult {
   files: number;
@@ -136,6 +137,8 @@ export function backfillTranscripts(
   projectsDir: string,
   now: Date = new Date(),
   days: number = BACKFILL_DAYS,
+  /** Capture first-request titles (default on; `item_titles_from_requests` in config.toml, D95). */
+  requestTitles = true,
 ): IngestResult {
   const stamp = now.toISOString();
   const cutoff = now.getTime() - days * 86_400_000;
@@ -146,6 +149,10 @@ export function backfillTranscripts(
     if (statSync(path).mtimeMs < cutoff) continue;
     const key = `transcript:${relative(projectsDir, path)}`;
     const before = store.getCursor(key);
+    // A session file is named by its session id. Sub-agent files (`subagents/`) carry the parent's id
+    // and are not sessions of their own. Copied history is read before the window filter (D86).
+    const own = path.split(sep).includes("subagents") ? null : basename(path, ".jsonl");
+    if (requestTitles && own) captureRequestTitle(store, path, key, own, stamp);
     const { lines, nextOffset } = tailLines(path, before);
     if (lines.length === 0 && nextOffset === before) continue;
     const parsed: TranscriptLine[] = [];
@@ -156,9 +163,6 @@ export function backfillTranscripts(
       // Lines older than the window are skipped; a long-lived file may start before the cutoff.
       if (p && p.timestamp && Date.parse(p.timestamp) >= cutoff) parsed.push(p);
     }
-    // A session file is named by its session id. Sub-agent files (`subagents/`) carry the parent's id
-    // and are not sessions of their own. Copied history is read before the window filter (D86).
-    const own = path.split(sep).includes("subagents") ? null : basename(path, ".jsonl");
     const lineage = own ? transcriptLineage(all, own) : [];
     result.files++;
     result.inserted += commit(store, key, nextOffset, [...lineage, ...transcriptEvents(parsed, ctx)], stamp);

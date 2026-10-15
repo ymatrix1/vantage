@@ -1,4 +1,4 @@
-// The npm names and the repository URL, in ONE place (D93). Changing the scope or the product name is a
+// The npm names and the repository URL, in ONE place (D96). Changing the scope or the product name is a
 // one-line change here. packages/cli/src/install.ts looks the native package up by the same name and has
 // a test that keeps the two in step.
 

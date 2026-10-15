@@ -24,7 +24,7 @@ Install without a clone and build, and make every release a deliberate, reviewab
 - [x] npm publish stays gated (variable, environment, token check, dry run first); least-privilege permissions; actions pinned by SHA
 - [x] `vantage --version` and a doctor version row, with tests
 - [x] Package content test, release-notes test, docs check for RELEASING.md
-- [x] Docs: ci.md Releasing, RELEASING.md, install guide, README, ROADMAP; D93 recorded as proposed
+- [x] Docs: ci.md Releasing, RELEASING.md, install guide, README, ROADMAP; D96 recorded as proposed
 - [x] Owner configuration split into a follow-up bean (`vantage-d28s`, now covers names, licence, environment, token, variable, rehearsal, first release)
 
 ## Out of Scope
@@ -37,5 +37,5 @@ Creating tags, releases, secrets, environments or publishing; repository setting
 - `tools/assemble-main-package.mjs`: the one `vantage-a2v` package (built workspace packages bundled through `bundledDependencies`, native packages optional); `tools/smoke-install.mjs` installs and runs the tarball.
 - Workflows: `release-pr.yml` (release PR), `release.yml` (build, native, assemble, GitHub Release, attestation, gated `publish-npm`); `release-native.yml` is now callable and no longer has its own manual publish. Actions pinned by SHA.
 - `vantage --version` (`build-info.json` in a release, package version plus git sha in a checkout) and a doctor `version` row.
-- Docs: `RELEASING.md` with the owner checklist, ci.md "Releasing", install guide and README release path, ROADMAP, D93 proposed; `tools/releasing_check.py` in `check_docs.py`.
+- Docs: `RELEASING.md` with the owner checklist, ci.md "Releasing", install guide and README release path, ROADMAP, D96 proposed; `tools/releasing_check.py` in `check_docs.py`.
 - Found: `vantage` is taken on npm (1.7.0), so the package is `vantage-a2v`; the `@vantage` scope is unverified. Not done: any real tag, release, publish or repository setting (owner work, `vantage-d28s`).

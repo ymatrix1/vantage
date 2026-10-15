@@ -1,4 +1,4 @@
-// Static checks on the release workflows and the package names (D93): the publish path has no stored token,
+// Static checks on the release workflows and the package names (D96): the publish path has no stored token,
 // the trusted-publisher file name is stable, and every action is pinned. Reads files only.
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

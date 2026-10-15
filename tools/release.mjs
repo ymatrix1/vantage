@@ -7,7 +7,7 @@
 //   node tools/release.mjs notes <version>        prints that version's CHANGELOG section
 //   node tools/release.mjs pr-body <version>      prints the release PR description
 //
-// Pre-1.0 rules (D93): feat bumps minor, fix and perf bump patch, a breaking change bumps minor until 1.0.
+// Pre-1.0 rules (D96): feat bumps minor, fix and perf bump patch, a breaking change bumps minor until 1.0.
 // From 1.0 a breaking change bumps major.
 import { execFileSync } from "node:child_process";
 import { appendFileSync, readFileSync, writeFileSync } from "node:fs";

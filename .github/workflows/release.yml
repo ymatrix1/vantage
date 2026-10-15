@@ -1,6 +1,6 @@
 name: release
 
-# Release delivery (D93, docs/specs/ci.md "Releasing", RELEASING.md).
+# Release delivery (D96, docs/specs/ci.md "Releasing", RELEASING.md).
 #
 #   push to main  -> if package.json holds a version with no tag (the release PR was merged): build, test,
 #                    native build, assemble, GitHub Release with artifacts and attestation, then the GATED npm publish.
@@ -9,7 +9,7 @@ name: release
 #
 # Nothing here publishes on its own. `publish-npm` needs the repository variable NPM_PUBLISH_ENABLED=true AND
 # approval in the `npm-publish` environment AND a trusted publisher configured on npmjs.com for this file.
-# There is no npm token anywhere. Without the variable the job is skipped; it stages by default (D93).
+# There is no npm token anywhere. Without the variable the job is skipped; it stages by default (D96).
 
 on:
   push:

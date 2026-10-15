@@ -1,5 +1,5 @@
 // Synthetic package tree: proves the published tarball holds exactly the expected files and nothing else
-// (no sources, no tests, no maps, no .env, no fixtures). vantage-a6hi, D93.
+// (no sources, no tests, no maps, no .env, no fixtures). vantage-a6hi, D96.
 import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -33,6 +33,7 @@ beforeEach(() => {
     put(`packages/${pkg}/src/index.ts`, "source");
     put(`packages/${pkg}/test/fixtures/session.jsonl`, "private");
     put(`packages/${pkg}/.env`, "SECRET=1");
+    if (pkg === "daemon") put("packages/daemon/migrations/0001-initial-schema.sql", "-- sql");
     if (pkg === "ui") {
       put("packages/ui/dist/index.html", "<html></html>");
       put("packages/ui/dist/assets/app.js", "js");
@@ -75,6 +76,7 @@ describe("main package assembly", () => {
         "node_modules/@vantage/core/dist/src/index.js",
         "node_modules/@vantage/core/package.json",
         "node_modules/@vantage/daemon/dist/src/index.js",
+        "node_modules/@vantage/daemon/migrations/0001-initial-schema.sql",
         "node_modules/@vantage/daemon/package.json",
         "node_modules/@vantage/hooks/dist/src/index.js",
         "node_modules/@vantage/hooks/package.json",

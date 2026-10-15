@@ -1,4 +1,4 @@
-// Assembles the one installable Vantage npm package (D93). Does not publish.
+// Assembles the one installable Vantage npm package (D96). Does not publish.
 // Usage: node tools/assemble-main-package.mjs <version> <outDir> [--commit <sha>]
 //
 // The workspace packages are not published on their own. Their built output is staged under the package's own
@@ -12,10 +12,12 @@ import { fileURLToPath } from "node:url";
 import { optionalDependencies } from "./assemble-native-packages.mjs";
 import { MAIN_NAME, REPOSITORY_URL } from "./package-names.mjs";
 
-/** npm name of the product package; `vantage` is taken on npm, so it is scoped (D93). The names live in package-names.mjs. */
+/** npm name of the product package; `vantage` is taken on npm, so it is scoped (D96). The names live in package-names.mjs. */
 export const PACKAGE_NAME = MAIN_NAME;
 /** Workspace packages staged inside the tarball, in `packages/` order. */
 export const BUNDLED = ["cli", "core", "daemon", "hooks", "ui"];
+/** Runtime files outside dist that a package reads from its own root (the daemon reads its SQL migrations at start). */
+export const EXTRA_DIRS = { daemon: ["migrations"] };
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const SEMVER = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
@@ -71,6 +73,11 @@ export function assemble(version, outDir, { commit, root = repoRoot } = {}) {
       recursive: true,
       filter: keep,
     });
+    for (const extra of EXTRA_DIRS[pkg] ?? []) {
+      const from = join(root, "packages", pkg, extra);
+      if (!existsSync(from)) throw new Error(`${from} is missing`);
+      cpSync(from, join(target, extra), { recursive: true });
+    }
     const source = JSON.parse(readFileSync(join(root, "packages", pkg, "package.json"), "utf8"));
     writeFileSync(
       join(target, "package.json"),

@@ -1,5 +1,14 @@
 export type { VantageEvent } from "@vantage/core";
 export { Store } from "./store.ts";
+export {
+  MigrationError,
+  MIGRATIONS_DIR,
+  buildMigrations,
+  checksum,
+  loadMigrations,
+  migrate,
+} from "./migrations.ts";
+export type { Migration, MigrationErrorCode } from "./migrations.ts";
 export { BACKFILL_DAYS, backfillEventBranches, backfillTranscripts, ingestSpool } from "./ingest.ts";
 export type { IngestResult } from "./ingest.ts";
 export { runOnce } from "./run.ts";
@@ -10,6 +19,13 @@ export { linkStoredEvents, linksForItem, undoLink } from "./linking.ts";
 export type { StoredLink } from "./linking.ts";
 export { itemSessionCounts } from "./lineage.ts";
 export type { ItemSessionCounts } from "./lineage.ts";
+export {
+  captureRequestTitle,
+  clearRequestTitles,
+  listRequestTitles,
+  requestTitleMap,
+  type StoredRequestTitle,
+} from "./titles.ts";
 export { dismissFlag, getItem, listItems, runStagePass } from "./stages.ts";
 export type {
   ItemDetail,
@@ -32,6 +48,7 @@ export {
   DEFAULT_PORT,
   HEALTH_FILE,
   readFlagWindowHours,
+  readRequestTitlesEnabled,
   readHealth,
   readRepos,
   startDaemon,

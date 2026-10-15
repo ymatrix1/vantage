@@ -125,7 +125,7 @@ The output holds numbers and fixed labels only: no titles, commands, paths or re
 
 ### Where your data lives
 
-All local, under `~/.vantage` (or `VANTAGE_HOME`): `spool/` (one line per hook event, **including the tool input Claude Code passes to the hook**), `vantage.db` (events, links, stages, proofs), `token` (the Track page token), `status.json` and `health.json`. The daemon listens on `127.0.0.1` only, with a token and Host and Origin checks. Nothing leaves the machine, and no outside model is called. See [privacy](docs/ARCHITECTURE.md#privacy) and the [data policy](docs/specs/settings.md).
+All local, under `~/.vantage` (or `VANTAGE_HOME`): `spool/` (one line per hook event, **including the tool input Claude Code passes to the hook**), `vantage.db` (events, links, stages, proofs), `token` (the Track page token), `status.json` and `health.json`. **Request titles are stored locally:** the first sentence of a session's first request (cleaned of paths, URLs and anything that looks like a secret, at most 80 characters) becomes that session's item title and is kept in `vantage.db`, nowhere else. Turn it off with `item_titles_from_requests = false` in `config.toml`, see what is stored with `vantage titles`, and delete it with `vantage titles clear`. The daemon listens on `127.0.0.1` only, with a token and Host and Origin checks. Nothing leaves the machine, and no outside model is called. See [privacy](docs/ARCHITECTURE.md#privacy) and the [data policy](docs/specs/settings.md).
 
 ### Undo
 

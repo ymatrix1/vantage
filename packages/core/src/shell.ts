@@ -50,6 +50,48 @@ function maskQuoted(text: string): string {
   );
 }
 
+/** Replaces `$( ... )` (nested too) with same-length filler so its separators are not seen. */
+function maskSubstitutions(text: string): string {
+  const out = text.split("");
+  for (let i = 0; i < text.length - 1; i++) {
+    if (text[i] !== "$" || text[i + 1] !== "(") continue;
+    let depth = 0;
+    let j = i + 1;
+    for (; j < text.length; j++) {
+      if (text[j] === "(") depth++;
+      else if (text[j] === ")" && --depth === 0) break;
+    }
+    // An unclosed `$(` runs to the end of the text.
+    for (let k = i; k <= Math.min(j, text.length - 1); k++) out[k] = "_";
+    i = j;
+  }
+  return out.join("");
+}
+
+/**
+ * Splits a command into the simple commands that run (`a && b | c; d`), without cutting inside quotes,
+ * backticks, `$(...)` or after a backslash, and without the bodies of here-documents. Each segment keeps
+ * its original text and is trimmed; empty ones are dropped. Pattern based like the rest of this file:
+ * `(` grouping and `{ }` are not parsed.
+ */
+export function splitCommandSegments(command: string): string[] {
+  const { shell } = splitHeredocs(command);
+  // Same-length masks so offsets in the mask are offsets in `shell`.
+  const masked = maskSubstitutions(
+    shell
+      .replace(/"(?:\\.|[^"\\])*"|'[^']*'|`[^`]*`/g, (m) => "_".repeat(m.length))
+      .replace(/\\[\s\S]/g, "__"),
+  );
+  const out: string[] = [];
+  let start = 0;
+  for (const m of masked.matchAll(/&&|\|\||;|\||\n/g)) {
+    out.push(shell.slice(start, m.index));
+    start = m.index + m[0].length;
+  }
+  out.push(shell.slice(start));
+  return out.map((s) => s.trim()).filter((s) => s !== "");
+}
+
 const PYTHON_FILE_WRITE =
   /\bopen\([^)\n]*,\s*(?:mode\s*=\s*)?["'][wax]b?\+?["']|\.write_(?:text|bytes)\(|\bwriteFileSync\(/;
 

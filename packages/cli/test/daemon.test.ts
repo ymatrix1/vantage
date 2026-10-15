@@ -1,10 +1,18 @@
 // Hermetic: loopback only, temp VANTAGE_HOME, ephemeral port, synthetic data.
 import { request } from "node:http";
+import { DatabaseSync } from "node:sqlite";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { AlreadyRunningError, readHealth, readRepos, startDaemon, type DaemonHandle } from "@vantage/daemon";
+import {
+  AlreadyRunningError,
+  loadMigrations,
+  readHealth,
+  readRepos,
+  startDaemon,
+  type DaemonHandle,
+} from "@vantage/daemon";
 import { collect } from "@vantage/hooks";
 import { statusLine } from "@vantage/hooks";
 import { runCli, trackUrl } from "../src/cli.ts";
@@ -135,6 +143,69 @@ describe("daemon end to end", () => {
     writeFileSync(join(home, "config.toml"), 'repos = [\n  "/a/b",\n  \'/c/d\',\n]\nproof_gate = "warn"\n');
     expect(readRepos(home, {})).toEqual(["/a/b", "/c/d"]);
     expect(readRepos(home, { VANTAGE_REPOS: "/x" })).toEqual(["/x"]);
+  });
+});
+
+const dbPath = (): string => join(home, "vantage.db");
+
+const ledger = (): { number: number; sha256: string }[] => {
+  const db = new DatabaseSync(dbPath(), { readOnly: true });
+  try {
+    return db
+      .prepare("SELECT number, sha256 FROM schema_migrations ORDER BY number")
+      .all()
+      .map((r) => ({ number: Number(r["number"]), sha256: String(r["sha256"]) }));
+  } finally {
+    db.close();
+  }
+};
+/** A database as the release before the ledger left it: migrations 1..4 and `schema_meta`, one event. */
+const writeOldDatabase = (): void => {
+  mkdirSync(home, { recursive: true });
+  const old = new DatabaseSync(dbPath());
+  for (const m of loadMigrations().filter((x) => x.number <= 6)) old.exec(m.sql);
+  old.exec(`DELETE FROM schema_meta; INSERT INTO schema_meta (version) VALUES (6);
+    INSERT INTO events (source, source_id, kind, occurred_at, ingested_at, payload_json)
+      VALUES ('claude_code', 'old1', 'file.edited', '2026-01-05T09:00:00Z', '2026-01-05T09:00:00Z', '{}');`);
+  old.close();
+};
+
+describe("migrations at start", () => {
+  it("the daemon starts on a fresh home and records every migration", async () => {
+    const d = await boot();
+    await d.stop();
+    daemon = null;
+    expect(ledger().map((r) => r.number)).toEqual(loadMigrations().map((m) => m.number));
+  });
+
+  it("the daemon starts on a database from before the ledger and keeps its events", async () => {
+    writeOldDatabase();
+    const d = await boot();
+    const track = await get(d.port, "/api/track", d.token);
+    expect(track.status).toBe(200);
+    await d.stop();
+    daemon = null;
+    expect(ledger()).toEqual(loadMigrations().map((m) => ({ number: m.number, sha256: m.sha256 })));
+    const db = new DatabaseSync(dbPath(), { readOnly: true });
+    expect(Number(db.prepare("SELECT COUNT(*) AS n FROM events WHERE source_id = 'old1'").get()?.["n"])).toBe(
+      1,
+    );
+    db.close();
+  });
+
+  it("vantage start says why and exits 1 when an applied migration was edited, leaving no lock", async () => {
+    const first = await boot();
+    await first.stop();
+    daemon = null;
+    const db = new DatabaseSync(dbPath());
+    db.exec("UPDATE schema_migrations SET sha256 = 'deadbeef' WHERE number = 2");
+    db.close();
+    const c = io({ VANTAGE_HOME: home, VANTAGE_REPOS: "", VANTAGE_PROJECTS_DIR: join(home, "none") });
+    expect(await runCli(["start", "--port", "0"], c.io)).toBe(1);
+    expect(c.err.join("\n")).toMatch(
+      /Could not start: Migration 0002-links\.sql was changed after it was applied/,
+    );
+    expect(existsSync(join(home, "daemon.lock"))).toBe(false);
   });
 });
 

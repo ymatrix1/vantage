@@ -8,6 +8,7 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { parseTrackQuery, type TrackView, type VantageEvent } from "@vantage/core";
 import {
+  loadMigrations,
   BIND_HOST,
   Store,
   readFlagWindowHours,
@@ -128,6 +129,7 @@ describe("defaults", () => {
       ["needs_you", 1, ["A"]],
       ["in_progress", 2, ["B", "C"]],
       ["waiting", 0, []],
+      ["forgotten", 0, []],
       ["done", 1, ["F"]],
     ]);
     expect(r.groups[0]).toMatchObject({ attention: "needs_you", label: "Needs you" });
@@ -257,7 +259,8 @@ describe("groups", () => {
   });
   it("a group's total counts the whole filter while its items are only the current page", () => {
     const r = view("since=all&pageSize=1&page=1");
-    expect(r.groups.find((g) => g.id === "needs_you")).toMatchObject({ total: 3 });
+    expect(r.groups.find((g) => g.id === "needs_you")).toMatchObject({ total: 2 }); // A and D
+    expect(r.groups.find((g) => g.id === "forgotten")).toMatchObject({ total: 1 }); // E
     expect(ids(r)).toEqual(["A"]);
   });
 });
@@ -267,7 +270,7 @@ describe("pagination", () => {
     const r = view("since=all");
     expect(r.page).toEqual({ page: 1, pageSize: 25, total: 0, pages: 1 });
     expect(ids(r)).toEqual([]);
-    expect(r.groups.map((g) => g.total)).toEqual([0, 0, 0, 0]);
+    expect(r.groups.map((g) => g.total)).toEqual([0, 0, 0, 0, 0]);
   });
   it("splits the flat sorted list, the last page is short, and a page past the end is empty, not an error", () => {
     seedSix();
@@ -396,7 +399,10 @@ describe("recent-flag window through the stage pass (fake clock)", () => {
     expect(byId["issue:FTK-2"]?.flags.filter((f) => f.kind !== "forgotten")).toEqual([]);
     expect(byId["issue:FTK-2"]).toMatchObject({ stage: "built", proofStatus: "failed" });
     // The Needs you group no longer fills with backfilled history.
-    expect(view("since=all").groups[0]?.items.map((i) => i.id)).toEqual(["issue:FTK-1", "issue:FTK-2"]);
+    const attention = view("since=all").groups;
+    expect(attention.find((g) => g.id === "needs_you")?.items.map((i) => i.id)).toEqual(["issue:FTK-1"]);
+    // The old item had code edits, so it is a forgotten item, not an urgent one.
+    expect(attention.find((g) => g.id === "forgotten")?.items.map((i) => i.id)).toEqual(["issue:FTK-2"]);
     expect(view("since=all&flag=thrashing").page.total).toBe(1);
   });
 
@@ -511,7 +517,9 @@ describe("migration 5", () => {
     old.close();
     const upgraded = new Store(path);
     try {
-      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(6);
+      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(
+        loadMigrations().length,
+      );
       const idx = upgraded.db
         .prepare("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'work_items'")
         .all()
@@ -625,5 +633,103 @@ describe("GET /api/track over HTTP", () => {
     expect((await get("/api/track", false)).status).toBe(401);
     expect((await get(`/api/track?token=${TOKEN}`, false)).status).toBe(401);
     expect((await get(`/api/track?token=${TOKEN}`)).status).toBe(400); // unknown parameter
+  });
+});
+
+const group = (id: string, at: Date): string[] => {
+  const p = parseTrackQuery(new URLSearchParams("since=all&pageSize=100"));
+  if (!p.ok) throw new Error(p.error);
+  return (
+    trackView(store, at, p.query)
+      .groups.find((g) => g.id === id)
+      ?.items.map((i) => i.id)
+      .toSorted() ?? []
+  );
+};
+
+describe("forgotten and session counts through the stage pass (fake clock, proposed D94)", () => {
+  let n = 0;
+  const put = (
+    branch: string,
+    kind: VantageEvent["kind"],
+    iso: string,
+    session: string,
+    payload: Record<string, unknown> = {},
+  ): void => {
+    store.insertEvent(
+      {
+        sourceId: `f${++n}`,
+        source: "claude_code",
+        kind,
+        timestamp: iso,
+        sessionId: session,
+        payload: { branch, ...payload },
+      },
+      iso,
+    );
+  };
+
+  it("a backfilled conversation gets no flag, now or later; fresh conversations and old work do", () => {
+    // All three events are 20 days old when the first pass sees them.
+    put("feat/ftk-1-chat", "prompt.submitted", "2025-12-16T09:00:00Z", "s1"); // conversation, no edit
+    put("feat/ftk-2-work", "file.edited", "2025-12-16T09:00:00Z", "s2", { path: "/w/a.ts" }); // code edit
+    runStagePass(store, {}, NOW);
+    expect(group("forgotten", NOW)).toEqual(["issue:FTK-2"]);
+    expect(group("in_progress", NOW)).toEqual(["issue:FTK-1"]);
+    // A later pass still does not flag the conversation: it was already stale when first seen.
+    const later = new Date("2026-01-20T11:00:00Z");
+    runStagePass(store, {}, later);
+    expect(group("forgotten", later)).toEqual(["issue:FTK-2"]);
+    expect(group("in_progress", later)).toEqual(["issue:FTK-1"]);
+  });
+
+  it("a conversation that was fresh when first seen is flagged once it goes idle", () => {
+    put("feat/ftk-3-fresh", "prompt.submitted", "2026-01-05T09:00:00Z", "s3");
+    runStagePass(store, {}, NOW);
+    expect(group("forgotten", NOW)).toEqual([]);
+    const later = new Date("2026-01-12T11:00:00Z"); // 7 days idle
+    runStagePass(store, {}, later);
+    expect(group("forgotten", later)).toEqual(["issue:FTK-3"]);
+  });
+
+  it("only thrashing and unproven_claim count as Needs you; the flag facet keeps all three kinds", () => {
+    put("feat/ftk-2-work", "file.edited", "2025-12-16T09:00:00Z", "s2", { path: "/w/a.ts" });
+    put("feat/ftk-4-claim", "file.edited", "2026-01-05T09:00:00Z", "s4", { path: "/w/b.ts" });
+    put("feat/ftk-4-claim", "session.stopped", "2026-01-05T09:05:00Z", "s4");
+    runStagePass(store, {}, NOW);
+    expect(group("needs_you", NOW)).toEqual(["issue:FTK-4"]);
+    expect(group("forgotten", NOW)).toEqual(["issue:FTK-2"]);
+    const p = parseTrackQuery(new URLSearchParams("since=all"));
+    if (!p.ok) throw new Error(p.error);
+    expect(trackView(store, NOW, p.query).facets.flag).toEqual({
+      thrashing: 0,
+      unproven_claim: 1,
+      forgotten: 1,
+      none: 0,
+    });
+  });
+
+  it("items carry sessionCount and derivedCount, defaulting to 1 and 0", () => {
+    put("feat/ftk-5-multi", "file.edited", "2026-01-05T08:00:00Z", "sa", { path: "/w/a.ts" });
+    put("feat/ftk-5-multi", "file.edited", "2026-01-05T09:00:00Z", "sb", { path: "/w/a.ts" });
+    store.insertEvent(
+      {
+        sourceId: "derived-sb",
+        source: "claude_code",
+        kind: "session.derived",
+        timestamp: "2026-01-05T09:00:00Z",
+        sessionId: "sb",
+        payload: { parentSessionId: "sa", lineage: "continuation", signal: "transcript-history" },
+      },
+      "2026-01-05T09:00:00Z",
+    );
+    seed("plain", { repo: "r", last: "2026-01-05T10:00:00Z" }); // no linked session at all
+    const p = parseTrackQuery(new URLSearchParams("since=all&group=none"));
+    if (!p.ok) throw new Error(p.error);
+    const items = (): Record<string, TrackView["groups"][number]["items"][number]> =>
+      Object.fromEntries((trackView(store, NOW, p.query).groups[0]?.items ?? []).map((i) => [i.id, i]));
+    expect(items()["plain"]).toMatchObject({ sessionCount: 1, derivedCount: 0 });
+    runStagePass(store, {}, NOW);
+    expect(items()["issue:FTK-5"]).toMatchObject({ sessionCount: 2, derivedCount: 1 });
   });
 });

@@ -1,4 +1,4 @@
-// Synthetic commit lists only: release notes, version bumps and changelog edits (vantage-a6hi, D93).
+// Synthetic commit lists only: release notes, version bumps and changelog edits (vantage-a6hi, D96).
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";

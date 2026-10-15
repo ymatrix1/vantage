@@ -21,7 +21,7 @@ Never slow an agent down.
 
 ## Acceptance Criteria
 
-Follow the checklist in RELEASING.md ("One-time setup"); the release workflow (vantage-a6hi, D93) is built and waits for it. No npm token is used: trusted publishing and staged approval.
+Follow the checklist in RELEASING.md ("One-time setup"); the release workflow (vantage-a6hi, D96) is built and waits for it. No npm token is used: trusted publishing and staged approval.
 
 - [ ] Package names confirmed free: `@ymatrix1/vantage` and `@ymatrix1/vantage-hook-<os>-<cpu>` (change `tools/package-names.mjs` if not)
 - [ ] Licence chosen (the packages say `UNLICENSED`)
