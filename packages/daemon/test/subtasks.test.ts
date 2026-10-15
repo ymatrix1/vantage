@@ -11,6 +11,7 @@ import {
   itemSessionCounts,
   itemTasks,
   linkStoredEvents,
+  loadMigrations,
   undoLink,
 } from "../src/index.ts";
 
@@ -229,7 +230,7 @@ describe("fork and resume counts", () => {
   });
 });
 
-describe("migration 7", () => {
+describe("migration 8", () => {
   it("replaces item_sessions and adds item_tasks on a version 6 database, keeping its data", () => {
     const p = join(dir, "old.db");
     const old = new DatabaseSync(p);
@@ -253,7 +254,9 @@ describe("migration 7", () => {
     old.close();
     const upgraded = new Store(p);
     try {
-      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(7);
+      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(
+        loadMigrations().length,
+      );
       expect(upgraded.countEvents()).toBe(2);
       expect(itemSessionCounts(upgraded).get("issue:FTK-9")).toMatchObject({
         sessionCount: 1,
