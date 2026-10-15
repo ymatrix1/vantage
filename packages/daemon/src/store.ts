@@ -35,6 +35,9 @@ export class Store {
     }
   }
 
+  /** Keep the cleaned text of the current task (D96). Set from the same switch as request titles. */
+  captureTaskText = true;
+
   /** Inserts the event unless (source, source_id) exists. Returns true when a row was added. */
   insertEvent(e: VantageEvent, ingestedAt: string): boolean {
     const r = this.db
