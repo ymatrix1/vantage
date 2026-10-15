@@ -50,7 +50,7 @@
       <span class="min-w-0 flex-1">
         <span class="block truncate font-medium">{humanTitle(item)}</span>
         <span class="block truncate text-xs text-muted-foreground">
-          {#if item.branch}<span>{item.branch}</span>{" · "}{/if}<span>{ago(item.lastActivity, now)}</span>
+          {#if item.org}<span title="Organization">{item.org === "local" ? "Local" : item.org}</span>{" · "}{/if}{#if item.branch}<span>{item.branch}</span>{" · "}{/if}<span>{ago(item.lastActivity, now)}</span>
           {#if (item.sessionCount ?? 0) > 1}<span class="ml-1 rounded-full border border-border px-1.5">{item.sessionCount} sessions</span>{/if}
           <span class="md:hidden"> · {stageLabel(item)}</span>
         </span>

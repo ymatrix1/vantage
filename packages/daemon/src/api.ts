@@ -12,6 +12,7 @@ import {
   projectNameOf,
   repoUrlOf,
   type AgeBucket,
+  type AskedEvidence,
   type Counts,
   type DiagnosticsResponse,
   type SortKey,
@@ -400,7 +401,7 @@ export function traceView(store: Store, id: string): TraceResponse | null {
   return {
     id,
     events,
-    transitions: item.transitions,
+    asked: askedEvidence(store, id, item.transitions),
     flags: item.flags.map((f) => ({
       kind: f.kind,
       severity: f.severity,
@@ -414,7 +415,36 @@ export function traceView(store: Store, id: string): TraceResponse | null {
       weakReason: p.weakReason,
       command: p.command,
       ranAt: p.ranAt,
+      type: p.type,
+      stale: p.state === "expired" || p.expiredByEventId !== null,
     })),
+    transitions: item.transitions,
+  };
+}
+
+const ANCHOR_KINDS = ["issue_key", "branch", "worktree", "session"] as const;
+
+/** The first stage change into Asked, with the anchor and session of its event. Ids and times only (D132). */
+function askedEvidence(
+  store: Store,
+  id: string,
+  transitions: { to: string; at: string; eventId: number }[],
+): AskedEvidence | null {
+  const t = transitions.find((x) => x.to === "asked");
+  if (!t) return null;
+  const e = store.db.prepare("SELECT session_id, occurred_at FROM events WHERE id = ?").get(t.eventId);
+  const l = store.db
+    .prepare(
+      "SELECT anchor_kind, anchor_value FROM links WHERE event_id = ? AND item_key = ? AND undone_at IS NULL",
+    )
+    .get(t.eventId, id);
+  const kind = ANCHOR_KINDS.find((k) => k === l?.["anchor_kind"]) ?? null;
+  const value = typeof l?.["anchor_value"] === "string" ? l["anchor_value"] : null;
+  return {
+    at: typeof e?.["occurred_at"] === "string" ? e["occurred_at"] : t.at,
+    anchorKind: kind,
+    anchorValue: kind === "issue_key" || kind === "branch" ? value : null,
+    sessionId: typeof e?.["session_id"] === "string" ? e["session_id"] : null,
   };
 }
 

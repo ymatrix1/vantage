@@ -35,7 +35,19 @@ describe("API strings render as text, never HTML", () => {
       trace: () => ({
         body: traceOf("x", {
           transitions: [{ from: BOLD, to: IMG, at: "t", eventId: 1, reason: SCRIPT }],
-          proofs: [{ eventId: 2, level: 1, state: IMG, weakReason: BOLD, command: SCRIPT, ranAt: "" }],
+          proofs: [
+            {
+              eventId: 2,
+              level: 1,
+              state: IMG,
+              weakReason: BOLD,
+              command: SCRIPT,
+              ranAt: "",
+              type: IMG,
+              stale: false,
+            },
+          ],
+          asked: { at: "", anchorKind: "branch", anchorValue: BOLD, sessionId: IMG },
           events: [{ eventId: 3, source: IMG, kind: SCRIPT, occurredAt: "", rule: BOLD, undone: false }],
         }),
       }),

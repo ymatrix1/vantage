@@ -20,6 +20,7 @@
 
   const DEBOUNCE_MS = 250;
   const TITLES: Record<FilterKey, string> = {
+    org: "Organization",
     repo: "Repo",
     branch: "Branch",
     stage: "Stage",

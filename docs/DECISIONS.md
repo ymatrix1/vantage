@@ -1237,6 +1237,33 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** Keep grouping by attention (mixes projects, hides which repo needs you). Store the project in a new column (a migration for what the stage pass can rewrite). Build PR links from branch names (invents a link that may not exist). Show the worktree folder as the subtitle (what the user disliked).
 - **Impact:** Adds `projects.ts` and `item-detail.ts` to the daemon, a route in `http.ts`, and `Header`, `Row`, `Detail`, title, link and project helpers to the UI; changes the default Track grouping to project; updates the web-ui and UX specs. Limits: projects are ordered by the rows on the current page (the API pages rows, not projects), and group totals include rows the page folds into "Conversations without code". Revisit when the API can sort and page by project.
 
+### D130. The Track page filters and shows items by organization
+
+- **Status:** proposed
+- **Context:** D99 gave every item an `org` (the remote's first path segment) and the API already filters, facets and groups by it. The page only used it as a grouping; there was no Organization filter and a row never said which organization it belongs to, so two repos with the same name under `flip-to` and `ymatrix1` looked alike.
+- **Decision:** The Toolbar gets an Organization filter (chips with live counts from `facets.org`, shown first), stored in the URL as `org=`. Each row's subtitle starts with the item's organization (`Local` for a repo with no remote), then the branch and age. No API change.
+- **Why:** The data and the query already exist, so the cost is one filter key and one subtitle part. Organization is the top of the Organization → Repo → Branch hierarchy (D99).
+- **Alternatives:** Show `owner/repo` on every row (long, and repeats what the group heading says). Only group by organization, no filter (cannot combine with repo or stage filters).
+- **Impact:** `FilterKey` gains `org`; `Toolbar`, `Row` and `view.ts` change; web-ui and UX specs updated. Revisit if rows get crowded.
+
+### D131. A proof is one line: kind, result icon, age, edited since
+
+- **Status:** proposed
+- **Context:** The proofs list read as `L2 fresh: <command>`, mixing a level, an internal state and a raw command, and did not say that a later edit made a proof out of date.
+- **Decision:** Each proof is one line: a line icon for the result (check passed, cross failed, dash weak, clock stale; no emoji, see the visual language spec), the kind (`Test`, `Data check`), the result word and weak reason, the level, the age, "edited since" when stale, then the command. The trace API adds `type` and `stale` to each proof (additive). A failed proof stays failed whatever its age; a stale one shows as stale.
+- **Why:** The reader scans result and freshness first. `stale` is already known to the stage machine (`expired`), so nothing new is derived.
+- **Alternatives:** Colour only (fails the shape-first rule). Group by kind (hides order in time). Keep the level badge instead of text (loses the weak reason).
+- **Impact:** `TraceResponse.proofs[]` gains `type` and `stale`; `Trace.svelte` and `proof-line.ts` change; web-ui and UX specs updated. Only `test` and `data_check` exist as kinds today; build and lint kinds show once the stage machine classifies them.
+
+### D132. Asked shows its evidence: session, anchor and time, never prompt text
+
+- **Status:** proposed
+- **Context:** "Asked" is set by a linked anchor (lifecycle spec), but the page never said which session or anchor started the item, so it read as an unexplained claim.
+- **Decision:** `GET /api/items/:id/trace` returns `asked {at, anchorKind, anchorValue, sessionId}` taken from the event of the first stage change into `asked` and its live link: the anchor kind (`issue_key`, `branch`, `worktree`, `session`), its value for an issue key or branch only (never a worktree path), the event's session id and time. The page shows "What made it Asked": session id first 8 characters, anchor, age. It is null when no such transition exists. No prompt or transcript text is read or sent.
+- **Why:** The link row and event already hold exactly this; metadata is enough to check the claim and respects the privacy boundary.
+- **Alternatives:** Show the first prompt text (privacy rule forbids it). Store the anchor on `work_items` (a migration for data that is one join away).
+- **Impact:** `TraceResponse.asked` (additive), `askedEvidence` in `packages/daemon/src/api.ts`, `Trace.svelte`. Updates web-ui, UX and lifecycle docs. An item whose first event was later undone shows null.
+
 ### D140. Edits to scratch and git-ignored files are not code edits
 
 - **Status:** proposed

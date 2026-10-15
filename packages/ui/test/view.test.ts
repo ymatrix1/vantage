@@ -106,3 +106,13 @@ describe("filters", () => {
     ]);
   });
 });
+
+describe("organization filter (D130)", () => {
+  it("round-trips org through the query string and counts as an active filter", () => {
+    const v = parseView("org=Flip-to,ymatrix1");
+    expect(v.org).toEqual(["Flip-to", "ymatrix1"]);
+    expect(toQuery(v)).toBe("org=Flip-to,ymatrix1");
+    expect(activeFilters(v)).toContain("org");
+    expect(clearFilters(v).org).toEqual([]);
+  });
+});

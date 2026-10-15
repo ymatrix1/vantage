@@ -82,8 +82,16 @@ export function traceOf(id: string, over: Partial<TraceResponse> = {}): TraceRes
         weakReason: null,
         command: "pnpm test",
         ranAt: "2026-01-01T00:00:00Z",
+        type: "test",
+        stale: false,
       },
     ],
+    asked: {
+      at: "2026-01-01T00:00:00Z",
+      anchorKind: "branch",
+      anchorValue: "feat/x",
+      sessionId: "a1b2c3d4-e5f6-7890",
+    },
     ...over,
   };
 }
