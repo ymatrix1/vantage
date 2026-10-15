@@ -1221,6 +1221,7 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** release-please in manifest mode (the standard tool and it supports pre-1.0 rules, but a large third-party action with write access, a manifest and config to maintain, and its changelog format is not ours to test). Tag-driven releases by hand (no release PR, so the changelog and version are edited by people). A bundler such as esbuild (one file, but a new exact-pinned dependency and a second build of the daemon). Publishing every workspace package (many names to own, and they are not a public API). An `NPM_TOKEN` environment secret (a long-lived write credential; kept only as an optional appendix in RELEASING.md). Direct `npm publish` from CI (no 2FA approval step). `vantage-cli` and `vantage` (taken on npm).
 - **Impact:** Adds `tools/release.mjs`, `tools/assemble-main-package.mjs`, `tools/smoke-install.mjs`, workflows `release.yml` and `release-pr.yml`, `RELEASING.md`, `CHANGELOG.md` and `vantage --version`. Narrows `release-native.yml` to build and package (no manual publish). The owner must confirm the names, create the 6 packages once by hand (a trusted publisher can only be added to an existing package), add the trusted publishers (exact file `release.yml`, environment `npm-publish`), create the `npm-publish` environment, set `NPM_PUBLISH_ENABLED` and choose a licence (`RELEASING.md`). A new trusted publisher must complete a publish within 2 days, and npm does not validate it on save. `npm stage publish` with a tarball and `--access public` is unverified until the first run. Accepting this amends the package names of D72 and D80. Revisit if the scope changes (one line in `tools/package-names.mjs`) or if the script outgrows its size.
 
+<<<<<<< HEAD
 ### D99. An item's repo is its git repo, resolved from the worktree it ran in
 
 - **Status:** proposed
@@ -1236,6 +1237,8 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** Store the repo on every event at ingest (cannot fix history; the hook has a 100 ms budget, D67). Group by the folder's parent (still wrong for worktrees). Ask only the scanner's worktrees (misses repos the scanner was never told about: on the real copy that left 350 of 463 items with no repo, against 189 with the git fallback).
 - **Impact:** `RepoInfo` and `repoInfoOf` in core, `projects.ts` in the daemon, a stage-pass step, `repoUrl` on the Track item. On a copy of the real store the distinct repos go from 148 to 8, with 189 items having no repo (folders that are gone or are not repos). A first pass after upgrade resolves 12 folders at a time, so repos fill in over a few passes. Revisit if asking git per folder proves too slow, or if projects get a config mapping.
 
+=======
+>>>>>>> docs/guide-and-glossary
 ### D120. Plain-language on-ramp: a guide, a glossary, term links and a pt-BR pair, with a docs check
 
 - **Status:** proposed
