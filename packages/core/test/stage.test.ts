@@ -388,3 +388,55 @@ describe("item origin", () => {
     expect([s?.repo, s?.branch]).toEqual([null, null]);
   });
 });
+
+const DAY = 86_400_000;
+const last = (m: number): number => Date.parse(at(m));
+const forgotten = (s: ItemState): boolean => s.flags.some((f) => f.kind === "forgotten");
+
+describe("forgotten and backfilled conversations (proposed D94)", () => {
+  it("is raised for idle work that had a code edit, even if it was already old when first seen", () => {
+    const now = new Date(last(1) + 10 * DAY);
+    expect(forgotten(one([edit(1)], { now }))).toBe(true);
+    const seenOld = new Map([["issue:FTK-1", now.toISOString()]]);
+    expect(forgotten(one([edit(1)], { now, firstSeen: seenOld }))).toBe(true);
+  });
+
+  it("is not raised for a conversation (no code edit) that was already older than the threshold when first seen", () => {
+    const now = new Date(last(0) + 10 * DAY);
+    const s = one([ev("prompt.submitted", 0)], {
+      now,
+      firstSeen: new Map([["issue:FTK-1", now.toISOString()]]),
+    });
+    expect(s.flags).toEqual([]);
+    expect(s.stage).toBe("asked"); // stage is untouched
+  });
+
+  it("counts an item missing from firstSeen as first seen now, so an old conversation gets no flag", () => {
+    const now = new Date(last(0) + 10 * DAY);
+    expect(one([ev("prompt.submitted", 0)], { now }).flags).toEqual([]);
+  });
+
+  it("is raised for a conversation that was fresh when first seen and then went idle", () => {
+    const firstSeen = new Map([["issue:FTK-1", new Date(last(0) + 1 * DAY).toISOString()]]);
+    const now = new Date(last(0) + 10 * DAY);
+    expect(forgotten(one([ev("prompt.submitted", 0)], { now, firstSeen }))).toBe(true);
+  });
+
+  it("holds just past the threshold: seen 4.9 days after the last activity is fresh, 5.1 is born stale", () => {
+    const now = new Date(last(0) + 30 * DAY);
+    const seenAt = (d: number): ReadonlyMap<string, string> =>
+      new Map([["issue:FTK-1", new Date(last(0) + d * DAY).toISOString()]]);
+    expect(forgotten(one([ev("prompt.submitted", 0)], { now, firstSeen: seenAt(4.9) }))).toBe(true);
+    expect(forgotten(one([ev("prompt.submitted", 0)], { now, firstSeen: seenAt(5.1) }))).toBe(false);
+  });
+
+  it("treats documentation-only items like conversations: no code edit", () => {
+    const now = new Date(last(1) + 10 * DAY);
+    const s = one([edit(1, "/w/README.md")], {
+      now,
+      firstSeen: new Map([["issue:FTK-1", now.toISOString()]]),
+    });
+    expect(s.docsOnly).toBe(true);
+    expect(forgotten(s)).toBe(false);
+  });
+});
