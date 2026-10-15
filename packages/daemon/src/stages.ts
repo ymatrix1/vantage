@@ -4,6 +4,7 @@
 // Stop gate, status line and Track page call.
 import { computeStages, fallbackTitle } from "@vantage/core";
 import type { ItemState, LinkOptions, StageOptions } from "@vantage/core";
+import { acceptedTitles, isExplicitKey } from "./classify-store.ts";
 import { linkStoredEvents, loadEvents } from "./linking.ts";
 import type { Store } from "./store.ts";
 
@@ -71,8 +72,12 @@ export function runStagePass(store: Store, opts: StagePassOptions = {}, now = ne
       }
       db.prepare("DELETE FROM work_items WHERE id = ?").run(id);
     }
+    // A title the user accepted from the classifier survives every pass, except where a ticket, branch or worktree names the item.
+    const accepted = acceptedTitles(store);
     for (const item of items) {
-      const { title, repo } = titleOf(item);
+      const derived = titleOf(item);
+      const { repo } = derived;
+      const title = (!isExplicitKey(item.itemKey) && accepted.get(item.itemKey)) || derived.title;
       db.prepare(
         `INSERT INTO work_items (item_key, title, repo, branch, has_edits, stage, proof_status, proof_level, docs_only,
            first_activity, last_activity, created_at, updated_at)

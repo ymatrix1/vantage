@@ -4,6 +4,7 @@ import { readdirSync, statSync } from "node:fs";
 import { basename, join, relative, sep } from "node:path";
 import {
   hookEvents,
+  isClassifyLocation,
   parseSpoolRecord,
   parseTranscriptLine,
   transcriptEvents,
@@ -42,6 +43,9 @@ function commit(
   return store.transaction(() => {
     let inserted = 0;
     for (const e of events) {
+      // A `vantage classify` run is a Claude Code session of ours: it must never become an item.
+      const cwd = e.payload["cwd"];
+      if (typeof cwd === "string" && isClassifyLocation(cwd)) continue;
       if (store.insertEvent(e, now)) inserted++;
       noteBranch(store, e);
     }
@@ -143,7 +147,7 @@ export function backfillTranscripts(
   const ctx: IngestContext = { repoRoots: knownRepoRoots(store) };
   backfillEventBranches(store, projectsDir, now, days);
   for (const path of jsonlFiles(projectsDir)) {
-    if (statSync(path).mtimeMs < cutoff) continue;
+    if (statSync(path).mtimeMs < cutoff || isClassifyLocation(relative(projectsDir, path))) continue;
     const key = `transcript:${relative(projectsDir, path)}`;
     const before = store.getCursor(key);
     const { lines, nextOffset } = tailLines(path, before);

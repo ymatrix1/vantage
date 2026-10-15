@@ -135,7 +135,7 @@ describe("migration 5", () => {
     old.close();
     const upgraded = new Store(path);
     try {
-      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(6);
+      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(7);
       expect(upgraded.countEvents()).toBe(1);
       expect(upgraded.countEventBranches()).toBe(0);
       upgraded.setEventBranch("claude_code", "cc:tool:old:edit", "feat/ftk-2-x");

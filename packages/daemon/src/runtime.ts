@@ -5,6 +5,8 @@ import { closeSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, write
 import { homedir } from "node:os";
 import { delimiter, join } from "node:path";
 import { STATUS_FILE } from "@vantage/core";
+import { readClassifyConfig } from "./classify-config.ts";
+import { createClassifyJob } from "./classify-job.ts";
 import { createGitLoop, type GitLoop } from "./git-loop.ts";
 import { startHttp, type HttpHandle } from "./http.ts";
 import { createLiveHub } from "./live.ts";
@@ -211,10 +213,20 @@ export async function startDaemon(options: DaemonOptions = {}): Promise<DaemonHa
 
     const uiDir = options.uiDir;
     const live = createLiveHub({ store: db });
+    // Opt-in classifier (docs/specs/classify.md): idle until the user starts a run, and off unless settings allow it.
+    const classifyJob = createClassifyJob({
+      store: db,
+      home,
+      projectsDir,
+      env,
+      config: () => readClassifyConfig(home),
+      log,
+    });
     live.publish(); // baseline, so the first pass pushes only what it changes
     http = await startHttp({
       store: db,
       live,
+      classify: { store: db, home, projectsDir, job: classifyJob },
       token,
       port: options.port ?? DEFAULT_PORT,
       ...(uiDir ? { uiDir } : {}),

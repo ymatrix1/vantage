@@ -21,7 +21,7 @@ export function buildStatusSummary(store: Store, now = new Date()): StatusSummar
     .prepare(
       `SELECT e.session_id AS session_id, l.item_key AS item_key, MAX(e.occurred_at) AS last
          FROM links l JOIN events e ON e.id = l.event_id
-        WHERE l.undone_at IS NULL AND e.session_id IS NOT NULL AND e.occurred_at >= ?
+        WHERE l.undone_at IS NULL AND l.method != 'inferred' AND e.session_id IS NOT NULL AND e.occurred_at >= ?
         GROUP BY e.session_id, l.item_key
         ORDER BY last, l.item_key`,
     )

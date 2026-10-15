@@ -11,6 +11,7 @@ import {
   startDaemon,
   vantageHomeDir,
 } from "@vantage/daemon";
+import { runClassify } from "./classify.ts";
 import { runDoctor } from "./doctor.ts";
 import { runAdd, runRemove } from "./install.ts";
 import { runStats } from "./stats.ts";
@@ -111,8 +112,9 @@ export async function runCli(argv: string[], io: CliIo): Promise<number> {
   if (cmd === "uninstall") return runRemove(rest, io, true);
   if (cmd === "doctor") return runDoctor(io);
   if (cmd === "stats") return runStats(rest, io);
+  if (cmd === "classify") return runClassify(rest, io);
   io.err(
-    "Usage: vantage start [--port N] | open [--print] | add [path] [--dry-run] [--yes] [--git-hooks] | remove [path] | uninstall | doctor | stats [--json] [--since 7d] [--repo NAME] [--days N]",
+    "Usage: vantage start [--port N] | open [--print] | add [path] [--dry-run] [--yes] [--git-hooks] | remove [path] | uninstall | doctor | stats [--json] [--since 7d] [--repo NAME] [--days N] | classify [--dry-run | accept | dismiss | undo | report | status]",
   );
   return cmd === undefined || cmd === "--help" || cmd === "help" ? 0 : 2;
 }
