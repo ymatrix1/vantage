@@ -12,7 +12,8 @@ describe("trace view (D45)", () => {
     expect(text).toContain("Test");
     expect(text).toContain("Passed · L2");
     expect(text).toContain("pnpm test");
-    expect(text).toContain("session a1b2c3d4, anchored on branch feat/x");
+    expect(text).toContain("Session a1b2c3d4 · branch feat/x · ");
+    expect(text).not.toContain("anchored on");
     expect(text).toContain("commit from git, linked by branch-name");
   });
 

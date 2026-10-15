@@ -27,6 +27,7 @@ import { itemSessionCounts } from "./lineage.ts";
 import { linksForItem } from "./linking.ts";
 import { getItem, summary, type ItemSummary } from "./stages.ts";
 import type { Store } from "./store.ts";
+import { requestTitleMap, sessionNameMap } from "./titles.ts";
 
 /** Sources the product plans for; those with no events yet show as unconfigured (hollow). */
 const KNOWN_SOURCES = ["claude_code", "git", "github", "ci", "tracker", "slack"];
@@ -288,6 +289,12 @@ function groupTotals(store: Store, q: TrackQuery, w: Where): Map<string, number>
       .all(...w.params)) {
       out.set(`repo:${typeof r["k"] === "string" ? r["k"] : ""}`, Number(r["n"]));
     }
+  } else if (q.group === "branch") {
+    for (const r of store.db
+      .prepare(`SELECT w.branch AS k, COUNT(*) AS n FROM work_items w WHERE ${w.sql} GROUP BY w.branch`)
+      .all(...w.params)) {
+      out.set(`branch:${typeof r["k"] === "string" ? r["k"] : ""}`, Number(r["n"]));
+    }
   } else if (q.group === "stage") {
     for (const r of store.db
       .prepare(`SELECT w.stage AS k, COUNT(*) AS n FROM work_items w WHERE ${w.sql} GROUP BY w.stage`)
@@ -365,13 +372,16 @@ export function trackView(store: Store, now = new Date(), q: TrackQuery = DEFAUL
     const key = (i: TrackItem): string =>
       q.group === "repo"
         ? `repo:${i.repo ?? ""}`
-        : q.group === "org"
-          ? `org:${(i.org ?? "").toLowerCase()}`
-          : `stage:${i.stage}`;
+        : q.group === "branch"
+          ? `branch:${i.branch ?? ""}`
+          : q.group === "org"
+            ? `org:${(i.org ?? "").toLowerCase()}`
+            : `stage:${i.stage}`;
     const byId = new Map<string, TrackItem[]>();
     for (const i of items) byId.set(key(i), [...(byId.get(key(i)) ?? []), i]);
     const label = (id: string): string => {
       if (q.group === "repo") return projectNameOf(id.slice(5)) ?? "No repo";
+      if (q.group === "branch") return id.slice(7) || "No branch";
       if (q.group === "org") {
         // Show the owner as most of its repos spell it (ties: the smaller spelling); no remote is "Local".
         const spellings = new Map<string, number>();
@@ -386,7 +396,8 @@ export function trackView(store: Store, now = new Date(), q: TrackQuery = DEFAUL
     const ids = [...byId.keys()].toSorted(
       (a, b) =>
         rank(a) - rank(b) ||
-        (a === "repo:" || a === "org:" ? 1 : 0) - (b === "repo:" || b === "org:" ? 1 : 0) ||
+        (["repo:", "org:", "branch:"].includes(a) ? 1 : 0) -
+          (["repo:", "org:", "branch:"].includes(b) ? 1 : 0) ||
         a.localeCompare(b),
     );
     for (const id of ids) {
@@ -462,11 +473,17 @@ function askedEvidence(
     .get(t.eventId, id);
   const kind = ANCHOR_KINDS.find((k) => k === l?.["anchor_kind"]) ?? null;
   const value = typeof l?.["anchor_value"] === "string" ? l["anchor_value"] : null;
+  const sessionId = typeof e?.["session_id"] === "string" ? e["session_id"] : null;
+  // A worktree anchor is a path; only its folder name is shown (the same name the item's title used).
+  const folder = value?.split(String.fromCharCode(92)).join("/").split("/").filter(Boolean).pop() ?? null;
   return {
     at: typeof e?.["occurred_at"] === "string" ? e["occurred_at"] : t.at,
     anchorKind: kind,
-    anchorValue: kind === "issue_key" || kind === "branch" ? value : null,
-    sessionId: typeof e?.["session_id"] === "string" ? e["session_id"] : null,
+    anchorValue: kind === "issue_key" || kind === "branch" ? value : kind === "worktree" ? folder : null,
+    sessionId,
+    sessionName: sessionId
+      ? (sessionNameMap(store).get(sessionId) ?? requestTitleMap(store).get(sessionId) ?? null)
+      : null,
   };
 }
 

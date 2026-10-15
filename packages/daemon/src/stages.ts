@@ -9,7 +9,7 @@ import { linkStoredEvents, loadEvents } from "./linking.ts";
 import { GIT_QUESTIONS_PER_PASS, itemRepoSet, resolveRepo, worktreeRepos } from "./projects.ts";
 import type { Store } from "./store.ts";
 import { classifyPaths, editedPaths, newScratchCache } from "./scratch.ts";
-import { requestTitleMap } from "./titles.ts";
+import { requestTitleMap, sessionNameMap } from "./titles.ts";
 
 export interface StagePassOptions extends StageOptions {
   link?: Omit<LinkOptions, "undone">;
@@ -36,11 +36,12 @@ const textOrNull = (r: Row, c: string): string | null => {
 const num = (r: Row, c: string): number => Number(r[c] ?? 0);
 
 /** Title and repo from the item key; an item with no name of its own gets a title from repo, branch and date. */
-type TitleSource = "anchor" | "request" | "fallback" | "classifier";
+type TitleSource = "anchor" | "name" | "request" | "fallback" | "classifier";
 
 function titleOf(
   item: ItemState,
   requests: ReadonlyMap<string, string>,
+  names: ReadonlyMap<string, string> = new Map(),
 ): { title: string; repo: string | null; source: TitleSource } {
   const [kind = "", ...rest] = item.itemKey.split(":");
   const value = rest.join(":");
@@ -55,6 +56,9 @@ function titleOf(
       repo: item.repo,
       source: "anchor",
     };
+  // The name Claude Code gave the session comes first, then the first sentence of its first request (D191).
+  const named = names.get(value);
+  if (named) return { title: named, repo: item.repo, source: "name" };
   const requested = requests.get(value);
   if (requested) return { title: requested, repo: item.repo, source: "request" };
   return {
@@ -76,6 +80,8 @@ export function runStagePass(store: Store, opts: StagePassOptions = {}, now = ne
   const { link, requestTitles, gitScratch, ...stageOpts } = opts;
   const requests: ReadonlyMap<string, string> =
     requestTitles === false ? new Map<string, string>() : requestTitleMap(store);
+  const names: ReadonlyMap<string, string> =
+    requestTitles === false ? new Map<string, string>() : sessionNameMap(store);
   const linked = linkStoredEvents(store, link ?? {}, now);
   const { ids, events } = loadEvents(store);
   const firstSeen = new Map<string, string>();
@@ -114,7 +120,7 @@ export function runStagePass(store: Store, opts: StagePassOptions = {}, now = ne
     const worktrees = worktreeRepos(store);
     const gitBudget = { left: GIT_QUESTIONS_PER_PASS };
     for (const item of items) {
-      const named = titleOf(item, requests);
+      const named = titleOf(item, requests, names);
       let { source } = named;
       // The repo a person knows (git identity), never the worktree folder an agent session ran in.
       const repo = resolveRepo(store, item.itemKey, named.repo, worktrees, gitBudget);
@@ -131,7 +137,18 @@ export function runStagePass(store: Store, opts: StagePassOptions = {}, now = ne
         });
       }
       // A worktree item is titled with a folder name; its branch is a better name.
-      if (item.itemKey.startsWith("worktree:") && item.branch) title = item.branch;
+      // Never by its folder: an agent tool picked that name. Without a branch it reads like an untitled session.
+      if (item.itemKey.startsWith("worktree:")) {
+        title = item.branch
+          ? item.branch
+          : fallbackTitle({
+              repo: shown,
+              branch: null,
+              firstActivity: item.firstActivity,
+              id: item.itemKey.split(":").slice(1).join(":"),
+            });
+        if (!item.branch) source = "fallback";
+      }
       if (title === "HEAD") title = `detached HEAD${shown ? ` in ${shown}` : ""}`;
       const pick = isExplicitKey(item.itemKey) ? undefined : accepted.get(item.itemKey);
       if (pick !== undefined) {
@@ -277,7 +294,7 @@ export interface ItemSummary {
   proofLevel: number;
   docsOnly: boolean;
   branch: string | null;
-  /** Where the title came from: its key (`anchor`), a stored first request, or repo, branch and date. */
+  /** Where the title came from: its key (`anchor`), the session's own name (`name`), a stored first request, or repo, branch and date. */
   titleSource: string;
   /** False when no code edit is linked (a conversation, or documentation only). */
   hasEdits: boolean;

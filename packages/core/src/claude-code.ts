@@ -5,7 +5,7 @@ import { classifyWrites, detectShellEffects } from "./shell.ts";
 import { resolveRepoRoot } from "./paths.ts";
 import { parseTestSummary } from "./test-summary.ts";
 import { todoCounts } from "./tasks.ts";
-import { requestTitle } from "./request-title.ts";
+import { requestTitle, userRequestText } from "./request-title.ts";
 import type { VantageEvent } from "./events.ts";
 
 export const SOURCE = "claude_code";
@@ -329,8 +329,10 @@ export function firstRequestTitle(
         .filter((b) => b["type"] === "text")
         .map((b) => str(b["text"]) ?? "")
         .join(" ");
-    if (text.trim() === "") continue;
-    return { found: true, title: requestTitle(text) };
+    // Injected text (system reminders, command wrappers, the worktree notice) is not a request (D194).
+    const typed = userRequestText(text);
+    if (typed === null) continue;
+    return { found: true, title: requestTitle(typed) };
   }
   return { found: false, title: null };
 }

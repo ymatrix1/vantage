@@ -36,3 +36,19 @@ export function cdCommand(path: string | null | undefined): string | null {
   const p = path?.trim();
   return p && !/["'`$\r\n]/.test(p) ? `cd "${p}"` : null;
 }
+
+const SESSION_ID = /^[0-9a-f][0-9a-f-]{7,63}$/i;
+
+/**
+ * The command that reopens a Claude Code session: `cd "<folder>" && claude --resume <full id>` (D193). Claude Code has
+ * no link that opens an existing session by id (its `claude-cli://` and `claude://` links start new sessions), so the
+ * page copies this command. The folder is left out when it needs shell escaping; a malformed id gives null.
+ */
+export function resumeCommand(
+  sessionId: string | null | undefined,
+  cwd: string | null | undefined,
+): string | null {
+  if (!sessionId || !SESSION_ID.test(sessionId)) return null;
+  const cd = cdCommand(cwd);
+  return `${cd ? `${cd} && ` : ""}claude --resume ${sessionId}`;
+}

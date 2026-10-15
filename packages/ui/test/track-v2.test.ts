@@ -299,6 +299,37 @@ describe("L3 inline detail", () => {
     expect(root.querySelector("[aria-label='Details']")).toBeNull();
   });
 
+  it("Open in Claude copies the resume command for the latest session, and sessions show their names (D191, D193)", async () => {
+    const writeText = vi.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+    const id = "981b84ab-1111-4222-8333-444455556666";
+    const { root } = await ready({
+      detail: (key) => ({
+        body: detail(key, {
+          sessions: [
+            {
+              id,
+              name: "Fix login redirect",
+              cwd: "/home/u/demo",
+              parentId: null,
+              firstAt: "2026-01-05T09:00:00Z",
+              lastAt: "2026-01-05T09:30:00Z",
+              events: 3,
+            },
+          ],
+        }),
+      }),
+    });
+    click(rows(root).find((r) => r.textContent?.includes("retry")));
+    await vi.waitFor(() => expect(root.textContent).toContain("Fix login redirect"));
+    expect(squash(root.textContent)).not.toContain("Session 981b84ab");
+    const buttons = [...root.querySelectorAll("button")].filter((b) => b.textContent === "Open in Claude");
+    expect(buttons).toHaveLength(2); // one on the session, one in the action bar
+    click(buttons[1]);
+    await vi.waitFor(() => expect(writeText).toHaveBeenCalled());
+    expect(writeText).toHaveBeenCalledWith(`cd "/home/u/demo" && claude --resume ${id}`);
+  });
+
   it("Enter toggles the selected row and Esc closes every open row", async () => {
     const { root } = await ready();
     press("j");

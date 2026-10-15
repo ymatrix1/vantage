@@ -24,6 +24,7 @@ import {
   payloadItem,
   promptHash,
   toBatches,
+  userRequestText,
   type ClassifiedItem,
   type ClassifyCandidate,
   type PayloadItem,
@@ -182,7 +183,8 @@ function firstRequestText(path: string, sessionId: string): string | null {
           .filter((b) => b["type"] === "text")
           .map((b) => (typeof b["text"] === "string" ? b["text"] : ""))
           .join(" ");
-      if (t.trim() !== "") return t;
+      const typed = userRequestText(t);
+      if (typed !== null) return typed;
     }
   } catch {
     // an unreadable transcript only means no request text

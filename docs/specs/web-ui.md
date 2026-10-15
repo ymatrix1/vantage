@@ -138,7 +138,7 @@ All optional. A list is comma-separated (`stage=asked,built`); an empty value me
 | `hasEdits` | `true`, `false`: any code edit linked (false for conversations and documentation-only items) | both |
 | `q` | at most 80 characters; case-insensitive substring over title, repo and branch only (ASCII case folding) | none |
 | `sort`, `order` | `activity`, `stage`, `title`, `repo`, `flags`; `asc`, `desc` | `activity` `desc` |
-| `group` | `attention`, `org`, `repo`, `stage`, `none` | `attention` |
+| `group` | `attention`, `org`, `repo`, `branch`, `stage`, `none` (`branch` ends with a "No branch" group; D191) | `attention` |
 | `page`, `pageSize` | integers from 1 (`pageSize` up to 100) | `1`, `25` |
 
 Response, on top of the Phase 1 fields (`generatedAt`, `lastPassAt`, `stale`, `sources`):
