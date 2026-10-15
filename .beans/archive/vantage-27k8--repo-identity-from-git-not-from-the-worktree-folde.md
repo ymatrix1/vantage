@@ -36,4 +36,4 @@ UI changes. Item detail endpoint. Projects config.
 
 - Core: `RepoInfo`, `repoInfoOf`, `repoUrlOf`, `projectNameOf`; `worktree.scanned` carries `repo`. Daemon: `projects.ts` maps an item's folder to its repo (scanned worktree roots, then git, once per folder, 12 per pass); the stage pass stores it; titles never use a folder name; detached HEAD titled by repo; `repoUrl` on Track items; `group=repo` labels and a "No repo" group.
 - Real store copy (counts only): distinct repos 148 → 8; 189 of 463 items have no repo (folders gone or not repos); 1 detached-HEAD title.
-- D98 proposed; ingestion and web-ui specs updated.
+- D99 proposed; ingestion and web-ui specs updated.

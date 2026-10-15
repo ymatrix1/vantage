@@ -76,7 +76,7 @@ HTTP on `127.0.0.1`, token required on every `/api/*` call as `Authorization: Be
 | Method and path | Purpose |
 |---|---|
 | `GET /api/focus` | Top 3 items plus digest groups |
-| `GET /api/track` | Track rows: filtered, sorted, paged and grouped, with `page`, `facets`, `lastPassAt`, `stale` and per-source health. Parameters below (proposed [D84](../DECISIONS.md)). Each row's `repo` is its git repo (the remote path, or the main folder for a repo with no remote; null when the folder is in no repo) `repoUrl` its `https` link and `org` its owner (`local` with no remote), never a worktree folder (proposed [D98](../DECISIONS.md)); `group=repo` ends with a "No repo" group |
+| `GET /api/track` | Track rows: filtered, sorted, paged and grouped, with `page`, `facets`, `lastPassAt`, `stale` and per-source health. Parameters below (proposed [D84](../DECISIONS.md)). Each row's `repo` is its git repo (the remote path, or the main folder for a repo with no remote; null when the folder is in no repo) `repoUrl` its `https` link and `org` its owner (`local` with no remote), never a worktree folder (proposed [D99](../DECISIONS.md)); `group=repo` ends with a "No repo" group |
 | `GET /api/items/:id` | Item detail: stage, behaviors, proofs, review, after-ship, history, links |
 | `GET /api/journal?since=` | Timeline entries |
 | `GET /api/inbox` | Mentions, review requests, commitments by person |
@@ -107,7 +107,7 @@ All optional. A list is comma-separated (`stage=asked,built`); an empty value me
 
 | Parameter | Values | Default |
 |---|---|---|
-| `org` | up to 50 owners (`Flip-to`, `local`), matched case-insensitively (proposed [D98](../DECISIONS.md)) | all |
+| `org` | up to 50 owners (`Flip-to`, `local`), matched case-insensitively (proposed [D99](../DECISIONS.md)) | all |
 | `repo` | up to 50 repo paths (`host/Owner/repo`), matched case-insensitively | all |
 | `branch` | up to 50 names, 200 characters each, matched exactly | all |
 | `stage` | `asked`, `built`, `proven`, `reviewed`, `shipped`, `verified` | all |
