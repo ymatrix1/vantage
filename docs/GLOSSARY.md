@@ -212,7 +212,7 @@ The docs use a few ideas from management consulting. They are here for one reaso
 
 ### Session
 **Plain:** one conversation with an agent such as Claude Code.
-**Example:** a session titled from its first request: "add a retry to the uploader". Without a better name the item reads "Session abc12345", the first characters of its id.
+**Example:** a session titled from its first request: "add a retry to the uploader". Without a better name the item reads "Untitled session" with the date, or its repo and branch when known.
 **Defined in:** [Work item model](specs/work-item-model.md#entities)
 
 ### Shipped

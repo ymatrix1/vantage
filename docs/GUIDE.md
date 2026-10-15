@@ -63,8 +63,8 @@ No check has run after your last code edit, or the check was too weak to count (
 **2. What is a flag?**
 A warning on an item with one suggested action. The [flag list](specs/flags.md) names every one. Amber waits for a digest; red interrupts.
 
-**3. Why is there an item called "Session abc12345"?**
-That session had edits but no ticket, branch or readable first request to name it. The name is the first characters of the session id. A session that only continues another one (a resume or a clear) joins its parent's item instead.
+**3. Why is there an item called "Untitled session"?**
+That session had edits but no ticket, branch or readable first request to name it. The name is "Untitled session" with the date, or the repo and branch when they are known; Vantage never shows a raw session id as a name. A session that only continues another one (a resume or a clear) joins its parent's item instead.
 
 **4. Why did my Proven item go back to Built?**
 Proof belongs to the code it checked. You edited the code afterwards, so the proof expired. Run the check again.

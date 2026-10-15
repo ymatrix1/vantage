@@ -71,17 +71,15 @@ const click = (el: Element): void => {
   el.dispatchEvent(new MouseEvent("click", { bubbles: true }));
   flushSync();
 };
-function choose(el: HTMLSelectElement, value: string): void {
-  el.value = value;
-  el.dispatchEvent(new Event("change", { bubbles: true }));
-  flushSync();
+/** Opens the themed list named `label` and picks the option with `text` (the keyboard and click paths share it). */
+function choose(root: ParentNode, label: string, text: string): void {
+  const box = root.querySelector<HTMLButtonElement>(`button[role='combobox'][aria-label='${label}']`);
+  if (!box) throw new Error(`no select "${label}"`);
+  click(box);
+  const opt = [...root.querySelectorAll("[role='option']")].find((o) => o.textContent?.trim() === text);
+  if (!opt) throw new Error(`no option "${text}" in "${label}"`);
+  click(opt);
 }
-const select = (root: ParentNode, label: string): HTMLSelectElement => {
-  const l = [...root.querySelectorAll("label")].find((x) => x.textContent?.includes(label));
-  const s = l?.querySelector("select");
-  if (!s) throw new Error(`no select "${label}"`);
-  return s;
-};
 const search = (root: ParentNode): HTMLInputElement => {
   const i = root.querySelector<HTMLInputElement>("input[type='search']");
   if (!i) throw new Error("no search box");
@@ -142,7 +140,7 @@ describe("the request is built from the view state", () => {
     const { api, root } = await ready();
     let n = calls(api).length;
 
-    choose(select(root, "Sort by"), "title");
+    choose(root, "Sort by", "Title");
     await settle(api, ++n);
     expect([last(api).get("sort"), last(api).get("order")]).toEqual(["title", "asc"]);
 
@@ -150,7 +148,7 @@ describe("the request is built from the view state", () => {
     await settle(api, ++n);
     expect(last(api).get("order")).toBe("desc");
 
-    choose(select(root, "Group by"), "stage");
+    choose(root, "Group by", "Stage");
     await settle(api, ++n);
     expect(last(api).get("group")).toBe("stage");
 
@@ -178,7 +176,7 @@ describe("the request is built from the view state", () => {
     await settle(api, ++n);
     expect(last(api).get("flag")).toBe("thrashing");
 
-    choose(select(root, "Per page"), "50");
+    choose(root, "Per page", "50");
     await settle(api, ++n);
     expect(last(api).get("pageSize")).toBe("50");
 

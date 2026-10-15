@@ -73,7 +73,7 @@ export const pt: TourText = {
         "                                                         ^ os seis pontos",
         "Clique numa linha da página Track para ver a evidência de cada ponto:",
         "a edição vista, o comando que rodou, o código de saída e por que ele está onde está.",
-        'Uma linha chamada "Session abc12345" é uma sessão com edições e sem ticket, branch ou pedido legível.',
+        'Uma linha chamada "Untitled session" é uma sessão com edições e sem ticket, branch ou pedido legível.',
       ],
     },
     {
