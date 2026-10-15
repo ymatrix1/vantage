@@ -61,6 +61,8 @@ function seed(key: string, s: Seed): void {
       s.last,
       s.last,
     );
+  if (s.repo)
+    store.db.prepare("INSERT INTO item_repos (item_key, repo, position) VALUES (?, ?, 0)").run(key, s.repo);
   const id = Number(store.db.prepare("SELECT id FROM work_items WHERE item_key = ?").get(key)?.["id"]);
   for (const kind of s.flags ?? []) {
     store.db

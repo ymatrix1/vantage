@@ -1,9 +1,9 @@
 <script lang="ts">
   // L3: what is behind a row. Why it is flagged, its sessions (derived ones nested), files by base name,
   // where it lives, the timeline and proofs (Trace), and actions. Every string renders as text.
-  import type { ItemDetailView, ItemSession, TraceResponse } from "@vantage/core/track";
+  import { projectNameOf, type ItemDetailView, type ItemSession, type TraceResponse } from "@vantage/core/track";
   import type { TrackRow } from "./contract";
-  import { branchLink, cdCommand, commitLink } from "./links";
+  import { branchLink, cdCommand, commitLink, repoLink } from "./links";
   import { ago } from "./relative-time";
   import { nestSessions, type SessionNode } from "./sessions";
   import Trace from "./Trace.svelte";
@@ -100,6 +100,15 @@
     <section>
       <h3 class="font-medium">Where it lives</h3>
       <ul class="text-muted-foreground">
+        {#if detail.repos.length > 0}
+          <li>
+            {detail.repos.length > 1 ? "Repos" : "Repo"}:
+            {#each detail.repos as r (r)}
+              {@const url = repoLink(r)}
+              {#if url}<a class="mr-1 rounded-full border border-border px-1.5 hover:bg-muted" href={url} target="_blank" rel="noopener noreferrer" title={r}>{projectNameOf(r) ?? r}</a>{:else}<span class="mr-1 rounded-full border border-border px-1.5" title={r}>{projectNameOf(r) ?? r}</span>{/if}
+            {/each}
+          </li>
+        {/if}
         {#if branch}<li>Branch: <code>{branch}</code></li>{/if}
         {#if detail.lastCommitSha}<li>Last commit: <code>{detail.lastCommitSha.slice(0, 10)}</code></li>{/if}
         {#if detail.worktreePath}<li>Folder: <code>{detail.worktreePath}</code></li>{/if}

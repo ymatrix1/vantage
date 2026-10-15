@@ -66,6 +66,8 @@ An undone link removes its event from every count.
 
 ### Item titles
 
+An item lists every repo it touched (`repos`, primary first; D190, proposed): the repo of each folder a linked event ran in or an edited file sits in. `repo` stays the primary one.
+
 A work item's title comes from, in order: its anchor (an issue key, branch name or worktree folder), else the first sentence of the session's first request when one was captured (cleaned, at most 80 characters, local only, switchable: [D95](../DECISIONS.md), proposed), else the repo, branch and first activity date (D84). `work_items.title_source` records which (`anchor`, `request`, `fallback`).
 
 ## Entities

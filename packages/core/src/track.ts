@@ -36,6 +36,8 @@ export interface TrackItem {
   flags: { kind: string; severity: string; reason: string }[];
   /** The next three are always set by the daemon; optional so values built before D84 still type-check. */
   branch?: string | null;
+  /** Every repo the item touched, primary first (D190). Always set by the daemon; absent means just `repo`. */
+  repos?: string[];
   /** `https://host/owner/repo` of the item's repo; null when it has no remote. Always set by the daemon. */
   repoUrl?: string | null;
   /** The repo's owner (`Flip-to`), `local` for a repo with no remote, null with no repo. Always set by the daemon. */
@@ -395,6 +397,8 @@ export interface ItemSession {
 export interface ItemDetailView {
   id: string;
   repo: string | null;
+  /** Every repo the item touched, primary first (D190). */
+  repos: string[];
   repoUrl: string | null;
   branch: string | null;
   /** Where the item's latest session ran; shown only in the expanded view. */

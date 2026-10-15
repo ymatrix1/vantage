@@ -6,7 +6,7 @@ import { computeStages, fallbackTitle, projectNameOf } from "@vantage/core";
 import type { ItemState, LinkOptions, StageOptions } from "@vantage/core";
 import { acceptedTitles, isExplicitKey } from "./classify-store.ts";
 import { linkStoredEvents, loadEvents } from "./linking.ts";
-import { GIT_QUESTIONS_PER_PASS, resolveRepo, worktreeRepos } from "./projects.ts";
+import { GIT_QUESTIONS_PER_PASS, itemRepoSet, resolveRepo, worktreeRepos } from "./projects.ts";
 import type { Store } from "./store.ts";
 import { classifyPaths, editedPaths, newScratchCache } from "./scratch.ts";
 import { requestTitleMap } from "./titles.ts";
@@ -169,6 +169,15 @@ export function runStagePass(store: Store, opts: StagePassOptions = {}, now = ne
         "id",
       );
 
+      db.prepare("DELETE FROM item_repos WHERE item_key = ?").run(item.itemKey);
+      itemRepoSet(store, item.itemKey, repo, worktrees, gitBudget).forEach((r, position) => {
+        db.prepare("INSERT INTO item_repos (item_key, repo, position) VALUES (?, ?, ?)").run(
+          item.itemKey,
+          r,
+          position,
+        );
+      });
+
       db.prepare("DELETE FROM proofs WHERE work_item_id = ?").run(id);
       for (const p of item.proofs) {
         db.prepare(
@@ -199,6 +208,7 @@ export function runStagePass(store: Store, opts: StagePassOptions = {}, now = ne
       persistFlags(store, id, item, at);
     }
   });
+  store.db.prepare("DELETE FROM item_repos WHERE item_key NOT IN (SELECT item_key FROM work_items)").run();
   return { items: items.length, proofs: proofCount };
 }
 
@@ -260,6 +270,8 @@ export interface ItemSummary {
   itemKey: string;
   title: string;
   repo: string | null;
+  /** Every repo the item touched, primary first (D190); empty when none is known. */
+  repos: string[];
   stage: string;
   proofStatus: string;
   proofLevel: number;
@@ -293,11 +305,21 @@ function flagsOf(store: Store, id: number): StoredFlag[] {
     }));
 }
 
+function reposOf(store: Store, itemKey: string, primary: string | null): string[] {
+  const rows = store.db
+    .prepare("SELECT repo FROM item_repos WHERE item_key = ? ORDER BY position, repo")
+    .all(itemKey)
+    .map((r) => text(r, "repo"));
+  // An item the pass has not rewritten since the migration still shows its primary repo.
+  return rows.length > 0 ? rows : primary ? [primary] : [];
+}
+
 export function summary(store: Store, r: Row): ItemSummary {
   return {
     itemKey: text(r, "item_key"),
     title: text(r, "title"),
     repo: textOrNull(r, "repo"),
+    repos: reposOf(store, text(r, "item_key"), textOrNull(r, "repo")),
     stage: text(r, "stage"),
     proofStatus: text(r, "proof_status"),
     proofLevel: num(r, "proof_level"),
