@@ -10,7 +10,7 @@ import { createClassifyJob } from "./classify-job.ts";
 import { createGitLoop, type GitLoop } from "./git-loop.ts";
 import { startHttp, type HttpHandle } from "./http.ts";
 import { createLiveHub } from "./live.ts";
-import { BACKFILL_DAYS, backfillTranscripts, ingestSpool } from "./ingest.ts";
+import { BACKFILL_DAYS, backfillTranscripts, ingestSpool, workDirOf } from "./ingest.ts";
 import { createStageLoop, type StageLoop } from "./stage-loop.ts";
 import { Store } from "./store.ts";
 import { loadOrCreateToken } from "./token.ts";
@@ -255,8 +255,15 @@ export async function startDaemon(options: DaemonOptions = {}): Promise<DaemonHa
       if (ingesting) return;
       ingesting = true;
       try {
-        const s = ingestSpool(db, spool);
-        const t = backfillTranscripts(db, projectsDir, new Date(), BACKFILL_DAYS, requestTitles);
+        const s = ingestSpool(db, spool, new Date(), workDirOf(home));
+        const t = backfillTranscripts(
+          db,
+          projectsDir,
+          new Date(),
+          BACKFILL_DAYS,
+          requestTitles,
+          workDirOf(home),
+        );
         health.lastIngestAt = new Date().toISOString();
         if (s.inserted + t.inserted > 0)
           log(`ingested ${s.inserted} spool and ${t.inserted} transcript events`);

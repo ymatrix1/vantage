@@ -119,6 +119,15 @@ Tool calls that were stored first by a hook (which has no branch) or before this
 
 The transcript backfill also reads the head of each session file (the first 256 KB, once, marker cursor `titles:<file>`) for the session's first real user request and keeps a cleaned first sentence as that session's title ([D95](../DECISIONS.md), proposed). It is not an event: `prompt.submitted` still carries only the prompt's length. The cleaning rules, the 80-character cap, what is never stored and the off switch (`item_titles_from_requests = false`) are in the decision; the table is `session_titles` ([data schema](data-schema.md)). Hook payloads carry no prompt text, so a session known only from hooks keeps its repo, branch and date title. Files already ingested are read too, so existing sessions get a title on the next pass. Sub-agent files and copied parent history are skipped. `vantage titles` lists the stored titles and `vantage titles clear` deletes them.
 
+### Sessions Vantage starts
+
+`vantage classify` runs `claude -p`, which is a Claude Code session. Hooks and the transcript backfill would record it, so ingestion drops everything that ran inside `$VANTAGE_HOME/work/` (D101):
+
+- Every classifier call works in its own folder under `$VANTAGE_HOME/work/classify/`, removed afterwards.
+- **Rule:** a spool event whose `cwd` is inside `work/`, and every other event of the same session, is dropped. A transcript file whose own lines carry a `cwd` inside `work/` is skipped whole: no events, no lineage, no request title, no branch note. This covers sub-agents and any Claude Code version, and ordinary history in the same pass is unaffected.
+- The call passes `--no-session-persistence`, so no transcript should be written at all; the rule is the backstop.
+- The child has `VANTAGE_SKIP=1`; the Node and native hooks exit 0 on it before reading stdin (anything but empty or `0`). A cheap early exit, not the guard.
+
 ### Test run counts
 
 For a shell command the daemon also reads the tool output the hook spooled (`tool_response`, or a transcript `tool_result`) and, when it recognises a runner's own summary, adds `command.ran.result: {run, passed, failed, skipped}` (`run` = passed + failed + skipped; errors count as failed). Recognised: vitest, jest, pytest, `go test` (`-v` per-test lines, or every package reporting no tests), `dotnet test`. Only numbers are kept, never output text. Unrecognised output leaves `result` absent, which the stage machine reads as "unknown", not zero. `go test` without `-v` prints no counts, so a plain `ok` package is unrecognised.

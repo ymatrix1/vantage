@@ -41,7 +41,21 @@ if (process.env.FAKE_PROJECTS) {
       timestamp: "2026-01-05T09:00:00Z",
       cwd: process.cwd(),
       message: { content: "classify these" },
-    }) + "\n",
+    }) +
+      "\n" +
+      JSON.stringify({
+        type: "assistant",
+        sessionId: "fake-classifier",
+        uuid: "u2",
+        timestamp: "2026-01-05T09:01:00Z",
+        cwd: process.cwd(),
+        message: {
+          content: [
+            { type: "tool_use", id: "t1", name: "Edit", input: { file_path: join(process.cwd(), "x.ts") } },
+          ],
+        },
+      }) +
+      "\n",
   );
 }
 if (mode === "fail") process.exit(1);

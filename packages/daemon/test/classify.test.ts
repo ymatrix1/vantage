@@ -14,7 +14,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { VantageEvent } from "@vantage/core";
+import { isInsideDir, type VantageEvent } from "@vantage/core";
 import {
   CLASSIFY_DEFAULTS,
   Store,
@@ -301,7 +301,7 @@ describe("the run", () => {
     expect(c.args[c.args.indexOf("--tools") + 1]).toBe("");
     expect(c.args[c.args.indexOf("--setting-sources") + 1]).toBe("");
     expect(c.skip).toBe("1");
-    expect(c.cwd).toContain("vantage-classify-");
+    expect(c.cwd.replaceAll("\\", "/")).toContain("/work/classify/");
     expect(existsSync(c.cwd)).toBe(false); // removed afterwards
     expect(status).toMatchObject({ state: "idle", callsDone: 1, callsFailed: 0 });
   });
@@ -384,49 +384,100 @@ describe("the run", () => {
   });
 });
 
-describe("a classifier run never produces events or items (VANTAGE_SKIP guard)", () => {
-  it("the hook records nothing and the transcript is not ingested", async () => {
+const work = (): string => join(home, "work");
+
+describe("a classifier run never produces events, items or sessions (work-folder rule + VANTAGE_SKIP)", () => {
+  it("runs in a folder under <home>/work, and its hook, transcript and sessions leave no trace", async () => {
     seed();
-    backfillTranscripts(store, projects, NOW); // the seeded transcripts are ours to ingest; the baseline is after that
+    backfillTranscripts(store, projects, NOW, 14, true, work()); // the seeded history is ours; the baseline is after it
     runStagePass(store, {}, NOW);
     const events = store.countEvents();
     const items = listItems(store).length;
+    const titles = Number(store.db.prepare("SELECT COUNT(*) AS n FROM session_titles").get()?.["n"]);
+
     await run(fake("ok", { FAKE_HOOK: HOOK_BIN, FAKE_PROJECTS: projects, VANTAGE_HOME: home }));
-    expect(calls().length).toBeGreaterThan(0);
-    expect(existsSync(join(home, "spool"))).toBe(false); // the hook exited without writing
-    expect(ingestSpool(store, join(home, "spool")).inserted).toBe(0);
-    expect(backfillTranscripts(store, projects, NOW).inserted).toBe(0); // only the classifier transcript is new, and it is skipped
+    const first = calls()[0];
+    expect(first?.cwd.replaceAll("\\", "/").toLowerCase()).toContain(
+      `${work().replaceAll("\\", "/").toLowerCase()}/classify/`,
+    );
+    expect(first?.args).toContain("--no-session-persistence");
+    // Layer 3: the hook exits early, so the spool was never created.
+    expect(existsSync(join(home, "spool"))).toBe(false);
+    // Layer 1: the fake wrote a transcript whose cwd is the work folder, next to ordinary history in the same pass.
+    transcript("s6", "An ordinary request. It is history.");
+    put("s6", "main", "file.edited", 40, { path: "/w/ordinary.ts" });
+    const before = store.countEvents();
+    const r = backfillTranscripts(store, projects, NOW, 14, true, work());
+    expect(r.inserted).toBeGreaterThan(0); // ordinary history is still ingested
+    expect(store.countEvents()).toBeGreaterThan(before);
+    const classifier = (sql: string) => Number(store.db.prepare(sql).get()?.["n"]);
+    expect(classifier("SELECT COUNT(*) AS n FROM events WHERE session_id = 'fake-classifier'")).toBe(0);
+    expect(classifier("SELECT COUNT(*) AS n FROM session_titles WHERE session_id = 'fake-classifier'")).toBe(
+      0,
+    );
     expect(
-      store.db.prepare("SELECT COUNT(*) AS n FROM events WHERE session_id = 'fake-classifier'").get()?.["n"],
+      classifier("SELECT COUNT(*) AS n FROM event_branches WHERE source_id LIKE '%fake-classifier%'"),
     ).toBe(0);
     runStagePass(store, {}, NOW);
-    expect(listItems(store).length).toBe(items);
-    expect(store.countEvents()).toBe(events);
-    expect(readdirSync(projects).some((d) => d.includes("vantage-classify-"))).toBe(true); // the fake did write it
+    expect(listItems(store).some((i) => i.itemKey.includes("fake-classifier"))).toBe(false);
+    expect(listItems(store).length).toBe(items + 1); // only s6's item is new
+    expect(events).toBeLessThanOrEqual(store.countEvents());
+    expect(titles).toBeLessThanOrEqual(
+      Number(store.db.prepare("SELECT COUNT(*) AS n FROM session_titles").get()?.["n"]),
+    );
+    expect(readdirSync(projects).length).toBeGreaterThan(1); // the fake did write its transcript
   });
 
-  it("without the guard ingestion still drops classifier locations (spool and transcripts)", () => {
+  it("the same transcript IS ingested when the rule is not applied (so the test above proves something)", async () => {
+    seed();
+    await run(fake("ok", { FAKE_PROJECTS: projects, VANTAGE_HOME: home }));
+    const other = new Store(join(dir, "control.db"));
+    try {
+      expect(backfillTranscripts(other, projects, NOW).inserted).toBeGreaterThan(0);
+      expect(
+        other.db.prepare("SELECT COUNT(*) AS n FROM events WHERE session_id = 'fake-classifier'").get()?.[
+          "n"
+        ],
+      ).toBe(2);
+    } finally {
+      other.close();
+    }
+  });
+
+  it("an older hook without the skip guard still leaves nothing: the spool line is dropped by cwd, with its whole session", () => {
     const spool = join(home, "spool");
     mkdirSync(spool, { recursive: true });
-    const line = JSON.stringify({
-      v: 1,
-      receivedAt: "2026-01-05T09:00:00.000Z",
-      hook: {
-        hook_event_name: "UserPromptSubmit",
+    const inside = join(work(), "classify", "c-abc");
+    const lines = [
+      {
+        hook_event_name: "PostToolUse",
         session_id: "x",
-        prompt: "hi",
-        cwd: join(tmpdir(), "vantage-classify-abc"),
+        tool_use_id: "tu-x",
+        tool_name: "Edit",
+        tool_input: { file_path: "a.ts" },
+        cwd: inside,
       },
-    });
-    writeFileSync(join(spool, "2026-01-05.jsonl"), `${line}\n`);
-    expect(ingestSpool(store, spool).inserted).toBe(0);
-    const d = join(projects, "C--tmp-vantage-classify-abc");
-    mkdirSync(d);
-    writeFileSync(
-      join(d, "y.jsonl"),
-      `${JSON.stringify({ type: "user", sessionId: "y", uuid: "u", timestamp: "2026-01-05T09:00:00Z", message: { content: "hi" } })}\n`,
-    );
-    expect(backfillTranscripts(store, projects, NOW).inserted).toBe(0);
+      { hook_event_name: "Stop", session_id: "x" }, // no cwd: dropped because the session ran inside the folder
+      {
+        hook_event_name: "PostToolUse",
+        session_id: "ordinary",
+        tool_use_id: "tu-o",
+        tool_name: "Edit",
+        tool_input: { file_path: "b.ts" },
+        cwd: "/w/repo",
+      },
+    ].map((hook) => JSON.stringify({ v: 1, receivedAt: "2026-01-05T09:00:00.000Z", hook }));
+    writeFileSync(join(spool, "2026-01-05.jsonl"), `${lines.join("\n")}\n`);
+    const r = ingestSpool(store, spool);
+    expect(r.inserted).toBe(1);
+    expect(store.db.prepare("SELECT COUNT(*) AS n FROM events WHERE session_id = 'x'").get()?.["n"]).toBe(0);
+  });
+
+  it("a path is inside the work folder in any spelling, and a sibling folder is not", () => {
+    expect(isInsideDir("C:\\Users\\a\\.vantage\\work\\classify\\c-1", "c:/users/a/.vantage/work")).toBe(true);
+    expect(isInsideDir("/home/a/.vantage/work", "/home/a/.vantage/work/")).toBe(true);
+    expect(isInsideDir("/home/a/.vantage/workshop", "/home/a/.vantage/work")).toBe(false);
+    expect(isInsideDir("/home/a/code", "")).toBe(false);
   });
 });
 

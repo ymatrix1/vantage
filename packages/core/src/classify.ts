@@ -16,12 +16,23 @@ export type ClassifyKind = (typeof CLASSIFY_KINDS)[number];
 
 /** Bumped whenever the prompt or schema changes, so cached suggestions from an older prompt are not reused. */
 export const CLASSIFY_PROMPT_VERSION = 1;
+/** Folder under the Vantage home where sessions Vantage starts itself work: `<home>/work/classify/...`. */
+export const WORK_DIR_NAME = "work";
+
 /**
- * Prefix of the temporary folder a classifier run works in. Ingestion drops any transcript or hook event
- * whose location carries it, so a classifier session can never become an item even if a hook still fires.
+ * True when `path` is `dir` or inside it. Slashes and case are normalised, so a Windows path in any spelling
+ * matches. Ingestion drops every event, transcript and session whose cwd is inside `<home>/work`, so a session
+ * Vantage started itself can never become an item, whatever the Claude Code version.
  */
-export const CLASSIFY_WORKDIR_PREFIX = "vantage-classify-";
-export const isClassifyLocation = (s: string): boolean => s.includes(CLASSIFY_WORKDIR_PREFIX);
+const normDir = (p: string): string =>
+  p.replaceAll("\\", "/").replace(/\/+/g, "/").replace(/\/$/, "").toLowerCase();
+
+export function isInsideDir(path: string, dir: string): boolean {
+  const norm = normDir;
+  const a = norm(path);
+  const d = norm(dir);
+  return d !== "" && (a === d || a.startsWith(`${d}/`));
+}
 
 export const TITLE_MAX = 60;
 export const TOPIC_MAX = 40;

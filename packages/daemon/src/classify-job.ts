@@ -2,17 +2,23 @@
 // `claude -p` in an isolated child with VANTAGE_SKIP=1, validates the answer and stores suggestions.
 // A failed, slow or invalid call gives no suggestion: it is counted, never stored as data.
 import { spawn } from "node:child_process";
-import { closeSync, mkdtempSync, openSync, readSync, readdirSync, rmSync, statSync } from "node:fs";
-import { tmpdir } from "node:os";
+import {
+  closeSync,
+  mkdirSync,
+  mkdtempSync,
+  openSync,
+  readSync,
+  readdirSync,
+  rmSync,
+  statSync,
+} from "node:fs";
 import { basename, join } from "node:path";
 import {
   CLASSIFY_SYSTEM_PROMPT,
-  CLASSIFY_WORKDIR_PREFIX,
   batchIds,
   buildPrompt,
   classifySchema,
   contentHash,
-  isClassifyLocation,
   parseClassifyOutput,
   parseTranscriptLine,
   payloadItem,
@@ -31,6 +37,7 @@ import {
   type NewSuggestion,
 } from "./classify-store.ts";
 import { classifyBlockers, type ClassifyConfig } from "./classify-config.ts";
+import { workDirOf } from "./ingest.ts";
 import type { ReadStore } from "./classify-store.ts";
 import type { Store } from "./store.ts";
 
@@ -132,7 +139,6 @@ function* transcriptFiles(dir: string): Generator<string> {
 function transcriptIndex(projectsDir: string): Map<string, string> {
   const out = new Map<string, string>();
   for (const p of transcriptFiles(projectsDir)) {
-    if (isClassifyLocation(p.slice(projectsDir.length))) continue;
     out.set(basename(p, ".jsonl"), p);
   }
   return out;
@@ -500,7 +506,10 @@ export function createClassifyJob(opts: JobOptions): ClassifyJob {
         const batch = batches[next++];
         if (!batch) return;
         const t0 = Date.now();
-        const cwd = mkdtempSync(join(tmpdir(), CLASSIFY_WORKDIR_PREFIX));
+        // Under the Vantage home, where ingestion drops everything that happens (docs/specs/ingestion.md).
+        const base = join(workDirOf(opts.home), "classify");
+        mkdirSync(base, { recursive: true });
+        const cwd = mkdtempSync(join(base, "c-"));
         let failure: FailureKind | null = null;
         let got: ClassifiedItem[] | null = null;
         try {

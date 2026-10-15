@@ -66,13 +66,13 @@ Prompt on stdin, an empty temp folder named `vantage-classify-*`, a timeout, nev
 
 ### The skip guard
 
-A `claude -p` run is itself a Claude Code session, and Vantage's hooks would record it. Three layers keep it out:
+A `claude -p` run is itself a Claude Code session: hooks would record it and the transcript backfill would import its transcript. `VANTAGE_SKIP` alone does not stop the transcript, so the layers are:
 
-1. The child environment has `VANTAGE_SKIP=1`; the Node hook (`packages/hooks/src/bin.ts`) and the native hook (`packages/hooks-native`) exit 0 without reading or writing when it is set (anything but empty or `0`).
-2. `--setting-sources ""` loads none of the user's settings, so no hook is registered in the child.
-3. Ingestion drops transcripts and hook events whose location holds `vantage-classify-`.
+1. **Work folder (the guard).** Every call runs in its own folder under `$VANTAGE_HOME/work/classify/`. Ingestion drops any event, transcript or session whose `cwd` is inside `$VANTAGE_HOME/work/` ([ingestion](ingestion.md#sessions-vantage-starts)).
+2. `--no-session-persistence`: no transcript is written at all. `--setting-sources ""` also loads none of the user's settings, so no hook is registered in the child.
+3. `VANTAGE_SKIP=1` in the child environment: the Node hook (`packages/hooks/src/bin.ts`) and the native hook (`packages/hooks-native`) exit 0 without reading or writing (anything but empty or `0`). A cheap early exit.
 
-Tests: both hooks (parity suite for the native one), and a run with a fake `claude` that fires the hook and writes a transcript produces no events and no items.
+Tests: both hooks (the parity suite covers the native one); a run with a fake `claude` that fires the hook and writes a transcript with that `cwd` leaves no events, items, sessions, titles or branch notes, while ordinary history in the same backfill is still ingested; the same transcript is ingested when the rule is not applied; an older hook without the skip is dropped by `cwd`, with the rest of its session.
 
 ## Output
 
