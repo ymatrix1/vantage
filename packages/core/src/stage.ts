@@ -3,6 +3,7 @@
 // (D3): never because an agent said so. Reviewed, Shipped and Verified are out of Phase 1.
 import type { VantageEvent } from "./events.ts";
 import type { Link } from "./linker.ts";
+import { isScratchPath, normalizeEditPath, scratchLabel } from "./scratch.ts";
 import { splitCommandSegments } from "./shell.ts";
 
 export type Stage = "asked" | "built" | "proven";
@@ -68,6 +69,10 @@ export interface ItemState {
   /** Only documentation files were edited (D53): proof is not required. */
   docsOnly: boolean;
   codeEdits: number;
+  /** Edits that touched only scratch files (logs, temp output, ignored files): kept, never counted as code. */
+  scratchEdits: number;
+  /** Base names of those scratch files, in order of first edit, at most 20. */
+  scratchFiles: string[];
   /** Repo and branch the item's events name (payload `repo` or `cwd` folder, `branch`); null when unknown. */
   repo: string | null;
   branch: string | null;
@@ -95,6 +100,17 @@ export interface StageOptions {
    * An item missing from the map counts as first seen at `now`.
    */
   firstSeen?: ReadonlyMap<string, string>;
+  /**
+   * Edited paths (as `normalizeEditPath` writes them) that git says are ignored in their repo. With the
+   * lexical `isScratchPath`, an edit whose paths are all scratch does not count as a code or
+   * documentation edit (proposed D140). Without it only the lexical rule applies.
+   */
+  scratchPaths?: ReadonlySet<string>;
+  /**
+   * For paths the daemon asked git about: the path inside its repo (key as `normalizeEditPath` writes it).
+   * The name rules look at that part only, so a repo that sits under a temp folder is not all scratch.
+   */
+  repoRelative?: ReadonlyMap<string, string>;
 }
 
 export const DEFAULT_FLAG_WINDOW_HOURS = 48;
@@ -256,6 +272,8 @@ function evaluate(itemKey: string, events: readonly VantageEvent[], opts: StageO
   let stage: Stage | null = null;
   let docEdits = 0;
   let codeEdits = 0;
+  let scratchEdits = 0;
+  const scratchFiles: string[] = [];
   let lastCodeEdit: VantageEvent | null = null;
   const edited = new Set<string>(); // normalized code paths, for L2
   const editIds: string[] = []; // source ids of code edits so far, for the fingerprint
@@ -300,6 +318,22 @@ function evaluate(itemKey: string, events: readonly VantageEvent[], opts: StageO
       case "file.edited": {
         if (e.payload["via"] === "shell-commit") break; // a commit through the shell is not an edit
         const paths = editPaths(e);
+        // Only scratch files touched: recorded, but no stage move, no proof expiry, no cycle, no flag.
+        if (
+          paths !== null &&
+          paths.every(
+            (p) =>
+              isScratchPath(opts.repoRelative?.get(normalizeEditPath(p)) ?? p) ||
+              opts.scratchPaths?.has(normalizeEditPath(p)),
+          )
+        ) {
+          scratchEdits++;
+          for (const p of paths) {
+            const label = scratchLabel(p);
+            if (label && scratchFiles.length < 20 && !scratchFiles.includes(label)) scratchFiles.push(label);
+          }
+          break;
+        }
         const docOnly = paths !== null && paths.every(isDoc);
         // An edit after a command closes the previous cycle and opens the next.
         if (cycleHadCommand) {
@@ -449,6 +483,8 @@ function evaluate(itemKey: string, events: readonly VantageEvent[], opts: StageO
     flags,
     docsOnly,
     codeEdits,
+    scratchEdits,
+    scratchFiles,
     ...originOf(events),
     firstActivity: first?.timestamp ?? "",
     lastActivity,
