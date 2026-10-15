@@ -11,6 +11,7 @@ description: Keep Vantage docs (PRD, ROADMAP, ARCHITECTURE, UX, specs, DECISIONS
    - Confirmed by the user: add it to `docs/DECISIONS.md` as a section with **Context, Decision, Why, Alternatives, Impact**, `Status: accepted <date>`, `Decided by: user`, and a row in the index.
    - Not yet confirmed: same fields with `Status: proposed`, under the "Proposed" section. Never write `accepted` yourself.
    - Changing an accepted decision: add a new decision and mark the old one `superseded` with `Superseded by: Dn`. Never edit an accepted decision's text (CI rejects it).
+   - Number: use the block of decision numbers your brief gave you (see `.agents/rules/docs-and-specs.md`); if you have none, ask the parent.
    - Don't record a decision with any field missing; ask for the missing context first.
    - If it answers an open question, remove it from `docs/OPEN-QUESTIONS.md`.
 4. **Schema changes:** add a numbered file in `packages/daemon/migrations/` (never edit an existing one), a test that upgrades from the previous version, and update `docs/specs/data-schema.md` (see its Migrations section).
