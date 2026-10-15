@@ -294,8 +294,8 @@ describe("where the title appears", () => {
   });
 });
 
-describe("migration 7", () => {
-  it("adds title_source and session_titles to a version 6 database and keeps its rows", () => {
+describe("migration 8", () => {
+  it("adds title_source and session_titles to a version 7 database and keeps its rows", () => {
     const path = join(dir, "old.db");
     const first = new Store(path);
     first.db.exec(
@@ -303,12 +303,13 @@ describe("migration 7", () => {
        VALUES ('issue:OLD-1', 'Old', 'built', 'none', 'x', 'x', 'x', 'x');
        DROP TABLE session_titles;
        ALTER TABLE work_items DROP COLUMN title_source;
-       UPDATE schema_meta SET version = 6;`,
+       DELETE FROM schema_migrations WHERE number = 8;
+       UPDATE schema_meta SET version = 7;`,
     );
     first.close();
     const upgraded = new Store(path);
     try {
-      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(7);
+      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(8);
       expect(upgraded.db.prepare("SELECT title, title_source FROM work_items").get()).toMatchObject({
         title: "Old",
         title_source: "fallback",

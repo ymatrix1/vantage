@@ -47,7 +47,7 @@ Counts for the Track view come from the `item_sessions` view (see [data schema](
 
 ### Item titles
 
-A work item's title comes from, in order: its anchor (an issue key, branch name or worktree folder), else the first sentence of the session's first request when one was captured (cleaned, at most 80 characters, local only, switchable: [D93](../DECISIONS.md), proposed), else the repo, branch and first activity date (D84). `work_items.title_source` records which (`anchor`, `request`, `fallback`).
+A work item's title comes from, in order: its anchor (an issue key, branch name or worktree folder), else the first sentence of the session's first request when one was captured (cleaned, at most 80 characters, local only, switchable: [D95](../DECISIONS.md), proposed), else the repo, branch and first activity date (D84). `work_items.title_source` records which (`anchor`, `request`, `fallback`).
 
 ## Entities
 

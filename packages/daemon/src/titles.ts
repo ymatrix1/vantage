@@ -1,4 +1,4 @@
-// Request titles (proposed D93): the first sentence of a session's first request, cleaned by
+// Request titles (proposed D95): the first sentence of a session's first request, cleaned by
 // `requestTitle` in core, kept in `session_titles` and used only as the title of that session's
 // provisional item. Local only; nothing here logs, sends or re-exposes the text.
 import { closeSync, openSync, readSync } from "node:fs";

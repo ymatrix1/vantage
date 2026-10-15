@@ -12,6 +12,7 @@ import {
   getItem,
   linkStoredEvents,
   listItems,
+  loadMigrations,
   runStagePass,
   undoLink,
 } from "../src/index.ts";
@@ -66,7 +67,7 @@ describe("migration 3", () => {
     const upgraded = new Store(path);
     try {
       const v = upgraded.db.prepare("SELECT version FROM schema_meta").get();
-      expect(Number(v?.["version"])).toBe(7);
+      expect(Number(v?.["version"])).toBe(loadMigrations().length);
       expect(upgraded.countEvents()).toBe(1);
       expect(runStagePass(upgraded, {}, NOW).items).toBe(1);
       expect(listItems(upgraded)[0]).toMatchObject({ itemKey: "issue:FTK-9", stage: "built" });

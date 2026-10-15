@@ -265,7 +265,7 @@ function branchOf(l: TranscriptLine, now: Map<string, string | null>): string | 
  * The title candidate for session `own`: its first real user request, run through `requestTitle`.
  * Returns `found: false` when the lines hold no user request yet (try again later) and `title: null`
  * when the first request leaves nothing usable (do not look at later ones). Only that one message is
- * read; nothing else of any prompt is kept (proposed D93).
+ * read; nothing else of any prompt is kept (proposed D95).
  */
 export function firstRequestTitle(
   lines: readonly TranscriptLine[],

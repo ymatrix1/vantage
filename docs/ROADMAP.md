@@ -51,7 +51,7 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 - [x] Track query API (`vantage-r0kv`, D84 proposed): `thrashing` and `unproven_claim` only for items active in the last 48 hours (`flag_window_hours`), flag reasons naming files by base name, and `GET /api/track` with filters, sort, grouping, paging and live facet counts, validated and read-only, plus a fallback title from repo, branch and date. Remaining: the page controls (`vantage-4ty4`).
 - [x] `vantage stats`: read-only, aggregates-only numbers on how useful the Track page is, with `--json`, `--since`, `--repo` and a per-day `--days N` view for the exit week (`vantage-v1o3`, D88 proposed). Goals stay constants; making them configurable is a follow-up bean.
 - [x] `forgotten` is its own low-urgency group, no `forgotten` flag on backfilled conversations, and `sessionCount` and `derivedCount` on Track items (`vantage-hs1y`, `vantage-e0rt`, D94 proposed).
-- [x] Item titles from the first request (`vantage-grkz`, D93 proposed): cleaned first sentence of a session's first request titles its provisional item, stored only locally, `item_titles_from_requests` switch, `title_source`, `vantage titles` and `vantage titles clear`.
+- [x] Item titles from the first request (`vantage-grkz`, D95 proposed): cleaned first sentence of a session's first request titles its provisional item, stored only locally, `item_titles_from_requests` switch, `title_source`, `vantage titles` and `vantage titles clear`.
 - [ ] **Exit:** used every day for a week, and the morning catch-up happens on the Track page instead of in terminals.
 
 ## Phase 2: work items and board

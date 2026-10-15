@@ -137,7 +137,7 @@ export function backfillTranscripts(
   projectsDir: string,
   now: Date = new Date(),
   days: number = BACKFILL_DAYS,
-  /** Capture first-request titles (default on; `item_titles_from_requests` in config.toml, D93). */
+  /** Capture first-request titles (default on; `item_titles_from_requests` in config.toml, D95). */
   requestTitles = true,
 ): IngestResult {
   const stamp = now.toISOString();

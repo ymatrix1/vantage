@@ -9,6 +9,7 @@ import {
   BIND_HOST,
   DEFAULT_QUERY,
   Store,
+  loadMigrations,
   loadOrCreateToken,
   runStagePass,
   startHttp,
@@ -222,7 +223,7 @@ describe("read-only API over a synthetic store", () => {
 
   it("GET /api/diagnostics reports source health basics", async () => {
     const d = JSON.parse((await call("/api/diagnostics", auth)).body);
-    expect(d).toMatchObject({ events: 4, items: 2, schemaVersion: 7 });
+    expect(d).toMatchObject({ events: 4, items: 2, schemaVersion: loadMigrations().length });
     expect(d.sources.find((s: { source: string }) => s.source === "claude_code").events).toBe(4);
   });
 

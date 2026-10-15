@@ -1,4 +1,4 @@
-// Turns a session's first request into a short item title (proposed D93). Pure. Privacy first: the
+// Turns a session's first request into a short item title (proposed D95). Pure. Privacy first: the
 // result is one line of at most 80 characters, and anything that could carry a secret, a location or
 // a contact is removed before the sentence is cut. The rest of the prompt is never kept.
 

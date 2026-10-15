@@ -109,7 +109,7 @@ function open(args: string[], io: CliIo): number {
 }
 
 /**
- * `vantage titles` lists the request titles stored locally (D93); `vantage titles clear` deletes them and
+ * `vantage titles` lists the request titles stored locally (D95); `vantage titles clear` deletes them and
  * refreshes the item titles. Nothing here sends or logs anything else.
  */
 function titles(args: string[], io: CliIo): number {

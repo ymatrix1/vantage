@@ -10,7 +10,7 @@ import { requestTitleMap } from "./titles.ts";
 
 export interface StagePassOptions extends StageOptions {
   link?: Omit<LinkOptions, "undone">;
-  /** Use stored first-request titles for provisional session items (default on, D93). */
+  /** Use stored first-request titles for provisional session items (default on, D95). */
   requestTitles?: boolean;
 }
 

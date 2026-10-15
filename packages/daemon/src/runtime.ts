@@ -105,7 +105,7 @@ export function readFlagWindowHours(home: string): number | undefined {
 }
 
 /**
- * `item_titles_from_requests = false` in `config.toml` turns request titles off (proposed D93). Any other
+ * `item_titles_from_requests = false` in `config.toml` turns request titles off (proposed D95). Any other
  * value, a missing key or an unreadable config means on.
  */
 export function readRequestTitlesEnabled(home: string): boolean {
