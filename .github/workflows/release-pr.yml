@@ -1,0 +1,58 @@
+name: release-pr
+
+# Keeps one release PR (branch release/next) up to date from the Conventional Commits on main (D98).
+# The PR changes only package.json (version) and CHANGELOG.md. Merging it is the release decision;
+# release.yml then tags, builds and publishes. This workflow never tags, releases or publishes.
+#
+# Needs the repository setting "Allow GitHub Actions to create and approve pull requests" (RELEASING.md).
+# Commit subjects are untrusted text: they go through files, never into a shell command line.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-pr
+  cancel-in-progress: false
+
+jobs:
+  release-pr:
+    if: github.event.repository.fork == false
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+      - name: Plan the next version
+        id: plan
+        run: node tools/release.mjs plan --write
+      - name: Push release/next and open or update the PR
+        if: steps.plan.outputs.release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.plan.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B release/next
+          git add package.json CHANGELOG.md
+          git commit -m "chore(release): v$VERSION"
+          git push --force origin release/next
+          node tools/release.mjs pr-body "$VERSION" > pr-body.md
+          number=$(gh pr list --head release/next --base main --state open --json number --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            gh pr edit "$number" --title "chore(release): v$VERSION" --body-file pr-body.md
+          else
+            gh pr create --base main --head release/next --title "chore(release): v$VERSION" --body-file pr-body.md
+          fi

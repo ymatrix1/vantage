@@ -1,3 +1,4 @@
+// fixture: synthetic
 // Synthetic stand-in for `claude -p` (tests never run the real one). Behaviour comes from FAKE_MODE:
 // ok | fail | hang | invalid | is_error. It logs its arguments, working folder, VANTAGE_SKIP and stdin to FAKE_LOG,
 // and, like a real Claude Code session, fires the Vantage hook and writes a transcript when asked to.

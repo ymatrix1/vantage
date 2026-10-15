@@ -50,7 +50,8 @@ import {
 const FAKE = fileURLToPath(new URL("./fixtures/fake-claude.mjs", import.meta.url));
 const HOOK_BIN = fileURLToPath(new URL("../../hooks/dist/src/bin.js", import.meta.url));
 const NOW = new Date("2026-01-05T12:00:00Z");
-const SECRET = "sk-ant-api03-ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+// Built, not written out, so secret scanners do not mistake the fake key for a real one.
+const SECRET = ["sk", "ant", "api03", "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"].join("-");
 const ON: ClassifyConfig = {
   ...CLASSIFY_DEFAULTS,
   enabled: true,

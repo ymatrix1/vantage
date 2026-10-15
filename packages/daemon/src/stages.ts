@@ -98,9 +98,9 @@ export function runStagePass(store: Store, opts: StagePassOptions = {}, now = ne
     for (const item of items) {
       const derived = titleOf(item, requests);
       const { repo } = derived;
-      const accepted_ = !isExplicitKey(item.itemKey) ? accepted.get(item.itemKey) : undefined;
-      const title = accepted_ ?? derived.title;
-      const source = accepted_ === undefined ? derived.source : "classifier";
+      const pick = !isExplicitKey(item.itemKey) ? accepted.get(item.itemKey) : undefined;
+      const title = pick ?? derived.title;
+      const source = pick === undefined ? derived.source : "classifier";
       db.prepare(
         `INSERT INTO work_items (item_key, title, title_source, repo, branch, has_edits, stage, proof_status, proof_level, docs_only,
            first_activity, last_activity, created_at, updated_at)

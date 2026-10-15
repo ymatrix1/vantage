@@ -20,6 +20,7 @@ import {
 import { runClassify } from "./classify.ts";
 import { runDoctor } from "./doctor.ts";
 import { runAdd, runRemove } from "./install.ts";
+import { formatVersion, readVersionInfo } from "./version.ts";
 import { runStats } from "./stats.ts";
 
 export interface CliIo {
@@ -157,11 +158,15 @@ export async function runCli(argv: string[], io: CliIo): Promise<number> {
   if (cmd === "remove") return runRemove(rest, io, false);
   if (cmd === "uninstall") return runRemove(rest, io, true);
   if (cmd === "doctor") return runDoctor(io);
+  if (cmd === "--version" || cmd === "-v" || cmd === "version") {
+    io.out(formatVersion(readVersionInfo(io.env)));
+    return 0;
+  }
   if (cmd === "stats") return runStats(rest, io);
   if (cmd === "titles") return titles(rest, io);
   if (cmd === "classify") return runClassify(rest, io);
   io.err(
-    "Usage: vantage start [--port N] | open [--print] | add [path] [--dry-run] [--yes] [--git-hooks] | remove [path] | uninstall | doctor | stats [--json] [--since 7d] [--repo NAME] [--days N] | titles [clear] | classify [--dry-run | accept | dismiss | undo | report | status]",
+    "Usage: vantage start [--port N] | open [--print] | add [path] [--dry-run] [--yes] [--git-hooks] | remove [path] | uninstall | doctor | --version | stats [--json] [--since 7d] [--repo NAME] [--days N] | titles [clear] | classify [--dry-run | accept | dismiss | undo | report | status]",
   );
   return cmd === undefined || cmd === "--help" || cmd === "help" ? 0 : 2;
 }
