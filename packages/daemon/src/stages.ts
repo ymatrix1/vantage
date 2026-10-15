@@ -7,12 +7,15 @@ import type { ItemState, LinkOptions, StageOptions } from "@vantage/core";
 import { linkStoredEvents, loadEvents } from "./linking.ts";
 import { GIT_QUESTIONS_PER_PASS, resolveRepo, worktreeRepos } from "./projects.ts";
 import type { Store } from "./store.ts";
+import { classifyPaths, editedPaths, newScratchCache } from "./scratch.ts";
 import { requestTitleMap } from "./titles.ts";
 
 export interface StagePassOptions extends StageOptions {
   link?: Omit<LinkOptions, "undone">;
   /** Use stored first-request titles for provisional session items (default on, D95). */
   requestTitles?: boolean;
+  /** Ask git which edited files are ignored (default on, proposed D140); off leaves only the name rules. */
+  gitScratch?: boolean;
 }
 
 export interface StagePassResult {
@@ -66,8 +69,10 @@ function titleOf(
 }
 
 /** Links every stored event, evaluates every item, and rewrites the derived tables. */
+const scratchCache = newScratchCache();
+
 export function runStagePass(store: Store, opts: StagePassOptions = {}, now = new Date()): StagePassResult {
-  const { link, requestTitles, ...stageOpts } = opts;
+  const { link, requestTitles, gitScratch, ...stageOpts } = opts;
   const requests: ReadonlyMap<string, string> =
     requestTitles === false ? new Map<string, string>() : requestTitleMap(store);
   const linked = linkStoredEvents(store, link ?? {}, now);
@@ -76,7 +81,17 @@ export function runStagePass(store: Store, opts: StagePassOptions = {}, now = ne
   for (const r of store.db.prepare("SELECT item_key, created_at FROM work_items").all()) {
     firstSeen.set(text(r, "item_key"), text(r, "created_at"));
   }
-  const items = computeStages(events, linked.links, { now, firstSeen, ...stageOpts });
+  const git =
+    gitScratch === false
+      ? { ignored: new Set<string>(), relative: new Map<string, string>() }
+      : classifyPaths(editedPaths(events), scratchCache, now.getTime());
+  const items = computeStages(events, linked.links, {
+    now,
+    firstSeen,
+    scratchPaths: git.ignored,
+    repoRelative: git.relative,
+    ...stageOpts,
+  });
   const at = now.toISOString();
   const eventId = (e: { source: string; sourceId: string }): number =>
     ids.get(`${e.source}|${e.sourceId}`) ?? 0;
