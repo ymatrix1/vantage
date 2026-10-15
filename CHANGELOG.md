@@ -2,6 +2,26 @@
 
 Generated from Conventional Commits by `tools/release.mjs`. See [RELEASING.md](RELEASING.md).
 
+## 0.2.0 (2026-10-15)
+
+### Features
+
+- **track:** organization filter, Asked evidence and one-line proofs (6daa85b)
+- **cli:** demo repos with a made-up remote; tour tests read the stored payloads (3e51c8d)
+- **cli:** vantage tour, a guided offline walkthrough and a synthetic demo home (54ea001)
+- **daemon:** organisation level above repo (org, host, repoName) (e2b9fe6)
+- **classify:** opt-in Haiku classifier with bulk accept and batch undo (72b4d6b)
+- **ui:** Track v2, projects, readable rows, inline detail and links (7351ffc)
+
+### Bug fixes
+
+- **docs:** one Terms line on the web UI spec (02b7625)
+- **docs:** resolve the DECISIONS merge conflict left in the last merge (33f29cd)
+- **daemon:** resolve the repo-relative path when the event spells the folder differently (2c17e15)
+- **core:** edits to scratch and git-ignored files are not code edits (53cac19)
+- **classify:** run in <home>/work and drop everything inside it at ingest (D101) (b676099)
+- **daemon:** an item's repo is its git repo, not the worktree folder (39b8912)
+
 ## 0.1.0 (2026-10-15)
 
 ### Features
