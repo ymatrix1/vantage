@@ -1251,7 +1251,7 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** Keep grouping by attention (mixes projects, hides which repo needs you). Store the project in a new column (a migration for what the stage pass can rewrite). Build PR links from branch names (invents a link that may not exist). Show the worktree folder as the subtitle (what the user disliked).
 - **Impact:** Adds `projects.ts` and `item-detail.ts` to the daemon, a route in `http.ts`, and `Header`, `Row`, `Detail`, title, link and project helpers to the UI; changes the default Track grouping to project; updates the web-ui and UX specs. Limits: projects are ordered by the rows on the current page (the API pages rows, not projects), and group totals include rows the page folds into "Conversations without code". Revisit when the API can sort and page by project.
 
-### D101. `vantage classify`: an opt-in Haiku classifier through the user's own Claude Code, suggestions only
+### D110. `vantage classify`: an opt-in Haiku classifier through the user's own Claude Code, suggestions only
 
 - **Status:** proposed
 - **Context:** The Track page showed hundreds of items with weak titles and no grouping, and there is no labelled data to tune rules. The user accepts sending a minimal summary through their own Claude Code because it already receives their data. D57 says the model writes text only; D68 says everything outside defaults to off; R13 measured `claude -p --json-schema` (Haiku schema-valid 20 of 20, median 52 s).
@@ -1264,7 +1264,7 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** Rules only (no labelled data to tune them). A direct API call (separate key and billing, and the user chose their own Claude Code). Sending transcripts or commands (more than the task needs). Letting the model set status (breaks D57).
 - **Impact:** New spec [classify](specs/classify.md), settings and operations rows, migration 10, `vantage classify` and its README section. Revisit if Haiku latency or limits make a run too slow, or if the agreement report shows the suggestions are mostly wrong.
 
-### D102. Bulk accept needs a preview token and is one batch with one undo; auto-accept is off by default
+### D111. Bulk accept needs a preview token and is one batch with one undo; auto-accept is off by default
 
 - **Status:** proposed
 - **Context:** Hundreds of suggestions make one-by-one acceptance unusable, but a bulk accept of model text that nobody saw is exactly what the project exists to avoid.
@@ -1278,7 +1278,7 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** A confirm dialog only in the UI (the CLI and API could skip it). Per-item undo only (a bulk accept would be hard to take back). Auto-accept on by default (applies unseen text).
 - **Impact:** `classify-store.ts`, `classify-api.ts`, the CLI and the page component; the agreement report (`vantage classify report`, `vantage stats`) measures accepted and dismissed against the deterministic anchors. Revisit the 0.8 and 0.9 defaults when that report has data.
 
-### D103. A `vantage classify` run is a session Vantage must not record; accepted groups are inferred links that never feed stages
+### D112. A `vantage classify` run is a session Vantage must not record; accepted groups are inferred links that never feed stages
 
 - **Status:** proposed
 - **Context:** `claude -p` is a Claude Code session, so Vantage's hooks and the transcript backfill would capture the classifier as a new item. Separately, an accepted grouping needs a representation that the work-item model already allows (`method = inferred`) without letting model output change status (D57).
