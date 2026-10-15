@@ -12,6 +12,7 @@ import {
   backfillTranscripts,
   linkStoredEvents,
   linksForItem,
+  loadMigrations,
 } from "../src/index.ts";
 
 const NOW = new Date("2026-10-14T12:00:00Z");
@@ -122,6 +123,7 @@ describe("migration 5", () => {
     old.exec(`
       CREATE TABLE schema_meta (version INTEGER NOT NULL);
       INSERT INTO schema_meta (version) VALUES (5);
+      CREATE VIEW item_sessions AS SELECT 1 AS item_key;
       CREATE TABLE events (id INTEGER PRIMARY KEY AUTOINCREMENT, source TEXT NOT NULL, source_id TEXT NOT NULL,
         kind TEXT NOT NULL, occurred_at TEXT NOT NULL, ingested_at TEXT NOT NULL, session_id TEXT, repo TEXT,
         payload_json TEXT NOT NULL, payload_version INTEGER NOT NULL DEFAULT 1, UNIQUE (source, source_id));
@@ -129,13 +131,16 @@ describe("migration 5", () => {
       CREATE TABLE links (event_id INTEGER NOT NULL REFERENCES events (id), item_key TEXT NOT NULL,
         method TEXT NOT NULL, anchor_kind TEXT NOT NULL, anchor_value TEXT NOT NULL, rule TEXT NOT NULL,
         confidence REAL NOT NULL, created_at TEXT NOT NULL, undone_at TEXT, PRIMARY KEY (event_id, item_key));
+      CREATE TABLE work_items (id INTEGER PRIMARY KEY AUTOINCREMENT, item_key TEXT NOT NULL UNIQUE, title TEXT NOT NULL);
       INSERT INTO events (source, source_id, kind, occurred_at, ingested_at, session_id, payload_json)
         VALUES ('claude_code', 'cc:tool:old:edit', 'file.edited', '2026-01-05T09:00:00Z', '2026-01-05T09:00:00Z', 's-1', '{}');
     `);
     old.close();
     const upgraded = new Store(path);
     try {
-      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(7);
+      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(
+        loadMigrations().length,
+      );
       expect(upgraded.countEvents()).toBe(1);
       expect(upgraded.countEventBranches()).toBe(0);
       upgraded.setEventBranch("claude_code", "cc:tool:old:edit", "feat/ftk-2-x");

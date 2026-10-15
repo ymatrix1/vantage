@@ -298,9 +298,13 @@ function acceptOne(store: Store, f: Full, batchId: string, at: string): void {
   const db = store.db;
   const payload = { ...f.payload };
   if (f.kind === "title") {
-    const cur = db.prepare("SELECT title FROM work_items WHERE item_key = ?").get(f.itemKey);
+    const cur = db.prepare("SELECT title, title_source FROM work_items WHERE item_key = ?").get(f.itemKey);
     payload["previous"] = cur ? text(cur, "title") : "";
-    db.prepare("UPDATE work_items SET title = ? WHERE item_key = ?").run(str(payload["title"]), f.itemKey);
+    payload["previousSource"] = cur ? text(cur, "title_source") : "fallback";
+    db.prepare("UPDATE work_items SET title = ?, title_source = 'classifier' WHERE item_key = ?").run(
+      str(payload["title"]),
+      f.itemKey,
+    );
   } else if (f.kind === "group" && f.withKey) {
     const other = db.prepare("SELECT first_activity FROM work_items WHERE item_key = ?").get(f.withKey);
     const { keep, fold } = survivor(f, text(other ?? {}, "first_activity"), f.withKey);
@@ -464,8 +468,13 @@ export function undoBatch(store: Store, batchId: string | undefined, now = new D
       }
       if (text(r, "kind") === "title") {
         store.db
-          .prepare("UPDATE work_items SET title = ? WHERE item_key = ? AND title = ?")
-          .run(str(payload["previous"]), text(r, "item_key"), str(payload["title"]));
+          .prepare("UPDATE work_items SET title = ?, title_source = ? WHERE item_key = ? AND title = ?")
+          .run(
+            str(payload["previous"]),
+            str(payload["previousSource"]) || "fallback",
+            text(r, "item_key"),
+            str(payload["title"]),
+          );
       } else if (text(r, "kind") === "group") {
         for (const pair of linkedPairs(payload["linked"])) {
           store.db

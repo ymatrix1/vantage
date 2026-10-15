@@ -1,6 +1,14 @@
 // Synthetic data only.
 import { describe, expect, it } from "vitest";
-import { attentionOf, dotsFor, fallbackTitle, parseTrackQuery, type TrackQuery } from "../src/track.ts";
+import {
+  ATTENTION_LABEL,
+  ATTENTION_ORDER,
+  attentionOf,
+  dotsFor,
+  fallbackTitle,
+  parseTrackQuery,
+  type TrackQuery,
+} from "../src/track.ts";
 
 const base = { proofStatus: "none", docsOnly: false, flags: [] as { severity: string }[] };
 
@@ -9,6 +17,26 @@ describe("attentionOf", () => {
     expect(attentionOf({ stage: "built", flags: [{ severity: "amber" }] })).toBe("needs_you");
     expect(attentionOf({ stage: "built", flags: [] })).toBe("in_progress");
     expect(attentionOf({ stage: "verified", flags: [] })).toBe("done");
+  });
+});
+
+const flag = (kind: string): { kind: string; severity: string } => ({ kind, severity: "amber" });
+
+describe("attention with forgotten (proposed D94)", () => {
+  it("a forgotten flag alone is the low-urgency Forgotten group", () => {
+    expect(attentionOf({ stage: "built", flags: [flag("forgotten")] })).toBe("forgotten");
+  });
+  it("thrashing or unproven_claim is Needs you, also next to forgotten", () => {
+    expect(attentionOf({ stage: "built", flags: [flag("thrashing")] })).toBe("needs_you");
+    expect(attentionOf({ stage: "built", flags: [flag("unproven_claim")] })).toBe("needs_you");
+    expect(attentionOf({ stage: "built", flags: [flag("forgotten"), flag("thrashing")] })).toBe("needs_you");
+  });
+  it("a flag with no kind stays urgent, so older callers keep working", () => {
+    expect(attentionOf({ stage: "built", flags: [{ severity: "amber" }] })).toBe("needs_you");
+  });
+  it("lists Forgotten after Waiting and before Done, with its label", () => {
+    expect(ATTENTION_ORDER).toEqual(["needs_you", "in_progress", "waiting", "forgotten", "done"]);
+    expect(ATTENTION_LABEL.forgotten).toBe("Forgotten");
   });
 });
 

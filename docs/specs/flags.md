@@ -19,6 +19,7 @@ Flags sit on any work item, whatever its stage. Each flag has exactly one primar
 | `follow_up_due` | You're waiting on someone and nothing came back within the threshold | amber | Clock | Draft a nudge | [pings](pings.md) |
 | `close_the_loop` | The item shipped or was verified and the person who asked for it hasn't been told | amber | Speech bubble with a check | Draft an update | [pings](pings.md) |
 | `shipped_unverified` | Deployed, but no post-deploy check ran within N hours (default 24) | amber | Rocket with a dashed trail | Run or open the post-deploy check | [lifecycle](lifecycle.md#verified-in-detail) |
+| `left_unfinished` | A session stopped, ended or went quiet (and may have been archived by the app) while its item still has open tasks, an unproven code edit, or an open flag | amber | Circle with a gap | Resume with context | [proof](proof.md), [ingestion](ingestion.md) |
 
 ## Rules
 

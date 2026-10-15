@@ -7,12 +7,19 @@ export type TrackStage = (typeof TRACK_STAGES)[number];
 /** Stages the Phase 1 sources can evidence; the rest stay hollow until their sources exist. */
 export const PHASE1_STAGES: readonly TrackStage[] = ["asked", "built", "proven"];
 
-export type Attention = "needs_you" | "in_progress" | "waiting" | "done";
-export const ATTENTION_ORDER: readonly Attention[] = ["needs_you", "in_progress", "waiting", "done"];
+export type Attention = "needs_you" | "in_progress" | "waiting" | "forgotten" | "done";
+export const ATTENTION_ORDER: readonly Attention[] = [
+  "needs_you",
+  "in_progress",
+  "waiting",
+  "forgotten",
+  "done",
+];
 export const ATTENTION_LABEL: Record<Attention, string> = {
   needs_you: "Needs you",
   in_progress: "In progress",
   waiting: "Waiting on others",
+  forgotten: "Forgotten",
   done: "Done this week",
 };
 
@@ -32,12 +39,24 @@ export interface TrackItem {
   /** False for a session with no code edits: the UI folds these into "Conversations without code". */
   hasEdits?: boolean;
   firstActivity?: string;
+  /** Sessions feeding the item (default 1) and how many of them continue another (default 0); D86. */
+  sessionCount?: number;
+  derivedCount?: number;
+  /** `anchor` (named by its key), `request` (first sentence of the first request) or `fallback`. */
+  titleSource?: string;
   lastActivity: string;
 }
 
-/** Any open flag means the item needs a look; Phase 1 has no source for "waiting" or "done". */
-export function attentionOf(item: { stage: string; flags: readonly { severity: string }[] }): Attention {
-  if (item.flags.length > 0) return "needs_you";
+/**
+ * `thrashing` or `unproven_claim` means the item needs you now. `forgotten` alone is low urgency and has
+ * its own group (proposed D94). Phase 1 has no source for "waiting".
+ */
+export function attentionOf(item: {
+  stage: string;
+  flags: readonly { severity: string; kind?: string }[];
+}): Attention {
+  if (item.flags.some((f) => f.kind !== "forgotten")) return "needs_you";
+  if (item.flags.length > 0) return "forgotten";
   if (item.stage === "verified") return "done";
   return "in_progress";
 }

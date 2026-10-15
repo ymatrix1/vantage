@@ -5,7 +5,14 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { Store, backfillTranscripts, itemSessionCounts, linkStoredEvents, undoLink } from "../src/index.ts";
+import {
+  Store,
+  backfillTranscripts,
+  itemSessionCounts,
+  linkStoredEvents,
+  loadMigrations,
+  undoLink,
+} from "../src/index.ts";
 
 const NOW = new Date("2026-10-14T12:00:00Z");
 let dir = "";
@@ -87,13 +94,13 @@ describe("item_sessions counts", () => {
     seed();
     linkStoredEvents(store);
     const counts = itemSessionCounts(store);
-    expect(counts.get("session:s-a")).toEqual({
+    expect(counts.get("session:s-a")).toMatchObject({
       itemKey: "session:s-a",
       sessionCount: 2,
       derivedCount: 1,
-      subagentCount: 1,
+      subagentRuns: 1,
     });
-    expect(counts.get("session:s-c")).toMatchObject({ sessionCount: 1, derivedCount: 0, subagentCount: 0 });
+    expect(counts.get("session:s-c")).toMatchObject({ sessionCount: 1, derivedCount: 0, subagentRuns: 0 });
     expect(counts.has("session:s-b")).toBe(false);
   });
   it("undoing the child's links removes it from the counts, and later passes keep it out", () => {
@@ -135,12 +142,14 @@ describe("migration 4", () => {
     old.close();
     const upgraded = new Store(path);
     try {
-      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(7);
+      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(
+        loadMigrations().length,
+      );
       expect(upgraded.countEvents()).toBe(1);
       expect(itemSessionCounts(upgraded).get("issue:FTK-9")).toMatchObject({
         sessionCount: 1,
         derivedCount: 0,
-        subagentCount: 0,
+        subagentRuns: 0,
       });
     } finally {
       upgraded.close();

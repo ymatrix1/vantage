@@ -1,4 +1,4 @@
-// `vantage start`, `open`, `add`, `remove`, `uninstall`, `doctor` and `stats` (docs/specs/operations.md).
+// `vantage start`, `open`, `add`, `remove`, `uninstall`, `doctor`, `stats` and `titles` (docs/specs/operations.md).
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
@@ -6,8 +6,14 @@ import { fileURLToPath } from "node:url";
 import {
   AlreadyRunningError,
   DEFAULT_PORT,
+  Store,
+  clearRequestTitles,
+  listRequestTitles,
   loadOrCreateToken,
+  readFlagWindowHours,
   readHealth,
+  readRequestTitlesEnabled,
+  runStagePass,
   startDaemon,
   vantageHomeDir,
 } from "@vantage/daemon";
@@ -103,6 +109,46 @@ function open(args: string[], io: CliIo): number {
   return 0;
 }
 
+/**
+ * `vantage titles` lists the request titles stored locally (D95); `vantage titles clear` deletes them and
+ * refreshes the item titles. Nothing here sends or logs anything else.
+ */
+function titles(args: string[], io: CliIo): number {
+  const [sub, ...extra] = args;
+  if ((sub !== undefined && sub !== "clear") || extra.length > 0) {
+    io.err("Usage: vantage titles [clear]");
+    return 2;
+  }
+  const home = vantageHomeDir(io.env);
+  const dbPath = join(home, "vantage.db");
+  if (!existsSync(dbPath)) {
+    io.out("No request titles stored (no database yet).");
+    return 0;
+  }
+  const store = new Store(dbPath);
+  try {
+    if (sub === "clear") {
+      const n = clearRequestTitles(store);
+      const window = readFlagWindowHours(home);
+      runStagePass(store, {
+        requestTitles: true,
+        ...(window === undefined ? {} : { flagWindowHours: window }),
+      });
+      io.out(`Cleared ${n} request title(s). Items use the repo, branch and date title again.`);
+      return 0;
+    }
+    const all = listRequestTitles(store);
+    const on = readRequestTitlesEnabled(home);
+    io.out(
+      `${all.length} request title(s) stored locally in ${dbPath}. Capture is ${on ? "on" : "off"} (item_titles_from_requests in config.toml).`,
+    );
+    for (const t of all) io.out(`${t.sessionId.slice(0, 8)}  ${t.capturedAt.slice(0, 10)}  ${t.title}`);
+    return 0;
+  } finally {
+    store.close();
+  }
+}
+
 export async function runCli(argv: string[], io: CliIo): Promise<number> {
   const [cmd, ...rest] = argv;
   if (cmd === "start") return start(rest, io);
@@ -112,9 +158,10 @@ export async function runCli(argv: string[], io: CliIo): Promise<number> {
   if (cmd === "uninstall") return runRemove(rest, io, true);
   if (cmd === "doctor") return runDoctor(io);
   if (cmd === "stats") return runStats(rest, io);
+  if (cmd === "titles") return titles(rest, io);
   if (cmd === "classify") return runClassify(rest, io);
   io.err(
-    "Usage: vantage start [--port N] | open [--print] | add [path] [--dry-run] [--yes] [--git-hooks] | remove [path] | uninstall | doctor | stats [--json] [--since 7d] [--repo NAME] [--days N] | classify [--dry-run | accept | dismiss | undo | report | status]",
+    "Usage: vantage start [--port N] | open [--print] | add [path] [--dry-run] [--yes] [--git-hooks] | remove [path] | uninstall | doctor | stats [--json] [--since 7d] [--repo NAME] [--days N] | titles [clear] | classify [--dry-run | accept | dismiss | undo | report | status]",
   );
   return cmd === undefined || cmd === "--help" || cmd === "help" ? 0 : 2;
 }

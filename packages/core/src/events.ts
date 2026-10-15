@@ -8,6 +8,8 @@ export const EVENT_KINDS = {
     "file.edited",
     "command.ran",
     "todo.updated",
+    "task.list.updated",
+    "subagent.run",
     "session.waiting",
     "session.stopped",
     "session.compacted",

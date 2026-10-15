@@ -1,0 +1,2 @@
+# Synthetic test strings in a history commit (made-up, match no real account); the file now builds them at runtime.
+a776182e49dc2e4dea9dc584b7713bf3e319293b:packages/core/test/request-title.test.ts:aws-access-token:41

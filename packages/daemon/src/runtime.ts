@@ -10,7 +10,7 @@ import { createClassifyJob } from "./classify-job.ts";
 import { createGitLoop, type GitLoop } from "./git-loop.ts";
 import { startHttp, type HttpHandle } from "./http.ts";
 import { createLiveHub } from "./live.ts";
-import { backfillTranscripts, ingestSpool } from "./ingest.ts";
+import { BACKFILL_DAYS, backfillTranscripts, ingestSpool } from "./ingest.ts";
 import { createStageLoop, type StageLoop } from "./stage-loop.ts";
 import { Store } from "./store.ts";
 import { loadOrCreateToken } from "./token.ts";
@@ -103,6 +103,20 @@ export function readFlagWindowHours(home: string): number | undefined {
     return n >= 1 && n <= 8760 ? n : undefined;
   } catch {
     return undefined;
+  }
+}
+
+/**
+ * `item_titles_from_requests = false` in `config.toml` turns request titles off (proposed D95). Any other
+ * value, a missing key or an unreadable config means on.
+ */
+export function readRequestTitlesEnabled(home: string): boolean {
+  try {
+    const text = readFileSync(join(home, "config.toml"), "utf8");
+    const v = /^\s*item_titles_from_requests\s*=\s*(true|false)\s*(?:#.*)?$/m.exec(text)?.[1];
+    return v !== "false";
+  } catch {
+    return true;
   }
 }
 
@@ -235,12 +249,14 @@ export async function startDaemon(options: DaemonOptions = {}): Promise<DaemonHa
     health.port = http.port;
     log(`serving 127.0.0.1:${http.port}${uiDir ? "" : " (API only, UI not found)"}`);
 
+    const requestTitles = readRequestTitlesEnabled(home); // read at start; changing it needs a restart
+    db.captureTaskText = requestTitles; // the current-task text follows the same switch (proposed D96)
     const ingest = (): void => {
       if (ingesting) return;
       ingesting = true;
       try {
         const s = ingestSpool(db, spool);
-        const t = backfillTranscripts(db, projectsDir);
+        const t = backfillTranscripts(db, projectsDir, new Date(), BACKFILL_DAYS, requestTitles);
         health.lastIngestAt = new Date().toISOString();
         if (s.inserted + t.inserted > 0)
           log(`ingested ${s.inserted} spool and ${t.inserted} transcript events`);
@@ -260,7 +276,7 @@ export async function startDaemon(options: DaemonOptions = {}): Promise<DaemonHa
     stage = createStageLoop({
       store: db,
       statusFile: join(home, STATUS_FILE),
-      pass: flagWindowHours === undefined ? {} : { flagWindowHours },
+      pass: { requestTitles, ...(flagWindowHours === undefined ? {} : { flagWindowHours }) },
       onPass: () => live.publish(),
       ...(options.stageMs ? { intervalMs: options.stageMs } : {}),
       onError: onError("stage pass"),

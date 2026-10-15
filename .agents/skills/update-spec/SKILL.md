@@ -13,11 +13,12 @@ description: Keep Vantage docs (PRD, ROADMAP, ARCHITECTURE, UX, specs, DECISIONS
    - Changing an accepted decision: add a new decision and mark the old one `superseded` with `Superseded by: Dn`. Never edit an accepted decision's text (CI rejects it).
    - Don't record a decision with any field missing; ask for the missing context first.
    - If it answers an open question, remove it from `docs/OPEN-QUESTIONS.md`.
-4. **Cross-doc consistency:**
+4. **Schema changes:** add a numbered file in `packages/daemon/migrations/` (never edit an existing one), a test that upgrades from the previous version, and update `docs/specs/data-schema.md` (see its Migrations section).
+5. **Cross-doc consistency:**
    - Stage names, flag names and item kinds must match `docs/specs/lifecycle.md` and `docs/specs/work-item-model.md` everywhere.
    - If a phase's scope moves or finishes, update `docs/ROADMAP.md` and tick finished checkboxes.
    - If goals or scope change, update `docs/PRD.md`, and only with the user's approval.
    - New docs are linked from `README.md`.
-5. **Checks:**
+6. **Checks:**
    - Broken relative links: every `](docs/...)` and `](specs/...)` target exists.
    - Privacy: no real names, ids, URLs or message content (see `.agents/rules/privacy-boundary.md`).

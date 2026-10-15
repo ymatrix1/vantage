@@ -50,6 +50,8 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 - [x] `vantage` Claude Code plugin (`vantage-u902`, D83 proposed): `/vantage:open`, `:start`, `:doctor`, `:status`, `:add`, each wrapping one CLI call with restricted `allowed-tools`; a CI check validates the command files. Remaining: a live run of each command in a real Claude Code session (touches the user's real config).
 - [x] Track query API (`vantage-r0kv`, D84 proposed): `thrashing` and `unproven_claim` only for items active in the last 48 hours (`flag_window_hours`), flag reasons naming files by base name, and `GET /api/track` with filters, sort, grouping, paging and live facet counts, validated and read-only, plus a fallback title from repo, branch and date. Remaining: the page controls (`vantage-4ty4`).
 - [x] `vantage stats`: read-only, aggregates-only numbers on how useful the Track page is, with `--json`, `--since`, `--repo` and a per-day `--days N` view for the exit week (`vantage-v1o3`, D88 proposed). Goals stay constants; making them configurable is a follow-up bean.
+- [x] `forgotten` is its own low-urgency group, no `forgotten` flag on backfilled conversations, and `sessionCount` and `derivedCount` on Track items (`vantage-hs1y`, `vantage-e0rt`, D94 proposed).
+- [x] Item titles from the first request (`vantage-grkz`, D95 proposed): cleaned first sentence of a session's first request titles its provisional item, stored only locally, `item_titles_from_requests` switch, `title_source`, `vantage titles` and `vantage titles clear`.
 - [ ] **Exit:** used every day for a week, and the morning catch-up happens on the Track page instead of in terminals.
 
 ## Phase 2: work items and board
@@ -58,6 +60,8 @@ The smallest version worth using daily. Only Claude Code and git; only Asked, Bu
 - [x] Stage machine for Asked, Built and Proven. Delivered in Phase 1 (`vantage-lxud`, D71).
 - [x] Derived sessions grouped under their parent's item (`vantage-o3s3`, D86 proposed): `session.derived` from copied transcript history, linker rule, `item_sessions` counts, [measurements](research/session-lineage.md). Remaining: show `sessionCount`, `derivedCount` and `subagentCount` in the Track view (follow-up bean); heuristic grouping waits on D87.
 - [x] Transcript branch on tool events (`vantage-j9ea`, D92 proposed): edits and commands carry the branch in force, the linker anchors on it, a one-shot backfill covers stored events. On the real store (137 sessions with edits) sessions with a branch, key or worktree anchored edit went from 12 to 129, `Session` items from 130 to 33.
+- [x] The agent's task list and sub-agent runs per item (`vantage-udzy`, D96 proposed): `task.list.updated` from `TodoWrite` (counts, plus the cleaned current task, 80 characters, same switch as request titles) and `subagent.run`, read through `itemTasks` and `itemSessionCounts`. Remaining: show the fields on Track (API session), `TaskCreate` and `TaskUpdate`, sub-agent run descriptions (follow-up beans). On this machine no session uses `TodoWrite`.
+- [x] Fork and resume counts per item (`vantage-i7gx`, D97 proposed): `forkCount` and `resumeCount` from the hook source, `forkHintCount` from timing as a hint only; they fill as hooks record `SessionStart` sources.
 - [ ] Local web UI: Track (attention and project grouping), Item and Journal; "since yesterday" filter.
 - [ ] Ghost proposals from sessions with no edits.
 - [ ] **Exit:** the morning catch-up uses the board instead of terminals.
@@ -74,7 +78,7 @@ Draft epic `vantage-nqh6`. It starts after the Phase 1 exit (a week of daily use
 
 - [ ] Priority, difficulty, spread, staleness.
 - [ ] Focus drawn as the landscape (dot characters, bands, shelf, sky), with the Track page as fallback.
-- [ ] Toasts for red items; `waiting_on_you` and `forgotten` flags.
+- [ ] Toasts for red items; `waiting_on_you`, `forgotten` and `left_unfinished` flags (P13: conversations archived while work is open).
 - [ ] Contexts (Work, Personal) and project settings on the Sources page.
 - [ ] **Exit:** the morning catch-up starts on the landscape for a week, and the user can say what needs them without opening a terminal.
 
