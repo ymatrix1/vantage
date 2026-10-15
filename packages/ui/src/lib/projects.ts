@@ -56,7 +56,12 @@ const plain = (g: TrackGroup): Section => ({
  * active, a repo-less group last; groups the page built itself (no code, older) follow. Other groupings
  * keep the API's order.
  */
-export function sectionsOf(mode: GroupBy, groups: readonly TrackGroup[]): Section[] {
+export function sectionsOf(mode: GroupBy, groups: readonly TrackGroup[], now: Date = new Date()): Section[] {
+  if (mode === "day")
+    return daySections(
+      groups.flatMap((g) => g.items),
+      now,
+    );
   if (mode !== "repo") return groups.map(plain);
   const projects = groups.filter((g) => g.id.startsWith("repo:")).map(projectOf);
   const ordered = projects
@@ -70,4 +75,34 @@ export function sectionsOf(mode: GroupBy, groups: readonly TrackGroup[]): Sectio
     )
     .map((x) => x.p);
   return [...ordered, ...groups.filter((g) => !g.id.startsWith("repo:")).map(plain)];
+}
+
+const DAY_MS = 86_400_000;
+const dayStart = (d: Date): number => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+
+/** Rows folded by the local day of their last activity: Today, Yesterday, then the date. Newest day first. */
+function daySections(items: readonly TrackRow[], now: Date): Section[] {
+  const today = dayStart(now);
+  const byDay = new Map<number, TrackRow[]>();
+  for (const i of items) {
+    const k = dayStart(new Date(i.lastActivity));
+    byDay.set(k, [...(byDay.get(k) ?? []), i]);
+  }
+  return [...byDay.entries()]
+    .toSorted((a, b) => b[0] - a[0])
+    .map(([k, rows]) => ({
+      id: `day:${k}`,
+      label:
+        k === today
+          ? "Today"
+          : k === today - DAY_MS
+            ? "Yesterday"
+            : new Date(k).toLocaleDateString("en", { weekday: "short", month: "short", day: "numeric" }),
+      total: rows.length,
+      items: rows,
+      url: null,
+      needsYou: null,
+      inProgress: null,
+      lastActivity: null,
+    }));
 }

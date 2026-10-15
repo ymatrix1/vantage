@@ -135,6 +135,10 @@ export function toQuery(s: ViewState, full = false): string {
   return parts.join("&");
 }
 
+/** The query the API gets: `day` grouping is the page's own, so the daemon sees no grouping (D181). */
+export const apiQuery = (s: ViewState, full = true): string =>
+  toQuery(s.group === "day" ? { ...s, group: "none" } : s, full);
+
 /** Filters that narrow the result (everything except sort, group and paging). */
 export function activeFilters(s: ViewState): string[] {
   const out: string[] = [];

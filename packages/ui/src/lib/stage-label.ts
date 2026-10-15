@@ -6,6 +6,12 @@ type LabelInput = Pick<TrackItem, "stage" | "proofStatus" | "proofLevel" | "docs
   flags: readonly unknown[];
 };
 
+/** `unproven_claim` and `forgotten` already show as the proof note or their own group; the label says "needs you" for the rest (D180). */
+const quiet = (f: unknown): boolean => {
+  const kind = typeof f === "object" && f !== null && "kind" in f ? f.kind : null;
+  return kind === "unproven_claim" || kind === "forgotten";
+};
+
 const PROOF_NOTE: Record<string, string> = {
   none: "no proof yet",
   expired: "proof expired",
@@ -18,7 +24,7 @@ const name = (stage: string): string => (stage ? stage.charAt(0).toUpperCase() +
 /** "Asked", "Built · no proof yet", "Built · needs you", "Proven · L1", "Built · docs only, proof not required". */
 export function stageLabel(item: LabelInput): string {
   const stage = name(item.stage);
-  const flagged = item.flags.length > 0;
+  const flagged = item.flags.some((f) => !quiet(f));
   const docs = item.docsOnly || item.proofStatus === "not_required";
   if (item.stage === "proven") {
     const level = item.proofLevel > 0 ? `L${item.proofLevel}` : "";

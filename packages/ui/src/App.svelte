@@ -6,18 +6,22 @@
   import { foldGroups } from "$lib/fold";
   import Header from "$lib/Header.svelte";
   import Legend from "$lib/Legend.svelte";
+  import Overview from "$lib/Overview.svelte";
   import { applyPush, mergeCounts, startLive } from "$lib/live";
   import Pagination from "$lib/Pagination.svelte";
+  import { loadSettings } from "$lib/settings.svelte";
   import { sectionsOf } from "$lib/projects";
   import Row from "$lib/Row.svelte";
   import { summaryOf, type Summary } from "$lib/summary";
   import Toolbar from "$lib/Toolbar.svelte";
   import { ago } from "$lib/relative-time";
-  import { activeFilters, blockers, clearFilters, parseView, toQuery, type ViewState } from "$lib/view";
+  import { activeFilters, apiQuery, blockers, clearFilters, parseView, toQuery, type ViewState } from "$lib/view";
 
   const POLL_MS = 5000;
   const FACET_REFRESH_MS = 1000;
   const EXPAND_ALL_MAX = 20;
+  // The overview asks for a page no list uses (25, 50, 100), so tests and logs can tell the two apart.
+  const SUMMARY_PAGE = 30;
   // Only the query string of the view is remembered here; the token never goes to localStorage (D75).
   const VIEW_KEY = "vantage.view";
   const SINCE_WORDS = { "24h": "24 hours", "7d": "7 days", "30d": "30 days", all: "all time" } as const;
@@ -76,6 +80,11 @@
   let live = $state(false);
   // Sections the user opened or closed; anything else follows COLLAPSED_BY_DEFAULT.
   let collapsedBy = $state<Record<string, boolean>>({});
+  function toggleHelp(): void {
+    const next = !(showKeys || showLegend);
+    showKeys = next;
+    showLegend = next;
+  }
   let searchEl = $state<HTMLInputElement | null>(null);
 
   let seq = 0;
@@ -83,7 +92,7 @@
   let facetTimer: ReturnType<typeof setTimeout> | null = null;
 
   const isCollapsed = (id: string): boolean => collapsedBy[id] ?? COLLAPSED_BY_DEFAULT.includes(id);
-  const sections = $derived(data ? sectionsOf(view.group, foldGroups(view, data, now)) : []);
+  const sections = $derived(data ? sectionsOf(view.group, foldGroups(view, data, now), now) : []);
   const flat = $derived<TrackRow[]>(sections.filter((s) => !isCollapsed(s.id)).flatMap((s) => s.items));
   const unconfigured = $derived(data ? data.sources.filter((s) => s.state === "unconfigured") : []);
   const filters = $derived(activeFilters(view));
@@ -94,10 +103,10 @@
 
   /** The header's counts: the same filters, grouped by attention, one row (only the totals matter). */
   async function loadSummary(): Promise<void> {
-    const asked = toQuery({ ...view, group: "attention", page: 1, pageSize: 1 }, true);
+    const asked = toQuery({ ...view, group: "attention", sort: "activity", order: "desc", page: 1, pageSize: SUMMARY_PAGE }, true);
     try {
       const v = await fetchTrack(asked);
-      if (asked === toQuery({ ...view, group: "attention", page: 1, pageSize: 1 }, true)) summary = summaryOf(v);
+      if (asked === toQuery({ ...view, group: "attention", sort: "activity", order: "desc", page: 1, pageSize: SUMMARY_PAGE }, true)) summary = summaryOf(v);
     } catch {
       // The header keeps its last counts; the list has its own error line.
     }
@@ -111,7 +120,7 @@
     refreshing = true;
     void loadSummary();
     try {
-      const next = await fetchTrack(toQuery(view, true), ctl.signal);
+      const next = await fetchTrack(apiQuery(view), ctl.signal);
       if (mine !== seq) return;
       // A page past the end (a shared link, or rows that vanished): land on the last real page.
       if (next.page.pages > 0 && view.page > next.page.pages) {
@@ -150,12 +159,12 @@
     if (facetTimer) return;
     facetTimer = setTimeout(async () => {
       facetTimer = null;
-      const asked = toQuery(view, true);
+      const asked = apiQuery(view);
       const mine = seq;
       void loadSummary();
       try {
         const fresh = await fetchTrack(asked);
-        if (mine !== seq || asked !== toQuery(view, true) || !data) return;
+        if (mine !== seq || asked !== apiQuery(view) || !data) return;
         data = mergeCounts(data, fresh);
       } catch {
         // Counts stay as they were; the next push or poll tries again.
@@ -242,6 +251,7 @@
   }
 
   onMount(() => {
+    loadSettings();
     void load();
     const onPop = (): void => {
       view = parseView(window.location.search.slice(1));
@@ -283,27 +293,23 @@
 
 <svelte:window onkeydown={onKey} />
 
-<div
-  class="min-h-screen"
-  style="--dot-green: oklch(0.65 0.17 150); --dot-blue: oklch(0.6 0.17 250); --dot-amber: oklch(0.75 0.16 75); --dot-red: oklch(0.6 0.22 27); --dot-gray: oklch(0.6 0 0); --dot-light: oklch(0.8 0 0);"
->
+<div class="min-h-screen">
   <main class="mx-auto max-w-4xl px-6 pb-6">
     <!-- Sticky: the summary line and the controls stay in view while the list scrolls. -->
-    <div class="sticky top-0 z-20 -mx-6 mb-2 border-b border-border bg-background px-6 pt-4" data-testid="sticky-top">
-      <div class="flex items-baseline justify-between">
+    <div class="z-20 md:sticky md:top-0 -mx-6 mb-2 border-b border-border bg-background px-6 pt-4" data-testid="sticky-top">
+      <div class="flex items-center justify-between gap-3">
         <h1 class="text-xl font-semibold">Track</h1>
-        <span class="flex gap-3 text-sm">
-          <button
-            type="button"
-            class="text-muted-foreground underline"
-            aria-expanded={showLegend}
-            aria-controls="dot-legend"
-            onclick={() => (showLegend = !showLegend)}
-          >
-            What the dots mean
-          </button>
-          <button type="button" class="text-muted-foreground underline" onclick={() => (showKeys = !showKeys)}>? keys</button>
-        </span>
+        <button
+          type="button"
+          class="ctl ctl-icon text-muted-foreground"
+          aria-expanded={showLegend}
+          aria-controls="dot-legend"
+          aria-label="Help: what the dots mean and the keyboard keys"
+          title="What the dots mean, and keys (?)"
+          onclick={toggleHelp}
+        >
+          ?
+        </button>
       </div>
       <Header {summary} {view} {now} stale={data?.stale ?? false} offline={error !== null} onchange={go} />
       {#if data}
@@ -312,6 +318,7 @@
     </div>
 
     {#if showLegend}<Legend onclose={() => (showLegend = false)} />{/if}
+    {#if data && !nothingAtAll}<Overview {summary} {now} onchange={go} />{/if}
 
     {#if data?.stale}
       <p class="mb-3 rounded-lg border border-border bg-muted px-3 py-2 text-sm" role="status">
@@ -349,7 +356,7 @@
       </section>
     {:else if data}
       {#if refreshing}<p class="sr-only" role="status">Updating</p>{/if}
-      <Pagination top page={data.page} onpage={(n) => go({ page: n })} onsize={(n) => go({ pageSize: n, page: 1 })} />
+      {#if data.page.pages > 1}<Pagination top page={data.page} onpage={(n) => go({ page: n })} onsize={(n) => go({ pageSize: n, page: 1 })} />{/if}
       <div class:opacity-60={refreshing} aria-busy={refreshing}>
         {#each sections as s (s.id)}
           {@const collapsed = isCollapsed(s.id)}

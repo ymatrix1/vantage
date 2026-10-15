@@ -16,7 +16,7 @@ async function ready(items: TrackRow[] = [item({ id: "a", title: "Alpha" })]) {
 const panelOf = (root: ParentNode): Element | null => root.querySelector("#dot-legend");
 const opener = (root: ParentNode): HTMLButtonElement => {
   const b = [...root.querySelectorAll("button")].find(
-    (x) => x.hasAttribute("aria-controls") && x.textContent?.includes("What the dots mean"),
+    (x) => x.hasAttribute("aria-controls") && x.getAttribute("aria-label")?.includes("what the dots mean"),
   );
   if (!b) throw new Error("no legend button");
   return b;
@@ -66,7 +66,7 @@ describe("dot legend", () => {
     expect(drawn).toEqual(["done", "current", "no_proof", "needs_you", "skipped", "not_yet"]);
     expect(text).toContain("No source can measure this yet.");
     expect(text).toContain("Edited, but no passing check since.");
-    expect(text).toContain("shape carries the meaning");
+    expect(text).toContain("state in words");
     expect(text).toContain("never moves a dot");
     // The skipped dot in the legend is the dash; the not-yet dot is the ring.
     expect(panel.querySelector("svg[data-state='skipped'] path")?.getAttribute("d")).toBe("M5 8h6");

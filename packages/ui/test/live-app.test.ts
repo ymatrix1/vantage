@@ -43,7 +43,7 @@ describe("live updates (D81)", () => {
     const before = trackCalls(api);
     sock.push(changed({ title: "After" }));
     await vi.waitFor(() => expect(root.textContent).toContain("After"));
-    expect(root.textContent).not.toContain("Before");
+    expect(root.querySelector("ul#group-in_progress, [id^='group-']")?.textContent).not.toContain("Before");
     expect(trackCalls(api)).toBe(before);
   });
 

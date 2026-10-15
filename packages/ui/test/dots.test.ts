@@ -1,8 +1,12 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import Dots from "../src/lib/Dots.svelte";
+import { setColourBlind } from "../src/lib/settings.svelte";
 import { cleanup, item, render } from "./helpers";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  setColourBlind(false);
+});
 
 // Skipped is a short horizontal dash, 6 units plus round caps, and has no ring at all.
 function expectDash(svg: Element | undefined): void {
@@ -17,7 +21,53 @@ function expectDash(svg: Element | undefined): void {
 const states = (root: ParentNode): (string | null)[] =>
   [...root.querySelectorAll("svg")].map((s) => s.getAttribute("data-state"));
 
-describe("honest dots (visual-language)", () => {
+const fills = (root: ParentNode): (string | null | undefined)[] =>
+  [...root.querySelectorAll("svg")].map((s) => s.querySelector("circle")?.getAttribute("fill"));
+
+describe("full-colour dots, the default (D183)", () => {
+  it("every state but skipped is one filled circle in its own colour", () => {
+    const flags = [{ kind: "x", severity: "red", reason: "r" }];
+    expect(fills(render(Dots, { item: item({ stage: "built" }) }))).toEqual([
+      "var(--dot-green)",
+      "var(--dot-blue)",
+      "var(--dot-amber)",
+      undefined,
+      undefined,
+      undefined,
+    ]);
+    expect(fills(render(Dots, { item: item({ stage: "asked" }) }))[1]).toBe("var(--dot-light)");
+    expect(fills(render(Dots, { item: item({ stage: "built", flags }) }))[1]).toBe("var(--dot-red)");
+    for (const svg of render(Dots, { item: item() }).querySelectorAll(
+      "svg[data-state]:not([data-state='skipped'])",
+    )) {
+      expect(svg.querySelectorAll("circle")).toHaveLength(1);
+      expect(svg.querySelector("path")).toBeNull();
+    }
+  });
+
+  it("colour is never the only signal: each dot has a title and the row names every state", () => {
+    const root = render(Dots, { item: item({ stage: "built" }) });
+    for (const svg of root.querySelectorAll("svg"))
+      expect(svg.querySelector("title")?.textContent).toMatch(/: \w/);
+    expect(root.querySelector("[role='img']")?.getAttribute("aria-label")).toContain("built: in progress");
+  });
+});
+
+describe("colour-blind friendly dots: the shape-first style of D34", () => {
+  it("switches to ring, half and dash, and back", () => {
+    setColourBlind(true);
+    const root = render(Dots, { item: item({ stage: "built" }) });
+    expect(root.querySelectorAll("svg")[1]?.querySelector("circle")?.getAttribute("fill")).toBe("none");
+    expect(root.querySelectorAll("svg")[2]?.querySelector("path")).not.toBeNull();
+    expect(document.documentElement.dataset["cb"]).toBe("1");
+    setColourBlind(false);
+    expect(document.documentElement.dataset["cb"]).toBeUndefined();
+  });
+});
+
+describe("honest dots (visual-language), shape style", () => {
+  beforeEach(() => setColourBlind(true));
+
   it("draws six dots", () => {
     expect(states(render(Dots, { item: item() }))).toHaveLength(6);
   });

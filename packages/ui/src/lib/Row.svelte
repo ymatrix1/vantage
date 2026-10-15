@@ -61,7 +61,7 @@
           <span class="block truncate text-xs text-muted-foreground" title={reasons.join("; ")}>{reasons.join("; ")}</span>
         {/if}
       </span>
-      <Dots {item} />
+      <span class="w-[7.5rem] shrink-0"><Dots {item} /></span>
       <span class="hidden w-44 shrink-0 text-xs md:block">{stageLabel(item)}</span>
     </button>
     {#if branchUrl}
@@ -78,6 +78,9 @@
           <path d="M4.5 5v6M11.5 7c0 2.5-3 2.5-7 4" />
         </svg>
       </a>
+    {:else}
+      <!-- Keeps the dots and stage text in the same column on rows without a branch link. -->
+      <span class="w-10 shrink-0" aria-hidden="true"></span>
     {/if}
     <!-- Slots for later sources: a PR link (GitHub source) and a ticket link (tracker, D90). -->
   </div>
