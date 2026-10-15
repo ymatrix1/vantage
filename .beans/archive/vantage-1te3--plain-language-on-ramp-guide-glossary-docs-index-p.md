@@ -33,4 +33,4 @@ Rewriting the technical specs. Translating specs other than GUIDE and GLOSSARY. 
 
 ## Summary of Changes
 
-Added docs/GUIDE.md, docs/GLOSSARY.md (46 entries, method terms with fetched outside links; none found for SCR itself, said so), docs/README.md index, README 'What is Vantage' section, first-use glossary links in README, METHOD, PRD and UX, a Terms line on ARCHITECTURE and every spec, docs/pt-BR/ (guide, glossary, README with source dates), tools/glossary_check.py with 12 unit tests wired into check_docs.py, D99 (proposed), ROADMAP lines, and the first-run spec's guided tour section (planned) with the Track UI first-run text.
+Added docs/GUIDE.md, docs/GLOSSARY.md (46 entries, method terms with fetched outside links; none found for SCR itself, said so), docs/README.md index, README 'What is Vantage' section, first-use glossary links in README, METHOD, PRD and UX, a Terms line on ARCHITECTURE and every spec, docs/pt-BR/ (guide, glossary, README with source dates), tools/glossary_check.py with 12 unit tests wired into check_docs.py, D105 (proposed), ROADMAP lines, and the first-run spec's guided tour section (planned) with the Track UI first-run text.
