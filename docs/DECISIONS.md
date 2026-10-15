@@ -1221,7 +1221,22 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** release-please in manifest mode (the standard tool and it supports pre-1.0 rules, but a large third-party action with write access, a manifest and config to maintain, and its changelog format is not ours to test). Tag-driven releases by hand (no release PR, so the changelog and version are edited by people). A bundler such as esbuild (one file, but a new exact-pinned dependency and a second build of the daemon). Publishing every workspace package (many names to own, and they are not a public API). An `NPM_TOKEN` environment secret (a long-lived write credential; kept only as an optional appendix in RELEASING.md). Direct `npm publish` from CI (no 2FA approval step). `vantage-cli` and `vantage` (taken on npm).
 - **Impact:** Adds `tools/release.mjs`, `tools/assemble-main-package.mjs`, `tools/smoke-install.mjs`, workflows `release.yml` and `release-pr.yml`, `RELEASING.md`, `CHANGELOG.md` and `vantage --version`. Narrows `release-native.yml` to build and package (no manual publish). The owner must confirm the names, create the 6 packages once by hand (a trusted publisher can only be added to an existing package), add the trusted publishers (exact file `release.yml`, environment `npm-publish`), create the `npm-publish` environment, set `NPM_PUBLISH_ENABLED` and choose a licence (`RELEASING.md`). A new trusted publisher must complete a publish within 2 days, and npm does not validate it on save. `npm stage publish` with a tarball and `--access public` is unverified until the first run. Accepting this amends the package names of D72 and D80. Revisit if the scope changes (one line in `tools/package-names.mjs`) or if the script outgrows its size.
 
-### D99. `vantage classify`: an opt-in Haiku classifier through the user's own Claude Code, suggestions only
+### D99. An item's repo is its git repo, resolved from the worktree it ran in
+
+- **Status:** proposed
+- **Context:** On the real page the Repo filter and `group=repo` listed worktree folders (`brave-joliot-995ebc`, `dev`) next to real repos, so counts per repo were wrong: an agent-only item took its repo from the last folder of the session's `cwd`. On a copy of the real store that was 148 distinct "repos".
+- **Decision:**
+  1. `worktree.scanned` events carry `repo {key, name, remoteUrl}` (additive): `key` is the repo key (normalised remote plus first commit), `name` is `owner/repo` from the remote or the main worktree's folder for a repo with no remote (never a linked worktree's folder), `remoteUrl` is `https://host/owner/repo` or null.
+  2. At read time (each stage pass; events stay immutable, nothing migrates) an item's `cwd` is mapped to its repo by the longest scanned worktree root containing it. Older events without `repo` still map, by the repo key in their id. The result is stored in the derived `work_items.repo` as the remote path (`host/owner/repo`), or the main folder for a repo with no remote.
+  3. A folder no scanned worktree contains is asked of git once (remote and first commit only), remembered for the life of the process, at most 12 new folders per pass so the daemon's event loop is not held; a folder that is gone or is not a repo has no repo (`null`).
+  4. `group=repo` groups by that value with a final "No repo" group; the repo facet counts only items with a repo; each Track item carries `repoUrl` (null without a remote).
+  5. **Organisation level:** the hierarchy is Organization → Repo → Branch → item. The scanner payload is `repo {key, name, org, repoName, host, remoteUrl}`: `org` is the first path segment of the remote (a GitLab subgroup stays in `repoName`), kept in the case it was written in (`Flip-to`); a repo with no remote has org `local` (shown as "Local"). `work_items.repo` keeps that case (`host/Flip-to/platform`); the key and every filter compare case-insensitively. Track items carry `org`, facets carry `org` counts, `org=` filters, and `group=org` groups (label: the spelling most of its repos use). Nested "org > repo" sections are built by the page from `group=repo`.
+  6. An untitled session is titled from the resolved repo, branch and date, never from the folder; a worktree item is titled with its branch; a detached `HEAD` is titled "detached HEAD in <repo>".
+- **Why:** The git remote is the one stable identity of a repo (D17); a worktree folder is a random name. Deriving at read time keeps events immutable and fixes history with no migration.
+- **Alternatives:** Store the repo on every event at ingest (cannot fix history; the hook has a 100 ms budget, D67). Group by the folder's parent (still wrong for worktrees). Ask only the scanner's worktrees (misses repos the scanner was never told about: on the real copy that left 350 of 463 items with no repo, against 189 with the git fallback).
+- **Impact:** `RepoInfo` and `repoInfoOf` in core, `projects.ts` in the daemon, a stage-pass step, `repoUrl` on the Track item. On a copy of the real store the distinct repos go from 148 to 8, with 189 items having no repo (folders that are gone or are not repos). A first pass after upgrade resolves 12 folders at a time, so repos fill in over a few passes. Revisit if asking git per folder proves too slow, or if projects get a config mapping.
+
+### D100. `vantage classify`: an opt-in Haiku classifier through the user's own Claude Code, suggestions only
 
 - **Status:** proposed
 - **Context:** The Track page showed hundreds of items with weak titles and no grouping, and there is no labelled data to tune rules. The user accepts sending a minimal summary through their own Claude Code because it already receives their data. D57 says the model writes text only; D68 says everything outside defaults to off; R13 measured `claude -p --json-schema` (Haiku schema-valid 20 of 20, median 52 s).
@@ -1234,7 +1249,7 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** Rules only (no labelled data to tune them). A direct API call (separate key and billing, and the user chose their own Claude Code). Sending transcripts or commands (more than the task needs). Letting the model set status (breaks D57).
 - **Impact:** New spec [classify](specs/classify.md), settings and operations rows, migration 10, `vantage classify` and its README section. Revisit if Haiku latency or limits make a run too slow, or if the agreement report shows the suggestions are mostly wrong.
 
-### D100. Bulk accept needs a preview token and is one batch with one undo; auto-accept is off by default
+### D101. Bulk accept needs a preview token and is one batch with one undo; auto-accept is off by default
 
 - **Status:** proposed
 - **Context:** Hundreds of suggestions make one-by-one acceptance unusable, but a bulk accept of model text that nobody saw is exactly what the project exists to avoid.
@@ -1248,7 +1263,7 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** A confirm dialog only in the UI (the CLI and API could skip it). Per-item undo only (a bulk accept would be hard to take back). Auto-accept on by default (applies unseen text).
 - **Impact:** `classify-store.ts`, `classify-api.ts`, the CLI and the page component; the agreement report (`vantage classify report`, `vantage stats`) measures accepted and dismissed against the deterministic anchors. Revisit the 0.8 and 0.9 defaults when that report has data.
 
-### D101. A `vantage classify` run is a session Vantage must not record; accepted groups are inferred links that never feed stages
+### D102. A `vantage classify` run is a session Vantage must not record; accepted groups are inferred links that never feed stages
 
 - **Status:** proposed
 - **Context:** `claude -p` is a Claude Code session, so Vantage's hooks and the transcript backfill would capture the classifier as a new item. Separately, an accepted grouping needs a representation that the work-item model already allows (`method = inferred`) without letting model output change status (D57).

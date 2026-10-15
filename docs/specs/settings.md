@@ -30,7 +30,7 @@ One row per job. Each row shows the current engine, what leaves the machine for 
 | **Judgment** (fuzzy yes or no questions) | `rules`, then optionally a small LLM or a decision model | `rules` | Open: Q4, compared in `vantage-ibuz` (R10) |
 | **Explain, layers 1 to 3** | None extra: evidence, byproduct capture, in-session command | On | [Explain](explain.md#engine-four-layers) |
 | **Explain, layer 4 (headless)** | `claude`, `codex`, in a user-chosen order | **Off** | [Explain](explain.md#engine-four-layers), [D46](../DECISIONS.md#d46-explain-runs-in-layers-headless-is-opt-in) |
-| **Classify** (titles, topics, groupings) | `claude -p` with Haiku, through the user's own Claude Code | **Off** | [Classify](classify.md), D99 |
+| **Classify** (titles, topics, groupings) | `claude -p` with Haiku, through the user's own Claude Code | **Off** | [Classify](classify.md), D100 |
 | **Embeddings** | Not offered until Q25 is answered | n/a | Open: Q25 |
 
 Rules:

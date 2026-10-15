@@ -96,6 +96,7 @@ Normalized `kind` values. The payload keeps the raw source fields.
 - A command with an inside and an outside target emits one `file.edited` with only the inside paths; the outside ones stay on `command.ran`. A commit still emits `file.edited` with `via: shell-commit`.
 - Both payload fields are additive. No event kind was added, so consumers that read `file.edited` only see in-repo work, and nothing is lost: the outside paths stay on the command event.
 - Matching is lexical: separators, `.` and `..` are normalized, Windows paths (drive letter, either separator, Git Bash `/c/...`) compare case-insensitively, POSIX paths case-sensitively. Symlinks and junctions are not followed.
+- **Repo identity (proposed D99).** `worktree.scanned` carries `repo {key, name, org, repoName, host, remoteUrl}` (`org` is the first path segment of the remote, case kept; `local` with no remote). At each stage pass an item's `cwd` is mapped to a repo by the longest scanned worktree root containing it (older events map by the repo key in their id); a folder no scanned worktree contains is asked of git once. No match means no repo.
 - The daemon passes `repoRoot` at ingest: the longest worktree root the git scanner has reported (`worktree.scanned.worktree`) that contains the session `cwd`, compared lexically. When the scanner has not reported a containing root yet (or no git scan is registered), the root stays the `cwd`, so a subdirectory session's `../sibling/x` reads as outside. That is the conservative reading; events already stored keep the classification they were ingested with. The hook itself never resolves a root (D67 budget).
 
 ### Derived sessions
@@ -121,7 +122,7 @@ The transcript backfill also reads the head of each session file (the first 256 
 
 ### Sessions Vantage starts
 
-`vantage classify` runs `claude -p`, which is a Claude Code session. Hooks and the transcript backfill would record it, so ingestion drops everything that ran inside `$VANTAGE_HOME/work/` (D101):
+`vantage classify` runs `claude -p`, which is a Claude Code session. Hooks and the transcript backfill would record it, so ingestion drops everything that ran inside `$VANTAGE_HOME/work/` (D102):
 
 - Every classifier call works in its own folder under `$VANTAGE_HOME/work/classify/`, removed afterwards.
 - **Rule:** a spool event whose `cwd` is inside `work/`, and every other event of the same session, is dropped. A transcript file whose own lines carry a `cwd` inside `work/` is skipped whole: no events, no lineage, no request title, no branch note. This covers sub-agents and any Claude Code version, and ordinary history in the same pass is unaffected.

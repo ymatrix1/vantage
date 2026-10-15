@@ -1,4 +1,4 @@
--- Classifier suggestions (docs/specs/classify.md, proposed D99): model text about titles, topics and groupings,
+-- Classifier suggestions (docs/specs/classify.md, proposed D100): model text about titles, topics and groupings,
 -- never status. `batch_id` is the bulk action that decided the row (one undo per batch); `run_id` is the
 -- classify run that produced it. `classify_calls` is the daily cap's ledger.
 CREATE TABLE suggestions (
