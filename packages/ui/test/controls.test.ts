@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "../src/App.svelte";
 import type { TrackView } from "../src/lib/contract";
 import {
+  listCalls,
   TOKEN,
   cleanup,
   emptyFacets,
@@ -42,8 +43,7 @@ const page = (total: number, p = 1, size = 25) => ({
   pages: Math.ceil(total / size),
 });
 type Api = ReturnType<typeof fakeApi>;
-const calls = (api: Api): string[] =>
-  api.mock.calls.map(([u]) => u).filter((u) => u.startsWith("/api/track"));
+const calls = (api: Api): string[] => listCalls(api);
 const last = (api: Api): URLSearchParams => new URLSearchParams((calls(api).at(-1) ?? "").split("?")[1]);
 const settle = (api: Api, n: number) => vi.waitFor(() => expect(calls(api)).toHaveLength(n));
 
@@ -91,10 +91,26 @@ const type = (box: HTMLInputElement, text: string): void => {
 describe("the request is built from the view state", () => {
   it("asks for the default view with every parameter spelled out, token in the header only", async () => {
     const { api } = await ready();
-    const [url, init] = api.mock.calls[0] ?? [];
-    expect(url).toBe("/api/track?since=7d&sort=activity&order=desc&group=attention&pageSize=25");
-    expect(new Headers(init?.headers).get("authorization")).toBe(`Bearer ${TOKEN}`);
-    expect(url).not.toContain(TOKEN);
+    const url = listCalls(api)[0];
+    expect(url).toBe("/api/track?since=7d&sort=activity&order=desc&group=repo&pageSize=25");
+    for (const [u, init] of api.mock.calls) {
+      expect(new Headers(init?.headers).get("authorization")).toBe(`Bearer ${TOKEN}`);
+      expect(u).not.toContain(TOKEN);
+    }
+  });
+
+  it("the header asks the same filters grouped by attention, one row, for its counts", async () => {
+    const { api } = await ready({}, "?repo=acme%2Fsync&since=30d");
+    const asked = api.mock.calls
+      .map(([u]) => u)
+      .filter((u) => u.includes("pageSize=1&") || u.endsWith("pageSize=1"));
+    const p = new URLSearchParams((asked[0] ?? "").split("?")[1]);
+    expect([p.get("group"), p.get("pageSize"), p.get("repo"), p.get("since")]).toEqual([
+      "attention",
+      "1",
+      "acme/sync",
+      "30d",
+    ]);
   });
 
   it("starts from the URL and sends exactly that", async () => {
@@ -457,16 +473,16 @@ describe("keyboard additions", () => {
     const { api } = await ready();
     let n = calls(api).length;
     for (const [key, g] of [
-      ["2", "repo"],
       ["3", "stage"],
       ["4", "none"],
       ["1", "attention"],
+      ["2", "repo"],
     ] as const) {
       press(key);
       await settle(api, ++n);
       expect(last(api).get("group")).toBe(g);
     }
-    press("1");
+    press("2");
     expect(calls(api)).toHaveLength(n);
   });
 
@@ -513,7 +529,7 @@ describe("URL, history and the token", () => {
 
     click(buttonText(root, "acme/web"));
     click(buttonText(root, "Next"));
-    press("2");
+    press("3");
     await vi.waitFor(() => expect(calls(api).length).toBeGreaterThan(3));
 
     expect(window.location.href).not.toContain(TOKEN);
