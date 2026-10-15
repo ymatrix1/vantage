@@ -83,6 +83,9 @@ export interface NativeBinary {
   source: "package" | "local";
 }
 
+/** npm scope of the native hook packages (D98; tools/package-names.mjs holds the source of truth). */
+export const NATIVE_SCOPE = "@ymatrix1";
+
 /**
  * Finds the native spool hook (D72): the per-OS npm package first, then a binary built in this checkout.
  * Both are plain lookups that return null when nothing is there. `VANTAGE_NATIVE_PACKAGES_DIR` (a
@@ -90,14 +93,15 @@ export interface NativeBinary {
  * defaults, so tests never see the real machine.
  */
 export function findNativeBinary(env: NodeJS.ProcessEnv): NativeBinary | null {
-  const pkg = `hook-${process.platform}-${process.arch}`;
+  // Same name as tools/package-names.mjs (a test keeps them equal).
+  const pkg = `vantage-hook-${process.platform}-${process.arch}`;
   const packages = env["VANTAGE_NATIVE_PACKAGES_DIR"];
   let fromPackage: string | null = null;
   if (packages) {
-    fromPackage = join(packages, "@vantage", pkg, "bin", `vantage-hook${exe}`);
+    fromPackage = join(packages, NATIVE_SCOPE, pkg, "bin", `vantage-hook${exe}`);
   } else {
     try {
-      const manifest = createRequire(import.meta.url).resolve(`@vantage/${pkg}/package.json`);
+      const manifest = createRequire(import.meta.url).resolve(`${NATIVE_SCOPE}/${pkg}/package.json`);
       fromPackage = join(dirname(manifest), "bin", `vantage-hook${exe}`);
     } catch {
       // Not installed: the packages are optional dependencies.
@@ -138,7 +142,7 @@ export function resolveHookCommands(env: NodeJS.ProcessEnv): HookCommands {
     statusLine: `node "${line}" ${MANAGED}`,
     files: [bin, line],
     kind: "node-js",
-    reason: "no native binary found (no @vantage/hook package, no cargo build); using node",
+    reason: "no native binary found (no native hook package, no cargo build); using node",
   };
 }
 
