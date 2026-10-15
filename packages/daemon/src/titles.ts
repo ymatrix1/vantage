@@ -1,12 +1,42 @@
 // Request titles (proposed D95): the first sentence of a session's first request, cleaned by
 // `requestTitle` in core, kept in `session_titles` and used only as the title of that session's
 // provisional item. Local only; nothing here logs, sends or re-exposes the text.
-import { closeSync, openSync, readSync } from "node:fs";
+import { closeSync, fstatSync, openSync, readSync } from "node:fs";
 import { firstRequestTitle, latestSessionName, looksInjectedTitle, parseTranscriptLine } from "@vantage/core";
 import type { Store } from "./store.ts";
 
 /** The first request sits near the top of a transcript; never read more than this per file. */
 const HEAD_BYTES = 256 * 1024;
+
+/**
+ * A transcript can open with megabytes of attachments before the first thing the person typed (measured on real
+ * data: the first request sat 0.6 to 3.9 MB in). When the first look finds none, one deeper read goes this far.
+ */
+const DEEP_BYTES = 6 * 1024 * 1024;
+/** Where a session's name is looked for the first time: the file's start and its last megabytes (names are re-written every turn). */
+const NAME_HEAD_BYTES = 1024 * 1024;
+const NAME_TAIL_BYTES = 2 * 1024 * 1024;
+
+/** Complete lines from the last `maxBytes` of a file (the first, probably partial, line is dropped). */
+export function tailWindowLines(path: string, maxBytes: number): string[] {
+  const fd = openSync(path, "r");
+  try {
+    const size = fstatSync(fd).size;
+    const start = Math.max(0, size - maxBytes);
+    const buf = Buffer.alloc(size - start);
+    let read = 0;
+    while (read < buf.length) {
+      const n = readSync(fd, buf, read, buf.length - read, start + read);
+      if (n === 0) break;
+      read += n;
+    }
+    const lines = buf.subarray(0, read).toString("utf8").split("\n");
+    // The last line may be unfinished; the first is partial unless the window starts at the file's start.
+    return lines.slice(start > 0 ? 1 : 0, -1).filter((l) => l.trim() !== "");
+  } finally {
+    closeSync(fd);
+  }
+}
 
 /** Complete lines from the start of a file, at most HEAD_BYTES of them. */
 export function headLines(path: string, maxBytes: number = HEAD_BYTES): string[] {
@@ -41,12 +71,21 @@ export function captureRequestTitle(store: Store, path: string, key: string, own
   // `titles2:` replaced `titles:` when injected text stopped counting as a request (D194): every head is read once more.
   const marker = `titles2:${key}`;
   if (store.getCursor(marker) !== 0) return;
-  const parsed = headLines(path).flatMap((l) => {
-    const p = parseTranscriptLine(l);
-    return p ? [p] : [];
-  });
-  const first = firstRequestTitle(parsed, own);
-  if (!first.found) return;
+  const read = (bytes: number) =>
+    headLines(path, bytes).flatMap((l) => {
+      const p = parseTranscriptLine(l);
+      return p ? [p] : [];
+    });
+  let first = firstRequestTitle(read(HEAD_BYTES), own);
+  if (!first.found) {
+    // Nothing typed yet in the first look: look once more, deeper, and never again (a session with no request
+    // at all would otherwise be re-read on every pass).
+    const deep = `titles-deep:${key}`;
+    if (store.getCursor(deep) !== 0) return;
+    first = firstRequestTitle(read(DEEP_BYTES), own);
+    store.setCursor(deep, 1, now);
+    if (!first.found) return;
+  }
   store.transaction(() => {
     if (first.title !== null) {
       store.db
@@ -116,7 +155,36 @@ export function clearRequestTitles(store: Store): number {
  * never replaced by a generated one; otherwise the latest name wins. Idempotent.
  */
 export function captureSessionName(store: Store, lines: readonly string[], own: string, now: string): void {
-  const found = latestSessionName(lines, own);
+  upsertSessionName(store, latestSessionName(lines, own), own, now);
+}
+
+/**
+ * A transcript already read before names were captured has its cursor past every name line, so the first time a
+ * file is seen its start and its last megabytes are searched once (a name is re-written on every turn, so the
+ * newest sits near the end). Later names arrive with the new lines.
+ */
+export function captureSessionNameFromFile(
+  store: Store,
+  path: string,
+  key: string,
+  own: string,
+  now: string,
+): void {
+  const marker = `names1:${key}`;
+  if (store.getCursor(marker) !== 0) return;
+  const lines = [...headLines(path, NAME_HEAD_BYTES), ...tailWindowLines(path, NAME_TAIL_BYTES)];
+  store.transaction(() => {
+    upsertSessionName(store, latestSessionName(lines, own), own, now);
+    store.setCursor(marker, 1, now);
+  });
+}
+
+function upsertSessionName(
+  store: Store,
+  found: ReturnType<typeof latestSessionName>,
+  own: string,
+  now: string,
+): void {
   if (!found) return;
   const { name, source } = found;
   store.db
