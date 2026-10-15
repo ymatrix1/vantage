@@ -105,6 +105,22 @@ Nothing inside your repo changes.
 - **Status line** (if installed): a short glyph line for the current session's item.
 - **Stop gate** (warn mode): when an agent stops after editing code with no fresh test or data check, Claude Code shows a message naming the files and why. It never blocks. Set the mode with `VANTAGE_GATE_MODE=off|warn` or `proof_gate = "off"` in `config.toml`. Docs-only sessions never trigger it.
 
+### Measuring it
+
+`vantage stats` prints numbers about the Track page from the local store, read-only (it works with the daemon running or stopped, and never writes):
+
+```bash
+vantage stats                 # summary, plus the last 14 days
+vantage stats --days 7        # one row per day, for the week review
+vantage stats --since 7d      # only items and events from the last 7 days (also 24h or YYYY-MM-DD)
+vantage stats --repo myrepo   # one repo, matched by name; repeat the command per repo
+vantage stats --json          # the same numbers as JSON
+```
+
+It reports items (total and active in 24 h, 7 d and 30 d), readable titles versus fallback rows (`Session …` or `repo · branch · date`), anchor kinds, session lineage (how many sessions sit on a real issue or branch item instead of a one-off `Session` row, sessions per item, sessions on a branch before and after the transcript-branch fix, derived sessions, sub-agent runs), **Needs you** (total and last 48 h, split by flag kind), stages, how many edited items reached Proven and how many Built items lost their proof, which checks ran (by runner family, plus one count for commands not recognised as checks), events by source and per day, database size and the age of the last stage pass. Each line says what it means, and a ✅, ⚠️ or ❌ shows where it stands against a goal (for example Needs you under 10). The goals are starting points, not product rules.
+
+The output holds numbers and fixed labels only: no titles, commands, paths or repo names (the one echo is the `--repo` text you typed), so it is safe to paste into an issue. Days are UTC.
+
 ### Where your data lives
 
 All local, under `~/.vantage` (or `VANTAGE_HOME`): `spool/` (one line per hook event, **including the tool input Claude Code passes to the hook**), `vantage.db` (events, links, stages, proofs), `token` (the Track page token), `status.json` and `health.json`. **Request titles are stored locally:** the first sentence of a session's first request (cleaned of paths, URLs and anything that looks like a secret, at most 80 characters) becomes that session's item title and is kept in `vantage.db`, nowhere else. Turn it off with `item_titles_from_requests = false` in `config.toml`, see what is stored with `vantage titles`, and delete it with `vantage titles clear`. The daemon listens on `127.0.0.1` only, with a token and Host and Origin checks. Nothing leaves the machine, and no outside model is called. See [privacy](docs/ARCHITECTURE.md#privacy) and the [data policy](docs/specs/settings.md).
