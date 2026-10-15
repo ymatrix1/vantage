@@ -8,8 +8,8 @@ name: release
 #   dispatch      -> rehearsal on the chosen ref; it can never release or publish.
 #
 # Nothing here publishes on its own. `publish-npm` needs the repository variable NPM_PUBLISH_ENABLED=true AND
-# approval in the `npm-publish` environment AND the NPM_TOKEN secret of that environment. Without the variable
-# the job is skipped; without the secret it fails before any `npm publish`.
+# approval in the `npm-publish` environment AND a trusted publisher configured on npmjs.com for this file.
+# There is no npm token anywhere. Without the variable the job is skipped; it stages by default (D93).
 
 on:
   push:
@@ -198,7 +198,10 @@ jobs:
 
   publish-npm:
     # GATED. Skipped until the owner sets the repository variable NPM_PUBLISH_ENABLED=true (RELEASING.md).
-    # Then it waits for approval in the `npm-publish` environment (required reviewers).
+    # Then it waits for approval in the `npm-publish` environment (required reviewers). It holds no token:
+    # npm trusted publishing (OIDC) authenticates this exact workflow file, `release.yml`, so do not rename it
+    # without changing the trusted publisher on npmjs.com. By default it only STAGES (`npm stage publish`): the
+    # owner approves each staged package on npmjs.com with 2FA before it goes live.
     if: needs.prepare.outputs.release == 'true' && vars.NPM_PUBLISH_ENABLED == 'true'
     needs: [prepare, assemble, github-release]
     runs-on: ubuntu-latest
@@ -211,30 +214,32 @@ jobs:
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
+      - name: Use an npm that can stage (11.15.0 or newer)
+        run: |
+          npm install --global npm@11.15.0
+          npm --version
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: release-assets
           path: assets
-      - name: Check the npm credential exists (never printed)
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          test -n "$NODE_AUTH_TOKEN" || { echo "::error::NPM_TOKEN is not set in the npm-publish environment. Nothing was published (RELEASING.md)."; exit 1; }
       - name: Dry run first
         run: |
-          for t in ./assets/vantage-hook-*.tgz ./assets/vantage-a2v-*.tgz; do
+          for t in ./assets/*vantage-hook-*.tgz ./assets/*vantage-[0-9]*.tgz; do
             npm publish "$t" --dry-run --access public
           done
-      - name: Publish native packages first, then the main package
+      - name: Stage the native packages first, then the main package
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # stage (default): CI stages, the owner approves with 2FA. publish: CI publishes directly; the trusted
+          # publisher must then allow `npm publish` too. Any other value stops the job.
+          MODE: ${{ vars.NPM_PUBLISH_MODE || 'stage' }}
         run: |
-          for t in ./assets/vantage-hook-*.tgz ./assets/vantage-a2v-*.tgz; do
+          case "$MODE" in stage | publish) ;; *) echo "::error::NPM_PUBLISH_MODE must be stage or publish"; exit 1 ;; esac
+          for t in ./assets/*vantage-hook-*.tgz ./assets/*vantage-[0-9]*.tgz; do
             spec=$(tar -xOzf "$t" package/package.json | node -e 'const p=JSON.parse(require("fs").readFileSync(0,"utf8"));console.log(p.name+"@"+p.version)')
-            # A re-run after a partial publish must not fail on what is already out.
+            # A re-run after a partial run must not fail on what is already live.
             if npm view "$spec" version > /dev/null 2>&1; then
               echo "$spec is already published; skipping"
               continue
             fi
-            npm publish "$t" --provenance --access public
+            if [ "$MODE" = stage ]; then npm stage publish "$t" --access public; else npm publish "$t" --access public; fi
           done

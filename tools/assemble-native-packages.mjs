@@ -5,8 +5,9 @@
 import { copyFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { REPOSITORY_URL, SCOPE, nativeName } from "./package-names.mjs";
 
-export const SCOPE = "@vantage";
+export { SCOPE };
 
 /** npm `os` / `cpu` values and the Rust triple for each shipped target. */
 export const TARGETS = {
@@ -17,7 +18,7 @@ export const TARGETS = {
   "linux-arm64": { os: "linux", cpu: "arm64", triple: "aarch64-unknown-linux-gnu", exe: "" },
 };
 
-export const packageName = (target) => `${SCOPE}/hook-${target}`;
+export const packageName = nativeName;
 
 export function manifest(target, version) {
   const t = TARGETS[target];
@@ -34,7 +35,7 @@ export function manifest(target, version) {
     // npm provenance checks that this matches the repository the build ran in.
     repository: {
       type: "git",
-      url: "git+https://github.com/ymatrix1/vantage.git",
+      url: REPOSITORY_URL,
       directory: "packages/hooks-native",
     },
     publishConfig: { access: "public" },

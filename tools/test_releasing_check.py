@@ -17,7 +17,8 @@ x
 ## One-time setup (owner checklist)
 - [ ] **Package names.** confirm them
 - [ ] Create the `npm-publish` environment
-- [ ] Add `NPM_TOKEN`
+- [ ] Add the trusted publisher with workflow release.yml
+- [ ] Enable 2FA and disallow tokens
 - [ ] Set `NPM_PUBLISH_ENABLED`
 - [ ] tick "Allow GitHub Actions to create and approve pull requests"
 
@@ -34,10 +35,10 @@ class ReleasingCheck(unittest.TestCase):
         self.assertEqual(rc.check_releasing(None), ["RELEASING.md is missing"])
 
     def test_missing_step_is_named(self):
-        text = GOOD.replace("- [ ] Add `NPM_TOKEN`\n", "")
+        text = GOOD.replace("- [ ] Enable 2FA and disallow tokens\n", "")
         problems = rc.check_releasing(text)
         self.assertEqual(len(problems), 1)
-        self.assertIn("NPM_TOKEN", problems[0])
+        self.assertIn("2FA", problems[0])
 
     def test_step_outside_a_checklist_item_does_not_count(self):
         text = GOOD.replace("- [ ] Set `NPM_PUBLISH_ENABLED`", "Set `NPM_PUBLISH_ENABLED`")

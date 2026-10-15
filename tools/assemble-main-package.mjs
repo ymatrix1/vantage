@@ -10,10 +10,10 @@ import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } fr
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { optionalDependencies } from "./assemble-native-packages.mjs";
+import { MAIN_NAME, REPOSITORY_URL } from "./package-names.mjs";
 
-/** npm name of the product package. `vantage` is taken on npm (1.7.0 by an unrelated project), see D93. */
-export const PACKAGE_NAME = "vantage-a2v";
-export const REPOSITORY = "https://github.com/ymatrix1/vantage";
+/** npm name of the product package; `vantage` is taken on npm, so it is scoped (D93). The names live in package-names.mjs. */
+export const PACKAGE_NAME = MAIN_NAME;
 /** Workspace packages staged inside the tarball, in `packages/` order. */
 export const BUNDLED = ["cli", "core", "daemon", "hooks", "ui"];
 
@@ -37,10 +37,10 @@ export function rootManifest(version) {
     bundledDependencies: BUNDLED.map(bundledName),
     optionalDependencies: optionalDependencies(version),
     license: "UNLICENSED",
-    repository: { type: "git", url: `git+${REPOSITORY}.git` },
-    homepage: `${REPOSITORY}#readme`,
-    bugs: { url: `${REPOSITORY}/issues` },
-    publishConfig: { access: "public", provenance: true },
+    repository: { type: "git", url: REPOSITORY_URL },
+    homepage: `${REPOSITORY_URL}#readme`,
+    bugs: { url: `${REPOSITORY_URL}/issues` },
+    publishConfig: { access: "public" },
   };
 }
 

@@ -40,7 +40,7 @@ It never adds tokens or credentials, never commits anything, and never edits you
 
 **You need:** Node.js 22.5 or newer (Vantage uses the built-in `node:sqlite`), git and Claude Code, plus [pnpm](https://pnpm.io) if the agent has to build from a checkout. The agent checks these first and tells you what to install.
 
-**Releases.** Once the first release is out, Vantage installs without a clone or a build: `npm install -g vantage-a2v` gives you the `vantage` command (`vantage --version` prints the version), and each [GitHub Release](https://github.com/ymatrix1/vantage/releases) carries the tarballs and a `SHA256SUMS` file. The agent tries the release first and falls back to a checkout. Until a release exists, the checkout path is the only one.
+**Releases.** Once the first release is out, Vantage installs without a clone or a build: `npm install -g @ymatrix1/vantage` (or `npx @ymatrix1/vantage --version`) gives you the `vantage` command (`vantage --version` prints the version), and each [GitHub Release](https://github.com/ymatrix1/vantage/releases) carries the tarballs and a `SHA256SUMS` file. The agent tries the release first and falls back to a checkout. Until a release exists, the checkout path is the only one.
 
 Then use Claude Code as usual. Open the Track page with `vantage open` (it opens `http://127.0.0.1:<port>` in your browser; `--print` only prints the URL). Items appear after the daemon's next pass, about 30 seconds.
 

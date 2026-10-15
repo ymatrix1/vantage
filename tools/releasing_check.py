@@ -8,7 +8,9 @@ import re
 # Each owner step must be named in a `- [ ]` checklist item, so the owner can tick them off.
 REQUIRED_STEPS = {
     "npm-publish": "create the `npm-publish` environment with required reviewers",
-    "NPM_TOKEN": "add the `NPM_TOKEN` environment secret",
+    "trusted publisher": "add the npm trusted publisher (workflow `release.yml`)",
+    "release.yml": "name the exact workflow file in the trusted publisher step",
+    "2FA": "enable 2FA and disallow tokens",
     "NPM_PUBLISH_ENABLED": "set the `NPM_PUBLISH_ENABLED` repository variable",
     "create and approve pull requests": "allow GitHub Actions to create pull requests",
     "Package names": "confirm the npm package names and scope",

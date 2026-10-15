@@ -1,6 +1,6 @@
 # Installing Vantage (instructions for AI agents)
 
-> **Status:** works for Claude Code from a built checkout (`pnpm install && pnpm build`). The release install path (`npm install -g vantage-a2v`, or a GitHub Release tarball) is built but **no release exists yet**: use it only after `npm view vantage-a2v version` or the latest GitHub Release answers. Not yet run end to end on a fresh machine. Codex steps are not written because Vantage does not install Codex hooks yet. The commands below are `vantage ...`; with a checkout, run them as `node <checkout>/packages/cli/dist/src/main.js ...`.
+> **Status:** works for Claude Code from a built checkout (`pnpm install && pnpm build`). The release install path (`npm install -g @ymatrix1/vantage`, or a GitHub Release tarball) is built but **no release exists yet**: use it only after `npm view @ymatrix1/vantage version` or the latest GitHub Release answers. Not yet run end to end on a fresh machine. Codex steps are not written because Vantage does not install Codex hooks yet. The commands below are `vantage ...`; with a checkout, run them as `node <checkout>/packages/cli/dist/src/main.js ...`.
 
 This file is written for an AI coding agent (Claude Code or similar) that a user asked to install Vantage. Follow the steps in order and stop at any step that fails.
 
@@ -14,8 +14,8 @@ Install Vantage for this repo. Follow https://github.com/ymatrix1/vantage/blob/m
 
 1. **Check prerequisites.** Node.js 22.5 or newer (`node --version`; Vantage uses the built-in `node:sqlite`), pnpm (`pnpm --version`) and git. If something is missing, tell the user what to install and stop.
 2. **Get Vantage** (skip what already exists; `vantage --version` tells you what is installed). Try these in order and use the first that works:
-   1. **npm release.** If `npm view vantage-a2v version` prints a version, run `npm install -g vantage-a2v`. `vantage` is now on the PATH. It needs no clone and no build.
-   2. **GitHub Release.** If a release exists at https://github.com/ymatrix1/vantage/releases/latest, download `vantage-a2v-<version>.tgz` and `SHA256SUMS` into a new empty directory, check the hash (`sha256sum -c --ignore-missing SHA256SUMS`, or `shasum -a 256`), then `npm install -g ./vantage-a2v-<version>.tgz`. If `gh` is available, `gh attestation verify <file> --repo ymatrix1/vantage` also proves where it was built.
+   1. **npm release.** If `npm view @ymatrix1/vantage version` prints a version, run `npm install -g @ymatrix1/vantage`. `vantage` is now on the PATH. It needs no clone and no build.
+   2. **GitHub Release.** If a release exists at https://github.com/ymatrix1/vantage/releases/latest, download `ymatrix1-vantage-<version>.tgz` and `SHA256SUMS` into a new empty directory, check the hash (`sha256sum -c --ignore-missing SHA256SUMS`, or `shasum -a 256`), then `npm install -g ./ymatrix1-vantage-<version>.tgz`. If `gh` is available, `gh attestation verify <file> --repo ymatrix1/vantage` also proves where it was built.
    3. **Checkout (fallback).** Look for an existing checkout: `~/.vantage/install.json` names one, or ask the user. If there is none, ask where to put it (suggest `~/vantage`; never inside the repo being tracked), then `git clone https://github.com/ymatrix1/vantage.git <dir>`, and in that directory `pnpm install --frozen-lockfile && pnpm build`. Check that `packages/cli/dist/src/main.js` exists. From here, `vantage` means `node <dir>/packages/cli/dist/src/main.js`.
 
    Run every command from the root of the repo the user wants to track. Run `vantage --version` once to confirm it works.

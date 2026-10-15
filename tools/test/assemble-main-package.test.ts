@@ -124,11 +124,11 @@ describe("main package manifest", () => {
     expect(m.engines).toEqual({ node: ">=22.5.0" });
   });
 
-  it("is public, has provenance, a licence and a repository, and is not private", () => {
+  it("is public, a licence and a repository, and is not private", () => {
     expect(m.private).toBeUndefined();
-    expect(m.publishConfig).toEqual({ access: "public", provenance: true });
+    expect(m.publishConfig).toEqual({ access: "public" });
     expect(m.license).toBe("UNLICENSED");
-    expect(m.repository.url).toBe("git+https://github.com/ymatrix1/vantage.git");
+    expect(m.repository.url).toBe("https://github.com/ymatrix1/vantage");
   });
 
   it("strips types conditions from staged manifests", () => {

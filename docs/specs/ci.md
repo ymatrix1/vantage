@@ -44,7 +44,7 @@ feat/fix commits on main
         -> you merge it           <- the release decision
         -> release      build, test, 5 native targets, assemble
         -> GitHub Release   tag, notes, binaries, tarballs, SHA256SUMS, attestation
-        -> publish-npm  GATED: variable + approval + secret, dry run, --provenance
+        -> publish-npm  GATED: variable + approval, dry run, npm stage publish (OIDC, owner approves with 2FA)
 ```
 
 | Piece | What it does |
@@ -53,22 +53,22 @@ feat/fix commits on main
 | `.github/workflows/release-pr.yml` | On every push to `main`: opens or updates the release PR. Never tags or publishes. Needs "Allow GitHub Actions to create and approve pull requests" |
 | `.github/workflows/release.yml` | Release on the merge of the release PR (a `package.json` version with no tag). Pull requests that touch the release files and manual dispatches run the same build as a rehearsal: no Release, no publish, no secrets |
 | `.github/workflows/release-native.yml` | Builds `packages/hooks-native` for the 5 D72 targets and assembles one npm package per target. Called by `release.yml`; dry run only |
-| `tools/assemble-main-package.mjs` | Stages the one npm package `vantage-a2v` (bin `vantage`): the built `cli`, `core`, `daemon`, `hooks` and `ui` as `bundledDependencies`, native packages as `optionalDependencies`, and `build-info.json` for `vantage --version` |
+| `tools/assemble-main-package.mjs` | Stages the one npm package `@ymatrix1/vantage` (bin `vantage`): the built `cli`, `core`, `daemon`, `hooks` and `ui` as `bundledDependencies`, native packages as `optionalDependencies`, and `build-info.json` for `vantage --version` |
 | `tools/smoke-install.mjs` | Installs the packed tarball into a temp directory and runs `vantage --version`, `vantage doctor` (against a temp `VANTAGE_HOME`) and `vantage start` |
 
 ### Gates and permissions
 
 - **GitHub Release:** created by the `release` workflow from the exact merge commit. The merge of the release PR is the approval.
-- **npm publish (`publish-npm`):** skipped until the repository variable `NPM_PUBLISH_ENABLED` is `true`. Then it waits for approval in the `npm-publish` environment (required reviewers), fails before publishing if the environment secret `NPM_TOKEN` is missing, dry-runs every tarball, and runs `npm publish --provenance --access public` (native packages first, the main package last; versions already on npm are skipped so a re-run is safe). The token is only in the environment of that step and is never printed.
-- **Permissions:** top level `contents: read`. `contents: write` only for `release-pr` (opens the PR) and `github-release`; `id-token: write` and `attestations: write` only for `github-release`; `id-token: write` for `publish-npm`.
+- **npm publish (`publish-npm`):** skipped until the repository variable `NPM_PUBLISH_ENABLED` is `true`. Then it waits for approval in the `npm-publish` environment (required reviewers), dry-runs every tarball, and runs `npm stage publish --access public` (native packages first, the main package last; versions already live are skipped so a re-run is safe). It holds no token: npm trusted publishing (OIDC) authenticates the workflow file `release.yml`, so that file name must not change without updating the trusted publisher on npmjs.com. Each staged package goes live only when the owner approves it with 2FA (`npm stage approve` or npmjs.com). `NPM_PUBLISH_MODE=publish` (a repository variable) switches to a direct `npm publish`, which the trusted publisher must then also allow; the default is staging. Needs npm 11.15.0 or newer, which the job installs by exact version.
+- **Permissions:** top level `contents: read`. `contents: write` only for `release-pr` (opens the PR) and `github-release`; `id-token: write` and `attestations: write` only for `github-release`; `id-token: write` for `publish-npm` (OIDC, no secret).
 - **Supply chain:** release workflows pin every action by commit SHA with the version in a comment, use no `pull_request_target`, and treat commit subjects as data (they go through files, never into a shell line). Forks never release: the release job requires `github.event.repository.fork == false`.
-- **Owner configuration:** the npm names, the `npm-publish` environment, `NPM_TOKEN`, `NPM_PUBLISH_ENABLED`, the pull request setting and the licence are not configured (`RELEASING.md`, `vantage-d28s`). Until they are, the workflows build and release to GitHub but cannot publish.
+- **Owner configuration:** the npm names, the 6 first manual publishes, the trusted publishers, the `npm-publish` environment, `NPM_PUBLISH_ENABLED`, the pull request setting and the licence are not configured (`RELEASING.md`, `vantage-d28s`). Until they are, the workflows build and release to GitHub but cannot publish.
 
 Upgrades back up the database first (see [operations](operations.md#upgrades-backup-and-uninstall)). Schema migrations ship inside the package.
 
 ### Native hook release (D72)
 
-`release-native.yml` builds `packages/hooks-native` for `win32-x64`, `darwin-arm64`, `darwin-x64`, `linux-x64` and `linux-arm64`, then `tools/assemble-native-packages.mjs` writes one npm package per target (`@vantage/hook-<target>`, with `os`, `cpu` and `repository`) plus the `optionalDependencies` map the main package adds. It runs on pull requests that touch the crate, on manual dispatch and as part of `release.yml`, and always ends in `npm publish --dry-run`. The one real publish is `publish-npm` above.
+`release-native.yml` builds `packages/hooks-native` for `win32-x64`, `darwin-arm64`, `darwin-x64`, `linux-x64` and `linux-arm64`, then `tools/assemble-native-packages.mjs` writes one npm package per target (`@ymatrix1/vantage-hook-<target>`, with `os`, `cpu` and `repository`) plus the `optionalDependencies` map the main package adds. It runs on pull requests that touch the crate, on manual dispatch and as part of `release.yml`, and always ends in `npm publish --dry-run`. The one real publish is `publish-npm` above.
 
 ## Rules
 

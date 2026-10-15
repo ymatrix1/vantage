@@ -18,7 +18,7 @@ describe("native package assembly", () => {
       "linux-arm64",
     ]);
     expect(manifest("win32-x64", "1.2.3")).toMatchObject({
-      name: "@vantage/hook-win32-x64",
+      name: "@ymatrix1/vantage-hook-win32-x64",
       os: ["win32"],
       cpu: ["x64"],
       bin: { "vantage-hook": "bin/vantage-hook.exe" },

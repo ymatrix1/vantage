@@ -440,7 +440,7 @@ describe("vantage doctor", () => {
 const EXE = process.platform === "win32" ? ".exe" : "";
 const fwdp = (x: string): string => x.replaceAll("\\", "/");
 const fakePackageBin = (): string => {
-  const dir = p("npm", "@vantage", `hook-${process.platform}-${process.arch}`, "bin");
+  const dir = p("npm", "@ymatrix1", `vantage-hook-${process.platform}-${process.arch}`, "bin");
   mkdirSync(dir, { recursive: true });
   const f = join(dir, `vantage-hook${EXE}`);
   writeFileSync(f, "fake binary");
