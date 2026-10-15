@@ -1,21 +1,23 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import type { TraceResponse } from "@vantage/core/track";
-  import { describeError, fetchTrace, fetchTrack } from "$lib/api";
+  import type { ItemDetailView, TraceResponse } from "@vantage/core/track";
+  import { describeError, fetchItem, fetchTrace, fetchTrack } from "$lib/api";
   import { COLLAPSED_BY_DEFAULT, type GroupBy, type TrackRow, type TrackView } from "$lib/contract";
-  import Dots from "$lib/Dots.svelte";
   import { foldGroups } from "$lib/fold";
+  import Header from "$lib/Header.svelte";
   import Legend from "$lib/Legend.svelte";
-  import { stageLabel } from "$lib/stage-label";
   import { applyPush, mergeCounts, startLive } from "$lib/live";
   import Pagination from "$lib/Pagination.svelte";
+  import { sectionsOf } from "$lib/projects";
+  import Row from "$lib/Row.svelte";
+  import { summaryOf, type Summary } from "$lib/summary";
   import Toolbar from "$lib/Toolbar.svelte";
-  import Trace from "$lib/Trace.svelte";
   import { ago } from "$lib/relative-time";
   import { activeFilters, blockers, clearFilters, parseView, toQuery, type ViewState } from "$lib/view";
 
   const POLL_MS = 5000;
   const FACET_REFRESH_MS = 1000;
+  const EXPAND_ALL_MAX = 20;
   // Only the query string of the view is remembered here; the token never goes to localStorage (D75).
   const VIEW_KEY = "vantage.view";
   const SINCE_WORDS = { "24h": "24 hours", "7d": "7 days", "30d": "30 days", all: "all time" } as const;
@@ -55,19 +57,24 @@
 
   let view = $state<ViewState>(initialView());
   let data = $state<TrackView | null>(null);
+  let summary = $state<Summary | null>(null);
   let error = $state<string | null>(null);
   let loading = $state(true);
   // True while a request for the current view is in flight and the previous rows are still shown.
   let refreshing = $state(false);
   let now = $state(new Date());
   let selected = $state<string | null>(null);
-  let open = $state<string | null>(null);
-  let trace = $state<TraceResponse | null>(null);
+  // Rows opened inline, with what was fetched for each (the trace and the item detail).
+  let open = $state<Record<string, boolean>>({});
+  let traces = $state<Record<string, TraceResponse>>({});
+  let details = $state<Record<string, ItemDetailView>>({});
+  let detailFailed = $state<Record<string, boolean>>({});
+  let traceFailed = $state<Record<string, boolean>>({});
   let showKeys = $state(false);
   let showLegend = $state(false);
   // True while the socket is open: pushes replace polling (D81).
   let live = $state(false);
-  // Groups the user opened or closed; anything else follows COLLAPSED_BY_DEFAULT.
+  // Sections the user opened or closed; anything else follows COLLAPSED_BY_DEFAULT.
   let collapsedBy = $state<Record<string, boolean>>({});
   let searchEl = $state<HTMLInputElement | null>(null);
 
@@ -76,8 +83,8 @@
   let facetTimer: ReturnType<typeof setTimeout> | null = null;
 
   const isCollapsed = (id: string): boolean => collapsedBy[id] ?? COLLAPSED_BY_DEFAULT.includes(id);
-  const groups = $derived(data ? foldGroups(view, data, now) : []);
-  const flat = $derived<TrackRow[]>(groups.filter((g) => !isCollapsed(g.id)).flatMap((g) => g.items));
+  const sections = $derived(data ? sectionsOf(view.group, foldGroups(view, data, now)) : []);
+  const flat = $derived<TrackRow[]>(sections.filter((s) => !isCollapsed(s.id)).flatMap((s) => s.items));
   const unconfigured = $derived(data ? data.sources.filter((s) => s.state === "unconfigured") : []);
   const filters = $derived(activeFilters(view));
   const why = $derived(data && data.page.total === 0 ? blockers(view, data.facets).filter((b) => b.wouldShow !== 0) : []);
@@ -85,12 +92,24 @@
     data !== null && data.page.total === 0 && filters.length === 0 && why.length === 0,
   );
 
+  /** The header's counts: the same filters, grouped by attention, one row (only the totals matter). */
+  async function loadSummary(): Promise<void> {
+    const asked = toQuery({ ...view, group: "attention", page: 1, pageSize: 1 }, true);
+    try {
+      const v = await fetchTrack(asked);
+      if (asked === toQuery({ ...view, group: "attention", page: 1, pageSize: 1 }, true)) summary = summaryOf(v);
+    } catch {
+      // The header keeps its last counts; the list has its own error line.
+    }
+  }
+
   async function load(): Promise<void> {
     const mine = ++seq;
     controller?.abort();
     const ctl = new AbortController();
     controller = ctl;
     refreshing = true;
+    void loadSummary();
     try {
       const next = await fetchTrack(toQuery(view, true), ctl.signal);
       if (mine !== seq) return;
@@ -123,8 +142,7 @@
       // Storage blocked: the URL still carries the view.
     }
     selected = null;
-    open = null;
-    trace = null;
+    open = {};
     void load();
   }
 
@@ -134,6 +152,7 @@
       facetTimer = null;
       const asked = toQuery(view, true);
       const mine = seq;
+      void loadSummary();
       try {
         const fresh = await fetchTrack(asked);
         if (mine !== seq || asked !== toQuery(view, true) || !data) return;
@@ -144,20 +163,32 @@
     }, FACET_REFRESH_MS);
   }
 
-  async function toggle(id: string): Promise<void> {
-    if (open === id) {
-      open = null;
-      trace = null;
-      return;
-    }
-    open = id;
-    trace = null;
-    try {
-      const t = await fetchTrace(id);
-      if (open === id) trace = t;
-    } catch (e) {
-      error = describeError(e);
-    }
+  async function expand(id: string): Promise<void> {
+    open[id] = true;
+    delete detailFailed[id];
+    delete traceFailed[id];
+    const [t, d] = await Promise.allSettled([fetchTrace(id), fetchItem(id)]);
+    if (t.status === "fulfilled") traces[id] = t.value;
+    // One row's trace failing (a 404 for an item a pass removed) must not turn the whole page offline.
+    else traceFailed[id] = true;
+    if (d.status === "fulfilled") details[id] = d.value;
+    else detailFailed[id] = true;
+  }
+
+  function collapse(id: string): void {
+    delete open[id];
+  }
+
+  function toggle(id: string): void {
+    if (open[id]) collapse(id);
+    else void expand(id);
+  }
+
+  /** `e`: opens every row of the section the selected row is in (or the first open section). */
+  function expandSection(): void {
+    const open1 = sections.filter((s) => !isCollapsed(s.id));
+    const sec = open1.find((s) => s.items.some((i) => i.id === selected)) ?? open1[0];
+    for (const i of sec?.items.slice(0, EXPAND_ALL_MAX) ?? []) if (!open[i.id]) void expand(i.id);
   }
 
   function move(step: number): void {
@@ -183,7 +214,8 @@
     const group = KEY_GROUP[e.key];
     if (e.key === "j") move(1);
     else if (e.key === "k") move(-1);
-    else if (e.key === "Enter" && selected) void toggle(selected);
+    else if (e.key === "Enter" && selected) toggle(selected);
+    else if (e.key === "e") expandSection();
     else if (e.key === "/") {
       e.preventDefault();
       searchEl?.focus();
@@ -194,10 +226,7 @@
       if (showKeys || showLegend) {
         showKeys = false;
         showLegend = false;
-      } else {
-        open = null;
-        trace = null;
-      }
+      } else open = {};
     } else if (e.key === "?") {
       const next = !(showKeys || showLegend);
       showKeys = next;
@@ -217,8 +246,7 @@
     const onPop = (): void => {
       view = parseView(window.location.search.slice(1));
       selected = null;
-      open = null;
-      trace = null;
+      open = {};
       void load();
     };
     window.addEventListener("popstate", onPop);
@@ -259,22 +287,29 @@
   class="min-h-screen"
   style="--dot-green: oklch(0.65 0.17 150); --dot-blue: oklch(0.6 0.17 250); --dot-amber: oklch(0.75 0.16 75); --dot-red: oklch(0.6 0.22 27); --dot-gray: oklch(0.6 0 0); --dot-light: oklch(0.8 0 0);"
 >
-  <main class="mx-auto max-w-4xl p-6">
-    <header class="mb-4 flex items-baseline justify-between">
-      <h1 class="text-xl font-semibold">Track</h1>
-      <span class="flex gap-3 text-sm">
-        <button
-          type="button"
-          class="text-muted-foreground underline"
-          aria-expanded={showLegend}
-          aria-controls="dot-legend"
-          onclick={() => (showLegend = !showLegend)}
-        >
-          What the dots mean
-        </button>
-        <button type="button" class="text-muted-foreground underline" onclick={() => (showKeys = !showKeys)}>? keys</button>
-      </span>
-    </header>
+  <main class="mx-auto max-w-4xl px-6 pb-6">
+    <!-- Sticky: the summary line and the controls stay in view while the list scrolls. -->
+    <div class="sticky top-0 z-20 -mx-6 mb-2 border-b border-border bg-background px-6 pt-4" data-testid="sticky-top">
+      <div class="flex items-baseline justify-between">
+        <h1 class="text-xl font-semibold">Track</h1>
+        <span class="flex gap-3 text-sm">
+          <button
+            type="button"
+            class="text-muted-foreground underline"
+            aria-expanded={showLegend}
+            aria-controls="dot-legend"
+            onclick={() => (showLegend = !showLegend)}
+          >
+            What the dots mean
+          </button>
+          <button type="button" class="text-muted-foreground underline" onclick={() => (showKeys = !showKeys)}>? keys</button>
+        </span>
+      </div>
+      <Header {summary} {view} {now} stale={data?.stale ?? false} offline={error !== null} onchange={go} />
+      {#if data}
+        <Toolbar {view} facets={data.facets} onchange={go} onclear={() => go(clearFilters(view))} bind:searchEl />
+      {/if}
+    </div>
 
     {#if showLegend}<Legend onclose={() => (showLegend = false)} />{/if}
 
@@ -285,10 +320,6 @@
     {/if}
     {#if error}
       <p class="mb-3 rounded-lg border border-border bg-muted px-3 py-2 text-sm" role="alert">{error}</p>
-    {/if}
-
-    {#if data}
-      <Toolbar {view} facets={data.facets} onchange={go} onclear={() => go(clearFilters(view))} bind:searchEl />
     {/if}
 
     {#if loading}
@@ -318,58 +349,53 @@
       </section>
     {:else if data}
       {#if refreshing}<p class="sr-only" role="status">Updating</p>{/if}
+      <Pagination top page={data.page} onpage={(n) => go({ page: n })} onsize={(n) => go({ pageSize: n, page: 1 })} />
       <div class:opacity-60={refreshing} aria-busy={refreshing}>
-        {#each groups as g (g.id)}
-          {@const collapsed = isCollapsed(g.id)}
-          <section class="mb-5" aria-label={g.label}>
+        {#each sections as s (s.id)}
+          {@const collapsed = isCollapsed(s.id)}
+          <section class="mb-5" aria-label={s.label}>
             {#if view.group !== "none"}
-              <h2 class="mb-1 text-sm font-medium text-muted-foreground">
-                <button
-                  type="button"
-                  class="flex items-center gap-1"
-                  aria-expanded={!collapsed}
-                  aria-controls={`group-${g.id}`}
-                  onclick={() => (collapsedBy[g.id] = !collapsed)}
-                >
-                  <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                    {#if collapsed}<path d="M4 2l4 4-4 4" />{:else}<path d="M2 4l4 4 4-4" />{/if}
-                  </svg>
-                  {g.label} · {g.total}{#if g.items.length !== g.total}<span class="font-normal">{" "}({g.items.length} on this page)</span>{/if}
-                </button>
-              </h2>
+              <div class="mb-1 flex flex-wrap items-baseline gap-x-3 text-sm text-muted-foreground">
+                <h2 class="font-medium">
+                  <button
+                    type="button"
+                    class="flex items-center gap-1"
+                    aria-expanded={!collapsed}
+                    aria-controls={`group-${s.id}`}
+                    onclick={() => (collapsedBy[s.id] = !collapsed)}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                      {#if collapsed}<path d="M4 2l4 4-4 4" />{:else}<path d="M2 4l4 4 4-4" />{/if}
+                    </svg>
+                    {s.label} · {s.total}{#if s.items.length !== s.total}<span class="font-normal">{" "}({s.items.length} on this page)</span>{/if}
+                  </button>
+                </h2>
+                {#if s.needsYou !== null}
+                  <span class="text-xs">{s.needsYou} need you, {s.inProgress} in progress{#if s.lastActivity}, last active {ago(s.lastActivity, now)}{/if}</span>
+                {/if}
+                {#if s.url}
+                  <a class="text-xs underline" href={s.url} target="_blank" rel="noopener noreferrer" aria-label={`Open ${s.label} on the remote`}>repo</a>
+                {/if}
+              </div>
             {/if}
             {#if !collapsed}
-              <ul id={`group-${g.id}`} class="overflow-hidden rounded-lg border border-border">
-                {#each g.items as item (item.id)}
-                  {@const idx = flat.indexOf(item)}
-                  <li class="border-b border-border last:border-b-0" aria-current={selected === item.id}>
-                    <button
-                      id={`row-${idx}`}
-                      class="flex w-full items-center gap-4 px-4 py-2 text-left hover:bg-muted"
-                      class:bg-muted={selected === item.id}
-                      aria-expanded={open === item.id}
-                      onclick={() => {
-                        selected = item.id;
-                        void toggle(item.id);
-                      }}
-                    >
-                      <span class="min-w-0 flex-1">
-                        <span class="block truncate font-medium">{item.title}</span>
-                        <span class="block truncate text-xs text-muted-foreground">{item.repo ?? item.id}{#if (item.sessionCount ?? 0) > 1}<span> · {item.sessionCount} sessions</span>{/if}<span class="md:hidden"> · {stageLabel(item)}</span></span>
-                      </span>
-                      <Dots {item} />
-                      <span class="hidden w-44 shrink-0 text-xs md:block">{stageLabel(item)}</span>
-                      <span class="hidden w-56 sm:block">
-                        {#each item.flags as f (f.kind)}
-                          <span class="block truncate text-xs text-muted-foreground" title={f.reason}>{f.reason}</span>
-                        {/each}
-                      </span>
-                      <span class="w-20 text-right text-xs text-muted-foreground">{ago(item.lastActivity, now)}</span>
-                    </button>
-                    {#if open === item.id}
-                      {#if trace}<Trace {trace} />{:else}<p class="px-4 py-3 text-sm text-muted-foreground">Loading…</p>{/if}
-                    {/if}
-                  </li>
+              <ul id={`group-${s.id}`} class="overflow-hidden rounded-lg border border-border">
+                {#each s.items as item (item.id)}
+                  <Row
+                    {item}
+                    idx={flat.indexOf(item)}
+                    selected={selected === item.id}
+                    isOpen={open[item.id] === true}
+                    {now}
+                    trace={traces[item.id] ?? null}
+                    detail={details[item.id] ?? null}
+                    detailFailed={detailFailed[item.id] === true}
+                    traceFailed={traceFailed[item.id] === true}
+                    onselect={() => {
+                      selected = item.id;
+                      toggle(item.id);
+                    }}
+                  />
                 {/each}
               </ul>
             {/if}
@@ -387,11 +413,12 @@
     {#if showKeys}
       <aside class="fixed bottom-4 right-4 rounded-lg border border-border bg-background p-4 text-sm shadow" aria-label="Keyboard map">
         <p><kbd>j</kbd> / <kbd>k</kbd> next, previous row</p>
-        <p><kbd>Enter</kbd> why this row looks this way</p>
+        <p><kbd>Enter</kbd> open or close the row's details</p>
+        <p><kbd>e</kbd> open every row of this group</p>
         <p><kbd>/</kbd> search</p>
         <p><kbd>[</kbd> / <kbd>]</kbd> previous, next page</p>
         <p><kbd>1</kbd> / <kbd>2</kbd> / <kbd>3</kbd> / <kbd>4</kbd> group by attention, repo, stage, none</p>
-        <p><kbd>Esc</kbd> close</p>
+        <p><kbd>Esc</kbd> close details</p>
         <p><kbd>?</kbd> this map</p>
       </aside>
     {/if}
