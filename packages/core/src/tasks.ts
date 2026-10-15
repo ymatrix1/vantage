@@ -16,7 +16,8 @@ export interface TaskCounts {
 const URL_RE = /\b[a-z][a-z0-9+.-]*:\/\/\S+/gi;
 const WIN_PATH_RE = /\b[A-Za-z]:[\\/][^\s"'`]*/g;
 const POSIX_PATH_RE = /(?:^|\s)~?\/[^\s"'`]+/g;
-const SECRET_RE = /\b(?:sk|pk|ghp|gho|ghs|github_pat|xox[a-z]|AKIA)[-_A-Za-z0-9]{8,}\b|\b[A-Za-z0-9+/_-]{32,}\b/g;
+const SECRET_RE =
+  /\b(?:sk|pk|ghp|gho|ghs|github_pat|xox[a-z]|AKIA)[-_A-Za-z0-9]{8,}\b|\b[A-Za-z0-9+/_-]{32,}\b/g;
 const EMAIL_RE = /\S+@\S+\.\S+/g;
 
 /** A task text safe to keep: no URLs, paths, emails or secret-looking tokens, one line, at most 80 characters. */
@@ -37,7 +38,8 @@ export function cleanTaskText(text: string): string | undefined {
   return `${(sp > 40 ? cut.slice(0, sp) : cut).trimEnd()}…`;
 }
 
-const isRec = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+const isRec = (v: unknown): v is Record<string, unknown> =>
+  typeof v === "object" && v !== null && !Array.isArray(v);
 
 /** Counts from a TodoWrite input (`{todos: [{content, status}]}`); null when the input is not a task list. */
 export function todoCounts(input: Record<string, unknown>, keepText: boolean): TaskCounts | null {

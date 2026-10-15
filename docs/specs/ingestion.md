@@ -75,7 +75,7 @@ Normalized `kind` values. The payload keeps the raw source fields.
 
 | Group | Kinds |
 |---|---|
-| Agent (keyed by Claude Code `session_id` and `prompt_id`) | `session.started`, `session.derived`, `prompt.submitted`, `file.edited`, `command.ran` (with exit code), `todo.updated`, `session.waiting`, `session.stopped`, `session.compacted`, `session.ended`. `command.ran` comes from `PostToolUse` (success) and `PostToolUseFailure` (failure); `session.waiting` from `PermissionRequest` and `Notification` (`permission_prompt`, `idle_prompt`, `elicitation_dialog`) |
+| Agent (keyed by Claude Code `session_id` and `prompt_id`) | `session.started`, `session.derived`, `task.list.updated`, `subagent.run`, `prompt.submitted`, `file.edited`, `command.ran` (with exit code), `todo.updated`, `session.waiting`, `session.stopped`, `session.compacted`, `session.ended`. `command.ran` comes from `PostToolUse` (success) and `PostToolUseFailure` (failure); `session.waiting` from `PermissionRequest` and `Notification` (`permission_prompt`, `idle_prompt`, `elicitation_dialog`) |
 | git | `commit.created`, `branch.checked_out`, `merge.completed`, `revert.created`, `worktree.scanned` (dirty files) |
 | Review | `pr.opened`, `pr.updated`, `review.submitted`, `review.requested`, `thread.commented`, `thread.resolved`, `pr.merged`, `pr.closed` |
 | Ship | `deploy.started`, `deploy.succeeded`, `deploy.failed`, `check.passed`, `check.failed`, `alert.fired`, `alert.resolved`, `incident.opened` |
@@ -101,6 +101,13 @@ Normalized `kind` values. The payload keeps the raw source fields.
 ### Derived sessions
 
 `session.derived` is written by the transcript backfill, not by a hook, because no hook payload names a parent (measured: [session lineage](../research/session-lineage.md)). A session file is named by its session id. When the file's first lines carry another `sessionId`, Claude Code copied the parent's history into it. The backfill reads every line of the file (the copied history is usually older than the 14-day window), takes the id on the last copied line as the parent and emits one event: `sourceId` `cc:lineage:<child>:<parent>`, `timestamp` of the child's first own line, payload `{parentSessionId, lineage: "continuation", signal: "transcript-history"}`. The kind is refined at link time from the `SessionStart` `source` (`resume`, `fork`, `clear`, `compact`). Files under `subagents/` are skipped: their lines carry the parent's `sessionId`, and `agentId` is added to the payload of their `file.edited` and `command.ran` events (and of hook events with `agent_id`). Replays are safe: the copied lines' own events dedupe on their tool and prompt ids.
+
+### Task lists and sub-agent runs
+
+Two kinds that feed the item read model (D96, proposed). Both come from the transcript backfill and, for task lists, from the hook too.
+
+- **`task.list.updated`** is a `TodoWrite` call: the whole list is in the call. The payload keeps only `{total, pending, inProgress, completed}` and, when text capture is on, `current`: the cleaned text of the first `in_progress` item (URLs, paths, emails and secret-looking tokens removed, one line, at most 80 characters). No other todo text is stored. `sourceId` is `cc:tool:<tool_use_id>:todos`, so the hook and the transcript dedupe. Capture of `current` follows the same switch as request titles (`item_titles_from_requests`); with it off the counts stay and `current` is absent. `TaskCreate` and `TaskUpdate` are not read yet (the task id sits in the create result; see the research note).
+- **`subagent.run`** is one slice of a sub-agent run: per sub-agent file and ingest batch, `{agentId, startedAt, endedAt, tools}` where `tools` counts the `tool_use` blocks in the batch. `sourceId` is `cc:subagent:<agentId>:<first line uuid>`, so a replay of a batch dedupes and a run read in several batches adds up. Sub-agent lines carry the parent's `sessionId`, so the run belongs to the parent's session. The tool-use counts and durations of the run result are not used: 688 of 730 runs are async and carry no totals.
 
 ### Branch on tool events
 

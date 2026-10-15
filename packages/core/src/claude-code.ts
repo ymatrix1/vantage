@@ -284,7 +284,10 @@ function branchOf(l: TranscriptLine, now: Map<string, string | null>): string | 
  * parent's `sessionId`, so the run belongs to the parent's session (D86).
  */
 function subagentRuns(lines: readonly TranscriptLine[]): VantageEvent[] {
-  const runs = new Map<string, { first: string; last: string; firstId: string; sid?: string; tools: number }>();
+  const runs = new Map<
+    string,
+    { first: string; last: string; firstId: string; sid?: string; tools: number }
+  >();
   for (const l of lines) {
     const ts = l.timestamp;
     if (!l.agentId || !ts || Number.isNaN(Date.parse(ts))) continue;

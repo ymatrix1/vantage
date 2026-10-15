@@ -52,23 +52,23 @@ const write = (rel: string, lines: string[]): void => {
   writeFileSync(path(rel), lines.join("\n") + "\n");
 };
 
-describe("task lists", () => {
-  const seed = (): void =>
-    write("s-a.jsonl", [
-      todo("s-a", "t1", "2026-10-13T09:00:00Z", [
-        ["Read the spec", "completed"],
-        ["Write the linker rule", "in_progress"],
-        ["Update the docs and tell everyone in private", "pending"],
-      ]),
-      todo("s-a", "t2", "2026-10-13T10:00:00Z", [
-        ["Read the spec", "completed"],
-        ["Write the linker rule", "completed"],
-        ["Update the docs and tell everyone in private", "in_progress"],
-      ]),
-    ]);
+const seedList = (): void =>
+  write("s-a.jsonl", [
+    todo("s-a", "t1", "2026-10-13T09:00:00Z", [
+      ["Read the spec", "completed"],
+      ["Write the linker rule", "in_progress"],
+      ["Update the docs and tell everyone in private", "pending"],
+    ]),
+    todo("s-a", "t2", "2026-10-13T10:00:00Z", [
+      ["Read the spec", "completed"],
+      ["Write the linker rule", "completed"],
+      ["Update the docs and tell everyone in private", "in_progress"],
+    ]),
+  ]);
 
+describe("task lists", () => {
   it("an item shows the latest list's counts and the current task", () => {
-    seed();
+    seedList();
     backfillTranscripts(store, projects(), NOW);
     linkStoredEvents(store);
     expect(itemTasks(store).get("session:s-a")).toEqual({
@@ -94,20 +94,33 @@ describe("task lists", () => {
   });
   it("with the text switch off the counts stay and the text is not kept", () => {
     store.captureTaskText = false;
-    seed();
+    seedList();
     backfillTranscripts(store, projects(), NOW);
     linkStoredEvents(store);
-    expect(itemTasks(store).get("session:s-a")).toMatchObject({ tasksTotal: 3, tasksDone: 2, currentTask: null });
-    const text = store.db.prepare("SELECT COUNT(*) AS n FROM events WHERE payload_json LIKE '%linker rule%'").get();
+    expect(itemTasks(store).get("session:s-a")).toMatchObject({
+      tasksTotal: 3,
+      tasksDone: 2,
+      currentTask: null,
+    });
+    const text = store.db
+      .prepare("SELECT COUNT(*) AS n FROM events WHERE payload_json LIKE '%linker rule%'")
+      .get();
     expect(Number(text?.["n"])).toBe(0);
   });
   it("sums the latest list of each session and follows undo", () => {
-    seed();
-    write("s-c.jsonl", [todo("s-c", "t9", "2026-10-13T11:00:00Z", [["One", "completed"], ["Two", "pending"]])]);
+    seedList();
+    write("s-c.jsonl", [
+      todo("s-c", "t9", "2026-10-13T11:00:00Z", [
+        ["One", "completed"],
+        ["Two", "pending"],
+      ]),
+    ]);
     backfillTranscripts(store, projects(), NOW);
     linkStoredEvents(store);
     expect(itemTasks(store).get("session:s-c")).toMatchObject({ tasksTotal: 2, tasksDone: 1 });
-    const id = Number(store.db.prepare("SELECT id FROM events WHERE source_id = 'cc:tool:t9:todos'").get()?.["id"]);
+    const id = Number(
+      store.db.prepare("SELECT id FROM events WHERE source_id = 'cc:tool:t9:todos'").get()?.["id"],
+    );
     expect(undoLink(store, id, "session:s-c", NOW)).toBe(true);
     expect(itemTasks(store).has("session:s-c")).toBe(false);
   });
@@ -127,19 +140,25 @@ describe("task lists", () => {
   });
 });
 
+const agentLine = (t: string, tools: number): string =>
+  JSON.stringify({
+    type: "assistant",
+    sessionId: "s-a",
+    agentId: "ag1",
+    isSidechain: true,
+    uuid: `ag1-${t}`,
+    timestamp: `2026-10-13T${t}Z`,
+    message: {
+      content: Array.from({ length: tools }, (_, i) => ({
+        type: "tool_use",
+        id: `x${t}${i}`,
+        name: "Read",
+        input: {},
+      })),
+    },
+  });
+
 describe("sub-agent runs", () => {
-  const agentLine = (t: string, tools: number): string =>
-    JSON.stringify({
-      type: "assistant",
-      sessionId: "s-a",
-      agentId: "ag1",
-      isSidechain: true,
-      uuid: `ag1-${t}`,
-      timestamp: `2026-10-13T${t}Z`,
-      message: {
-        content: Array.from({ length: tools }, (_, i) => ({ type: "tool_use", id: `x${t}${i}`, name: "Read", input: {} })),
-      },
-    });
   it("sums a run read in two batches, and a replay adds nothing", () => {
     write("s-a.jsonl", [todo("s-a", "t1", "2026-10-13T09:00:00Z", [["One", "pending"]])]);
     write("s-a/subagents/agent-ag1.jsonl", [agentLine("09:01:00", 2)]);
@@ -152,40 +171,42 @@ describe("sub-agent runs", () => {
   });
 });
 
+const ev = (
+  sourceId: string,
+  kind: VantageEvent["kind"],
+  sessionId: string,
+  t: string,
+  payload: Record<string, unknown> = {},
+): VantageEvent => ({
+  source: "claude_code",
+  sourceId,
+  kind,
+  timestamp: `2026-01-05T${t}Z`,
+  sessionId,
+  payload,
+});
+
+const seedForks = (): void => {
+  const at = "2026-01-05T13:00:00Z";
+  const put = (e: VantageEvent): void => void store.insertEvent(e, at);
+  put(ev("a1", "file.edited", "s-a", "09:00:00", { cwd: "/w/x" }));
+  put(ev("a2", "file.edited", "s-a", "11:00:00", { cwd: "/w/x" })); // parent goes on after the forks start
+  // s-b: a fork (hook says so), parent still active
+  put(ev("d-b", "session.derived", "s-b", "10:00:00", { parentSessionId: "s-a" }));
+  put(ev("h-b", "session.started", "s-b", "10:00:00", { start: "fork" }));
+  put(ev("b1", "file.edited", "s-b", "10:05:00", { cwd: "/w/x" }));
+  // s-c: a resume (hook says so), parent idle since
+  put(ev("d-c", "session.derived", "s-c", "12:00:00", { parentSessionId: "s-a" }));
+  put(ev("h-c", "session.started", "s-c", "12:00:00", { start: "resume" }));
+  put(ev("c1", "file.edited", "s-c", "12:05:00", { cwd: "/w/x" }));
+  // s-d: derived, no hook source (history only)
+  put(ev("d-d", "session.derived", "s-d", "12:30:00", { parentSessionId: "s-a" }));
+  put(ev("d1", "file.edited", "s-d", "12:35:00", { cwd: "/w/x" }));
+};
+
 describe("fork and resume counts", () => {
-  const ev = (
-    sourceId: string,
-    kind: VantageEvent["kind"],
-    sessionId: string,
-    t: string,
-    payload: Record<string, unknown> = {},
-  ): VantageEvent => ({
-    source: "claude_code",
-    sourceId,
-    kind,
-    timestamp: `2026-01-05T${t}Z`,
-    sessionId,
-    payload,
-  });
-  const seed = (): void => {
-    const at = "2026-01-05T13:00:00Z";
-    const put = (e: VantageEvent): void => void store.insertEvent(e, at);
-    put(ev("a1", "file.edited", "s-a", "09:00:00", { cwd: "/w/x" }));
-    put(ev("a2", "file.edited", "s-a", "11:00:00", { cwd: "/w/x" })); // parent goes on after the forks start
-    // s-b: a fork (hook says so), parent still active
-    put(ev("d-b", "session.derived", "s-b", "10:00:00", { parentSessionId: "s-a" }));
-    put(ev("h-b", "session.started", "s-b", "10:00:00", { start: "fork" }));
-    put(ev("b1", "file.edited", "s-b", "10:05:00", { cwd: "/w/x" }));
-    // s-c: a resume (hook says so), parent idle since
-    put(ev("d-c", "session.derived", "s-c", "12:00:00", { parentSessionId: "s-a" }));
-    put(ev("h-c", "session.started", "s-c", "12:00:00", { start: "resume" }));
-    put(ev("c1", "file.edited", "s-c", "12:05:00", { cwd: "/w/x" }));
-    // s-d: derived, no hook source (history only)
-    put(ev("d-d", "session.derived", "s-d", "12:30:00", { parentSessionId: "s-a" }));
-    put(ev("d1", "file.edited", "s-d", "12:35:00", { cwd: "/w/x" }));
-  };
   it("counts forks and resumes from the hook source only, and the fork hint from timing", () => {
-    seed();
+    seedForks();
     linkStoredEvents(store);
     expect(itemSessionCounts(store).get("session:s-a")).toMatchObject({
       sessionCount: 4,
@@ -196,7 +217,7 @@ describe("fork and resume counts", () => {
     });
   });
   it("timing alone never makes a fork: without a hook source forkCount stays 0", () => {
-    seed();
+    seedForks();
     store.db.exec("DELETE FROM events WHERE kind = 'session.started'");
     linkStoredEvents(store);
     expect(itemSessionCounts(store).get("session:s-a")).toMatchObject({

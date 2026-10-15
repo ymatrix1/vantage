@@ -43,7 +43,24 @@ How the linker uses it (`packages/core/src/linker.ts`, `lineage.ts`):
 
 Not done: grouping by the same cwd and branch within a time gap (D87, proposed). Measured counts: [session lineage](../research/session-lineage.md).
 
-Counts for the Track view come from the `item_sessions` view (see [data schema](data-schema.md)): `session_count`, `derived_count`, `subagent_count`.
+### Forks and resumes
+
+The kind of a derived session is explicit where the data says so: a `SessionStart` source of `fork` or `resume` (hook), else `continuation` (`clear` and `compact` also give `continuation`). Timing is a hint and never a rule: a derived session whose parent kept producing events after the child started is counted in `forkHintCount`, and it never changes the kind. On the measured machine 59 of 75 such sessions had a live parent ([research](../research/session-lineage.md)), but no hook source was recorded yet, so `forkCount` and `resumeCount` start at 0 and fill as hooks run (D97, proposed).
+
+### Read model for the Track view
+
+From the `item_sessions` and `item_tasks` views (see [data schema](data-schema.md)); the daemon reads them with `itemSessionCounts` and `itemTasks` (`packages/daemon/src/lineage.ts`):
+
+| Field | Meaning |
+|---|---|
+| `sessionCount`, `derivedCount` | Sessions with a live link, and those that continue another session |
+| `forkCount`, `resumeCount` | Derived sessions the hook source called a fork or a resume |
+| `forkHintCount` | Derived sessions whose parent went on after the child started (hint) |
+| `subagentRuns`, `subagentTools` | Distinct sub-agent runs in the item's sessions, and their tool calls |
+| `tasksTotal`, `tasksDone` | Sum over the item's sessions of the latest task list's size and completed count |
+| `currentTask` | Cleaned `in_progress` text (at most 80 characters) of the most recent list that has one; null when none or capture is off |
+
+An undone link removes its event from every count.
 
 ## Entities
 
