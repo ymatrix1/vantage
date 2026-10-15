@@ -19,6 +19,13 @@ export { linkStoredEvents, linksForItem, undoLink } from "./linking.ts";
 export type { StoredLink } from "./linking.ts";
 export { itemSessionCounts } from "./lineage.ts";
 export type { ItemSessionCounts } from "./lineage.ts";
+export {
+  captureRequestTitle,
+  clearRequestTitles,
+  listRequestTitles,
+  requestTitleMap,
+  type StoredRequestTitle,
+} from "./titles.ts";
 export { dismissFlag, getItem, listItems, runStagePass } from "./stages.ts";
 export type {
   ItemDetail,
@@ -41,6 +48,7 @@ export {
   DEFAULT_PORT,
   HEALTH_FILE,
   readFlagWindowHours,
+  readRequestTitlesEnabled,
   readHealth,
   readRepos,
   startDaemon,

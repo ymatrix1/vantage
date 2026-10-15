@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { classifyWrites, detectShellEffects } from "./shell.ts";
 import { resolveRepoRoot } from "./paths.ts";
 import { parseTestSummary } from "./test-summary.ts";
+import { requestTitle } from "./request-title.ts";
 import type { VantageEvent } from "./events.ts";
 
 export const SOURCE = "claude_code";
@@ -258,6 +259,32 @@ function branchOf(l: TranscriptLine, now: Map<string, string | null>): string | 
   const sid = l.sessionId ?? "";
   if (l.gitBranch !== undefined) now.set(sid, l.gitBranch === "HEAD" ? null : l.gitBranch);
   return now.get(sid) ?? undefined;
+}
+
+/**
+ * The title candidate for session `own`: its first real user request, run through `requestTitle`.
+ * Returns `found: false` when the lines hold no user request yet (try again later) and `title: null`
+ * when the first request leaves nothing usable (do not look at later ones). Only that one message is
+ * read; nothing else of any prompt is kept (proposed D95).
+ */
+export function firstRequestTitle(
+  lines: readonly TranscriptLine[],
+  own: string,
+): { found: boolean; title: string | null } {
+  for (const l of lines) {
+    if (l.type !== "user" || l.isMeta || l.isSidechain || l.agentId) continue;
+    if (l.sessionId !== undefined && l.sessionId !== own) continue;
+    if (l.content.some((b) => b["type"] === "tool_result")) continue;
+    const text =
+      l.text ??
+      l.content
+        .filter((b) => b["type"] === "text")
+        .map((b) => str(b["text"]) ?? "")
+        .join(" ");
+    if (text.trim() === "") continue;
+    return { found: true, title: requestTitle(text) };
+  }
+  return { found: false, title: null };
 }
 
 /** Events for one batch of transcript lines; pairs tool calls with their results within the batch. */
