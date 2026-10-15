@@ -1,7 +1,7 @@
 ---
 # vantage-a6hi
 title: 'Automatic release delivery (CD): release PR, GitHub Release, gated npm publish'
-status: in-progress
+status: completed
 type: feature
 created_at: 2026-10-14T23:34:45Z
 updated_at: 2026-10-14T23:34:45Z
@@ -20,7 +20,7 @@ Install without a clone and build, and make every release a deliberate, reviewab
 
 - [x] Release PR automation: version bump and CHANGELOG from Conventional Commits (pre-1.0 rules), one product version (`tools/release.mjs`, `release-pr.yml`; tested on a synthetic repo and run read-only against the real history: 0.0.0 to 0.1.0)
 - [x] One installable npm package whose bin runs the CLI; the packed tarball installs into a temp directory and runs `--version`, `doctor` and `start` (`tools/smoke-install.mjs`)
-- [ ] Release workflow: build, test, 5-target native build, GitHub Release with artifacts and SHA256SUMS, provenance attestation. Written and actionlint clean; its first run is the rehearsal on this PR (the release path itself cannot run before `main` holds a bumped version)
+- [x] Release workflow: build, test, 5-target native build, GitHub Release with artifacts and SHA256SUMS, provenance attestation. Rehearsal run on PR 60 is green (verify, native, assemble pass; github-release and publish-npm skipped as designed). The release and attestation steps themselves cannot run before `main` holds a bumped version, so they are unexercised
 - [x] npm publish stays gated (variable, environment, token check, dry run first); least-privilege permissions; actions pinned by SHA
 - [x] `vantage --version` and a doctor version row, with tests
 - [x] Package content test, release-notes test, docs check for RELEASING.md
