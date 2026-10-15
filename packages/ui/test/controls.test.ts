@@ -55,6 +55,11 @@ async function ready(over: Partial<TrackView> = {}, search = "", stored = "") {
   return { api, root };
 }
 
+/** The rows only: the overview above them repeats titles on purpose. */
+const listText = (root: ParentNode): string =>
+  [...root.querySelectorAll("section[aria-label]:not([aria-label='Overview']) ul")]
+    .map((u) => u.textContent)
+    .join(" ");
 const buttonText = (root: ParentNode, text: string): HTMLButtonElement => {
   const b = [...root.querySelectorAll("button")].find((x) =>
     x.textContent?.replace(/\s+/g, " ").trim().startsWith(text),
@@ -103,11 +108,11 @@ describe("the request is built from the view state", () => {
     const { api } = await ready({}, "?repo=acme%2Fsync&since=30d");
     const asked = api.mock.calls
       .map(([u]) => u)
-      .filter((u) => u.includes("pageSize=1&") || u.endsWith("pageSize=1"));
+      .filter((u) => u.includes("pageSize=30&") || u.endsWith("pageSize=30"));
     const p = new URLSearchParams((asked[0] ?? "").split("?")[1]);
     expect([p.get("group"), p.get("pageSize"), p.get("repo"), p.get("since")]).toEqual([
       "attention",
-      "1",
+      "30",
       "acme/sync",
       "30d",
     ]);
@@ -369,8 +374,8 @@ describe("groups", () => {
       "Older · 1",
     ]);
     expect(rows(root).map((r) => r.textContent)).toHaveLength(2);
-    expect(root.textContent).not.toContain("Chat only");
-    expect(root.textContent).not.toContain("Old work");
+    expect(listText(root)).not.toContain("Chat only");
+    expect(listText(root)).not.toContain("Old work");
     expect(root.querySelectorAll("h2 button[aria-expanded='false']")).toHaveLength(2);
   });
 
@@ -378,17 +383,17 @@ describe("groups", () => {
     const { root } = await ready(opts);
     const heads = [...root.querySelectorAll("h2")].map((h) => h.textContent ?? "");
     expect(heads.some((h) => h.includes("Older"))).toBe(false);
-    expect(root.textContent).toContain("Old work");
+    expect(listText(root)).toContain("Old work");
   });
 
   it("a header opens and closes its group", async () => {
     const { root } = await ready(opts, "?since=all");
     click(buttonText(root, "Conversations without code"));
-    expect(root.textContent).toContain("Chat only");
+    expect(listText(root)).toContain("Chat only");
     click(buttonText(root, "Conversations without code"));
-    expect(root.textContent).not.toContain("Chat only");
+    expect(listText(root)).not.toContain("Chat only");
     click(buttonText(root, "Needs you"));
-    expect(root.textContent).not.toContain("Needs one");
+    expect(listText(root)).not.toContain("Needs one");
   });
 
   it("each flag shows its reason text", async () => {

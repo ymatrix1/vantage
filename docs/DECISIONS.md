@@ -1347,3 +1347,35 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Why:** Seeing real-looking rows move through the stages teaches the product faster than any page of prose, and a throwaway home is the only way to do that without touching the user's data (privacy boundary). Keeping the text in data files makes the translation testable.
 - **Alternatives:** A `vantage demo` that reuses the real home with a flag (one bug away from mixing synthetic and real rows). A web-only onboarding (needs the UI and a running daemon first). A static screenshot walkthrough in the README (cannot be clicked, goes stale). Translating through the UI strings only (the first run happens in the terminal).
 - **Impact:** `packages/cli/src/tour/*`, `cli.ts` (command and `pause` seam), `main.ts` (Enter prompt), `install.ts` (one line), tests in `packages/cli/test/tour.test.ts`, the first-run and operations specs, README and install-for-agents. The demo must be kept in step with the stage machine: a change to stages or flags needs the demo test counts updated. Revisit when Reviewed, Shipped and Verified exist, so the demo shows them.
+
+
+### D180. Test-only and throwaway edits never raise `unproven_claim`; "needs you" keeps its meaning but says so only for stuck work
+
+- **Status:** proposed
+- **Context:** On real data 10 of 12 rows read "Built · needs you" with the reason "Session stopped after editing zz.test.ts / res5.py with no passing check since". Two causes: the stage machine counted a test file and a throwaway probe file (`res5.py`) as code edits that need proof, and the row label said "needs you" for every non-forgotten flag, so a quiet "no proof yet" looked as urgent as a stuck loop. [flags.md](specs/flags.md) marks `unproven_claim` amber (waits for the digest) and `thrashing` the one that interrupts.
+- **Decision:**
+  1. An edit whose paths are all documentation or test files (`*.test.*`, `*.spec.*`, `test_*.py`, `*_test.py|go`, or a `test/`, `tests/`, `__tests__/`, `spec/`, `fixtures/` folder) counts like a docs edit: Built, no proof expiry, no `unproven_claim`. A passing check still proves it.
+  2. A file named like a throwaway (`zz*`, `res<N>`, `tmp<N>`, `temp`, `scratch`, `debug`, `out<N>`, `untitled`, `try`, `test<N>`) is scratch, the same as logs and caches (extends D140).
+  3. The row label says "needs you" only for flags other than `unproven_claim` and `forgotten`; an unproven row reads "Built · no proof yet" (or expired, failed, weak). The attention groups and the header count are unchanged, so the Needs you group still lists unproven work.
+  4. The status file's `needsYou` uses the same rule as the page (a lone `forgotten` flag does not count, D94).
+- **Why:** The product's promise is that a flag is a real signal. A test edit with no run is not a claim that shipped code works, and a probe file is not the work. Fixing the inputs removes the false rows without hiding a true unproven claim; fixing the label keeps "needs you" for what interrupts.
+- **Alternatives:** Raise the flag window or add a minimum edit count (hides real unproven work). Move `unproven_claim` out of the Needs you group (changes D94 and the API; revisit if the group is still too broad after this). Learn scratch names per user (not deterministic; D3).
+- **Impact:** `scratch.ts` (`isTestPath`, throwaway names), `stage.ts`, `stage-label.ts`, `status-file.ts`, tests. A project whose real files match a throwaway name (a real `debug.py`) is treated as scratch until it is committed; revisit with the flag-dismissal rate in `vantage stats`.
+
+### D181. Track grouping choices: repo (default), organization, stage, attention, day, none; day is the page's own
+
+- **Status:** proposed
+- **Context:** The user asked for grouping by work item or repo with collapsible groups plus choices (repo, organization, stage, day). The API groups by attention, org, repo, stage or none.
+- **Decision:** Add **Day** to the Group by control. It is client-only: the page asks the API for no grouping and folds the page's rows by the local day of their last activity (Today, Yesterday, then the date), newest first. Sessions of one work item are already one row (`sessionCount`), so a work item is never split across groups. Repo stays the default.
+- **Why:** No API or schema change, and the rows of one page are all the day view needs.
+- **Alternatives:** A `day` group in the daemon (exact totals across pages, but a new API value for one view). Drop day (the user asked for it).
+- **Impact:** `contract.ts`, `view.ts` (`apiQuery`), `projects.ts`. Day totals count the rows on the page; revisit if paging makes that misleading.
+
+### D182. Track page layout: one summary line, an overview, a collapsed filter bar
+
+- **Status:** proposed
+- **Context:** The page repeated itself (a counts line, five filter chips, a legend link and a keys link), had no top view, and its controls had uneven spacing and height.
+- **Decision:** Top to bottom: title and one Help button (dots and keys together); one summary line (counts that filter); one row of controls (search, Group by, Sort by, Filters) with the filter panel closed and an active-filter count and chips on show; an overview of three cards (Needs you now: top three with the reason; Where things stand: Asked, Built, Proven counts; In progress, latest first); then the grouped list. The top pager appears only with more than one page. Controls share one height, radius and focus ring (`.ctl`, `.chip` in `app.css`); shape carries meaning before colour (D34).
+- **Why:** The answer to "what needs me" is visible without scrolling, and the controls stay quiet until wanted.
+- **Alternatives:** A sidebar for filters (costs width on a narrow window). Leave filters open (the noise the user reported).
+- **Impact:** `App.svelte`, `Toolbar.svelte`, new `Overview.svelte`, `summary.ts`, `app.css`, [UX](UX.md#track). The overview reads the first 30 rows by activity, so it names the most recent needs-you items, not necessarily the oldest.

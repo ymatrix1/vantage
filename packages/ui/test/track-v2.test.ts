@@ -92,7 +92,7 @@ async function ready(
 ) {
   const api = fakeApi({
     track: (u) => ({
-      body: /[?&]pageSize=1(&|$)/.test(u)
+      body: /[?&]pageSize=30(&|$)/.test(u)
         ? summaryBody()
         : track([], { groups, facets, page: { page: 1, pageSize: 25, total: 60, pages: 3 } }),
     }),
@@ -232,7 +232,7 @@ describe("L2 rows", () => {
     expect(row).not.toContain("web · main · Oct 14");
     expect(row).toContain("Said done, no test ran after the last edit");
     expect(row).toContain("3 sessions");
-    expect(row).toContain("Built · needs you");
+    expect(row).toContain("Built · no proof yet");
   });
 
   it("has a branch link built from the remote, escaped, and none without a remote", async () => {

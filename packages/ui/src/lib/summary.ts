@@ -1,5 +1,5 @@
-// The one-line header (L0): counts for the current filters, from a `group=attention, pageSize=1` request.
-import type { TrackView } from "./contract";
+// The one-line header (L0): counts for the current filters, from a `group=attention, pageSize=30` request.
+import type { TrackRow, TrackView } from "./contract";
 
 export interface Summary {
   inProgress: number;
@@ -8,7 +8,16 @@ export interface Summary {
   stuck: number;
   forgotten: number;
   older: number;
+  /** Top of the "needs you" and "in progress" groups, for the overview (how many: OVERVIEW_ITEMS). */
+  needs: TrackRow[];
+  progress: TrackRow[];
+  /** Items per stage under the current filters. */
+  stages: Record<string, number>;
 }
+
+export const OVERVIEW_ITEMS = 3;
+const top = (v: TrackView, id: string): TrackRow[] =>
+  v.groups.find((g) => g.id === id)?.items.slice(0, OVERVIEW_ITEMS) ?? [];
 
 const total = (v: TrackView, id: string): number => v.groups.find((g) => g.id === id)?.total ?? 0;
 
@@ -20,6 +29,9 @@ export function summaryOf(v: TrackView): Summary {
     stuck: v.facets.flag["thrashing"] ?? 0,
     forgotten: v.facets.flag["forgotten"] ?? 0,
     older: v.facets.age.older,
+    needs: top(v, "needs_you"),
+    progress: top(v, "in_progress"),
+    stages: v.facets.stage,
   };
 }
 

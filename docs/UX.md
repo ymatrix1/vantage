@@ -50,15 +50,18 @@ Focus is drawn as the **[landscape](GLOSSARY.md#landscape)**: work items as dot 
 
 The main "all work" view. A table, not a board, because it stays readable with many items and keeps priority visible.
 
+- **Overview and controls** (proposed D182): title and one Help button (the dots legend and the keys together); one summary line; one row of controls (search, Group by, Sort by, a Filters button with the active count; the filter panel is closed by default); then three cards: **Needs you now** (top three, each with its reason), **Where things stand** (Asked, Built, Proven counts that filter) and **In progress** (latest first). Screenshots of the synthetic demo at 1280 and 700 px, light and dark, are in [screenshots](screenshots/track-redesign/).
 - **Layout, top to bottom** (proposed D100, [web UI spec](specs/web-ui.md#track-layout)): a one-line header with counts that filter ("Last 7 days: 98 in progress, 20 need you, 37 older"), then projects, then one row per item, then the detail inline under a row. The summary line and the toolbar stay in view while scrolling; the pager is above and below the list.
 - **Row:** title (ticket title or key, else the branch without agent prefixes, never a [worktree](GLOSSARY.md#worktree) folder), subtitle (branch and a short time), six-dot track (Asked, Built, Proven, Reviewed, Shipped, Verified) with a stage label, the [flag](GLOSSARY.md#flag) reason in words, a session-count chip and a branch link.
 - **Inline detail:** sessions (derived ones nested), files touched, branch, last commit, what made it Asked (session, [anchor](GLOSSARY.md#anchor), time; no prompt text, D132), stage history, proofs as one line each (result icon, kind, age, edited since, D131) and actions (open branch, copy branch name, copy the `cd` command).
+- **Label:** "needs you" only for flags that interrupt (stuck loops); an unproven row reads "no proof yet", and test-only or throwaway edits raise no flag (proposed D180, [flags](specs/flags.md)).
 - **Dot states:** filled green = done, blue ring = current, amber = at risk (for example unproven), red = needs you, a short dash = skipped or not configured.
 - **Short tracks:** `review_request` and `commitment` items show only their relevant dots.
 - **Group by** toggle:
   - **Project** (default): one collapsible header per project (the repo from the git remote) with "N need you, M in progress", last activity and a repo link, most "needs you" first. A stage health bar is later.
   - **Attention:** Needs you, In progress, Waiting on others, Done this week (collapsed).
   - **Stage:** rows grouped by current stage.
+  - **Organization** and **Day** (Today, Yesterday, the date; the page's own grouping, D181).
 - **Filters:** context, project, flag, agent, item kind, and proof state (`unproven`, `expired proof`, `failed proof`, `weak proof`).
 - **"Moved since yesterday"** marker on rows whose stage changed.
 - **Board toggle:** an optional kanban rendering (six columns) of the same data, for people who prefer it. Not the default.

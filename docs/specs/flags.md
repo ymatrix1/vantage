@@ -25,6 +25,8 @@ Flags sit on any work item, whatever its stage. Each flag has exactly one primar
 
 ## Rules
 
+- **What does not trigger `unproven_claim`:** edits that touch only documentation, test files or throwaway/scratch files (logs, caches, `zz*`, `res<N>`, `tmp<N>` and similar names; proposed D180). A real source edit next to a test edit still needs proof.
+
 - **Severity:** red interrupts (toast, foreground); amber waits for the digest.
 - **Icons** come from one line-icon set, on a tinted circle in the severity color. Never emoji.
 - **Precision:** each flag's dismissal rate is tracked; a flag dismissed as wrong more than 30% of the time gets fixed or turned off (see [operations](operations.md#quality-how-we-know-it-works)).

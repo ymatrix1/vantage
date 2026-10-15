@@ -16,7 +16,7 @@ async function ready(items: TrackRow[] = [item({ id: "a", title: "Alpha" })]) {
 const panelOf = (root: ParentNode): Element | null => root.querySelector("#dot-legend");
 const opener = (root: ParentNode): HTMLButtonElement => {
   const b = [...root.querySelectorAll("button")].find(
-    (x) => x.hasAttribute("aria-controls") && x.textContent?.includes("What the dots mean"),
+    (x) => x.hasAttribute("aria-controls") && x.getAttribute("aria-label")?.includes("what the dots mean"),
   );
   if (!b) throw new Error("no legend button");
   return b;

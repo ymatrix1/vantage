@@ -102,7 +102,7 @@ const none = (): Reply => ({ status: 404 });
 
 /**
  * Routes /api/track, /api/items/<id>/trace and /api/items/<id>; the reply for each can change between calls.
- * The page's header asks for `pageSize=1` (counts only): tests count list requests with `listCalls`.
+ * The page's header asks for `pageSize=30` (counts only): tests count list requests with `listCalls`.
  */
 export function fakeApi(routes: {
   track: (url: string) => Reply;
@@ -130,7 +130,7 @@ export function fakeApi(routes: {
 
 /** The list requests (everything under /api/track except the header's one-row counts request). */
 export const listCalls = (api: ReturnType<typeof fakeApi>): string[] =>
-  api.mock.calls.map(([u]) => u).filter((u) => u.startsWith("/api/track") && !/[?&]pageSize=1(&|$)/.test(u));
+  api.mock.calls.map(([u]) => u).filter((u) => u.startsWith("/api/track") && !/[?&]pageSize=30(&|$)/.test(u));
 
 /** Stands in for the browser WebSocket: the test decides when it opens, pushes and drops. */
 export class FakeSocket extends EventTarget {

@@ -18,7 +18,8 @@ import {
 
 export { SINCE_VALUES, type Since };
 export const SORT_VALUES = SORT_KEYS;
-export const GROUP_VALUES = GROUP_KEYS;
+/** `day` is client-only: the page asks the API for no grouping and folds the rows by day itself (D181). */
+export const GROUP_VALUES = [...GROUP_KEYS, "day"] as const;
 export const PROOF_VALUES = PROOF_STATES;
 export const FLAG_VALUES = FLAG_FILTERS;
 export const STAGE_VALUES = TRACK_STAGES;
@@ -26,7 +27,7 @@ export const Q_MAX = MAX_QUERY_CHARS;
 export const PAGE_SIZES = [25, 50, 100] as const;
 
 export type Sort = SortKey;
-export type GroupBy = GroupKey;
+export type GroupBy = GroupKey | "day";
 export type Order = "asc" | "desc";
 export type Facets = TrackFacets;
 export type PageInfo = CoreTrackView["page"];

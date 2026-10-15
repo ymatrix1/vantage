@@ -188,6 +188,24 @@ describe("docs-only sessions (D53)", () => {
   });
 });
 
+describe("test-only and throwaway edits (proposed D180)", () => {
+  it("a test-only session raises no unproven_claim", () => {
+    const s = one([edit(1, "/w/src/zz.test.ts"), edit(2, "/w/test/a.ts"), ev("session.stopped", 3)]);
+    expect(s.flags).toEqual([]);
+  });
+
+  it("a throwaway file (res5.py) is scratch: no code edit, no flag", () => {
+    const s = one([edit(1, "/w/res5.py"), ev("session.stopped", 2)]);
+    expect(s.flags).toEqual([]);
+    expect(s.codeEdits).toBe(0);
+  });
+
+  it("a real source edit next to a test edit still needs proof", () => {
+    const s = one([edit(1, "/w/src/a.test.ts"), edit(2, "/w/src/a.ts"), ev("session.stopped", 3)]);
+    expect(s.flags.map((f) => f.kind)).toEqual(["unproven_claim"]);
+  });
+});
+
 describe("flags", () => {
   it("unproven_claim: stopped with code edits and no fresh proof", () => {
     const s = one([edit(1), ev("session.stopped", 2)]);

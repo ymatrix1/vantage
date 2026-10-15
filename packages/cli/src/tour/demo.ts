@@ -155,7 +155,7 @@ export function seedDemoHome(home: string, now: Date = new Date()): void {
     put("demo-s11c", "session.derived", 10 * H, { parentSessionId: "demo-s11a", lineage: "continuation" });
     edit("demo-s11c", docs, "main", "guide.ts", 10 * H - 60_000);
     // 12. A session with edits and nothing to name it: the "Session ..." fallback.
-    edit("demo-s12", api, "main", "scratch.ts", H);
+    edit("demo-s12", api, "main", "session.ts", H);
 
     // A readable title for the derived group, as a stored first request would give it (made up).
     store.db
