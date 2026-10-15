@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { classifyWrites, detectShellEffects } from "./shell.ts";
 import { resolveRepoRoot } from "./paths.ts";
 import { parseTestSummary } from "./test-summary.ts";
+import { todoCounts } from "./tasks.ts";
 import { requestTitle } from "./request-title.ts";
 import type { VantageEvent } from "./events.ts";
 
@@ -34,12 +35,16 @@ export interface ToolCall {
   repoRoot?: string | undefined;
   /** The tool's combined output text, read only to extract test counts and never stored. */
   output?: string | undefined;
+  /** Keep the cleaned text of the in_progress task (D96). Counts are kept either way. */
+  taskText?: boolean | undefined;
 }
 
 /** Context the daemon supplies at ingest (the hook only spools raw payloads). */
 export interface IngestContext {
   /** Known repo and worktree roots; a call's root is the longest one containing its cwd. */
   repoRoots?: readonly string[];
+  /** Keep the cleaned text of the current task (default true; same switch as request titles, D96). */
+  taskText?: boolean;
 }
 
 const rootFor = (cwd: string | undefined, ctx: IngestContext | undefined): string | undefined =>
@@ -69,7 +74,18 @@ export function toolCallEvents(call: ToolCall): VantageEvent[] {
   if (call.branch) common["branch"] = call.branch;
   const events: VantageEvent[] = [];
 
-  if (EDIT_TOOLS.has(call.name)) {
+  if (call.name === "TodoWrite") {
+    const counts = todoCounts(call.input, call.taskText !== false);
+    if (counts) {
+      events.push({
+        ...base,
+        ...sid,
+        sourceId: `cc:tool:${call.toolUseId}:todos`,
+        kind: "task.list.updated",
+        payload: { ...common, ...counts },
+      });
+    }
+  } else if (EDIT_TOOLS.has(call.name)) {
     const path = str(call.input["file_path"]) ?? str(call.input["notebook_path"]);
     events.push({
       ...base,
@@ -191,6 +207,7 @@ export function hookEvents(record: SpoolRecord, ctx?: IngestContext): VantageEve
         ok: name === "PostToolUse",
         cwd,
         repoRoot: rootFor(cwd, ctx),
+        taskText: ctx?.taskText,
         output: outputText(h["tool_response"]) ?? outputText(h["error"]),
       });
     }
@@ -262,6 +279,37 @@ function branchOf(l: TranscriptLine, now: Map<string, string | null>): string | 
 }
 
 /**
+ * One `subagent.run` event per sub-agent per batch of lines: the agent id, its first and last line time,
+ * and how many tools it called in the batch. A run read in several batches yields several events with
+ * distinct ids (the first line's uuid); the read model sums them per agent. Sub-agent lines carry the
+ * parent's `sessionId`, so the run belongs to the parent's session (D86).
+ */
+function subagentRuns(lines: readonly TranscriptLine[]): VantageEvent[] {
+  const runs = new Map<
+    string,
+    { first: string; last: string; firstId: string; sid?: string; tools: number }
+  >();
+  for (const l of lines) {
+    const ts = l.timestamp;
+    if (!l.agentId || !ts || Number.isNaN(Date.parse(ts))) continue;
+    const r = runs.get(l.agentId) ?? { first: ts, last: ts, firstId: l.uuid ?? ts, tools: 0 };
+    if (Date.parse(ts) < Date.parse(r.first)) r.first = ts;
+    if (Date.parse(ts) > Date.parse(r.last)) r.last = ts;
+    if (l.sessionId) r.sid = l.sessionId;
+    if (l.type === "assistant") r.tools += l.content.filter((b) => b["type"] === "tool_use").length;
+    runs.set(l.agentId, r);
+  }
+  return [...runs].map(([agentId, r]) => ({
+    source: SOURCE,
+    sourceId: `cc:subagent:${agentId}:${r.firstId}`,
+    kind: "subagent.run" as const,
+    timestamp: r.first,
+    ...(r.sid ? { sessionId: r.sid } : {}),
+    payload: { agentId, startedAt: r.first, endedAt: r.last, tools: r.tools },
+  }));
+}
+
+/**
  * The title candidate for session `own`: its first real user request, run through `requestTitle`.
  * Returns `found: false` when the lines hold no user request yet (try again later) and `title: null`
  * when the first request leaves nothing usable (do not look at later ones). Only that one message is
@@ -312,6 +360,7 @@ export function transcriptEvents(lines: TranscriptLine[], ctx?: IngestContext): 
           branch,
           cwd: l.cwd,
           repoRoot: rootFor(l.cwd, ctx),
+          taskText: ctx?.taskText,
         });
       }
       continue;
@@ -341,5 +390,5 @@ export function transcriptEvents(lines: TranscriptLine[], ctx?: IngestContext): 
       });
     }
   }
-  return [...prompts, ...[...calls.values()].flatMap(toolCallEvents)];
+  return [...prompts, ...[...calls.values()].flatMap(toolCallEvents), ...subagentRuns(lines)];
 }

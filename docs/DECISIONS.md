@@ -1072,6 +1072,24 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 
 ## Proposed (pending confirmation)
 
+### D96. The agent's task list and sub-agent runs become events; only counts and one short current-task line are kept
+
+- **Status:** proposed
+- **Context:** Claude Code already records the agent's own task list (`TodoWrite`) and sub-agent runs. Measured over 14 days on one machine ([research](research/session-lineage.md)): `TodoWrite` in 0 of 521 sessions, the newer task tools in 3, and 730 sub-agent runs in 119 sessions, mostly async with no totals in the result. The card should show progress and activity from this, and a todo text can hold private detail.
+- **Decision:** Two event kinds. `task.list.updated` (from `TodoWrite`) keeps `total`, `pending`, `inProgress`, `completed` and, when text capture is on, `current`: the first `in_progress` item, stripped of URLs, paths, emails and secret-looking tokens, one line, at most 80 characters. No other todo text is stored. `subagent.run` is one slice per sub-agent file and batch (`agentId`, `startedAt`, `endedAt`, `tools`), summed per agent by the read model. Text capture uses the `item_titles_from_requests` switch (default on, local only). Items read `tasksTotal`, `tasksDone`, `currentTask`, `subagentRuns` and `subagentTools` from the `item_tasks` and `item_sessions` views (migration 9). `TaskCreate` and `TaskUpdate` are not read until the task id in the create result is verified.
+- **Why:** Counts carry the progress signal without the private text; the one line the card needs is short, cleaned and switchable. Slices make a run that is read in several batches additive without rewriting events.
+- **Alternatives:** Store the whole list (private text, no gain for the card). Take run totals from the tool result (688 of 730 runs are async and have none). Count only (no way to show what is being done now).
+- **Impact:** Two event kinds (catalog 39 to 41), migration 9, specs [ingestion](specs/ingestion.md), [work item model](specs/work-item-model.md) and [data schema](specs/data-schema.md). `store.captureTaskText` is the switch, set at daemon start from `item_titles_from_requests` (D95). Revisit if the task tools replace `TodoWrite` for most users.
+
+### D97. A fork or a resume is named only by the hook source; timing is a hint
+
+- **Status:** proposed
+- **Context:** 79 of 521 sessions are derived. 59 of the 75 whose parent transcript is in the window started while the parent was still producing lines, but the hook source (`fork`, `resume`, `clear`, `compact`) that names the kind is not in the data yet.
+- **Decision:** The lineage kind stays `continuation` unless a `SessionStart` source says `fork` or `resume`. `forkCount` and `resumeCount` count those only. `forkHintCount` counts derived sessions whose parent kept producing events after the child started and is shown as a hint, never used to set the kind or to group.
+- **Why:** The same timing fits a fork and a second resume of one parent, so it cannot name either with certainty; an explicit source can.
+- **Alternatives:** Call the overlap a fork (79% of derived sessions, unverified). Drop the hint (loses a cheap signal that the parent went on).
+- **Impact:** Counts read 0 until hooks have recorded sources. Revisit once a week of hook data shows how the hint compares with the explicit sources.
+
 ### D92. Tool events take the branch from the transcript line; stored events get it beside them
 
 - **Status:** proposed

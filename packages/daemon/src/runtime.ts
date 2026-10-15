@@ -238,6 +238,7 @@ export async function startDaemon(options: DaemonOptions = {}): Promise<DaemonHa
     log(`serving 127.0.0.1:${http.port}${uiDir ? "" : " (API only, UI not found)"}`);
 
     const requestTitles = readRequestTitlesEnabled(home); // read at start; changing it needs a restart
+    db.captureTaskText = requestTitles; // the current-task text follows the same switch (proposed D96)
     const ingest = (): void => {
       if (ingesting) return;
       ingesting = true;
