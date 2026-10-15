@@ -76,7 +76,7 @@ Draft epic `vantage-nqh6`. It starts after the Phase 1 exit (a week of daily use
 
 - [ ] Priority, difficulty, spread, staleness.
 - [ ] Focus drawn as the landscape (dot characters, bands, shelf, sky), with the Track page as fallback.
-- [ ] Toasts for red items; `waiting_on_you` and `forgotten` flags.
+- [ ] Toasts for red items; `waiting_on_you`, `forgotten` and `left_unfinished` flags (P13: conversations archived while work is open).
 - [ ] Contexts (Work, Personal) and project settings on the Sources page.
 - [ ] **Exit:** the morning catch-up starts on the landscape for a week, and the user can say what needs them without opening a terminal.
 
