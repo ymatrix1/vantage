@@ -92,11 +92,15 @@ type Dim = "org" | "repo" | "branch" | "stage" | "proof" | "flag" | "since" | "h
 
 // The owner of `w.repo` (`host/Owner/repo`): the second path segment when the first looks like a host,
 // `local` for a folder name, null without a repo. Built from SQL string functions so it filters and groups.
-const REST = "substr(w.repo, instr(w.repo, '/') + 1)";
-const ORG_SQL = `CASE WHEN w.repo IS NULL THEN NULL
-  WHEN instr(substr(w.repo, 1, instr(w.repo, '/') - 1), '.') > 0 AND instr(${REST}, '/') > 0
-    THEN substr(${REST}, 1, instr(${REST}, '/') - 1)
+const orgSql = (col: string): string => {
+  const rest = `substr(${col}, instr(${col}, '/') + 1)`;
+  return `CASE WHEN ${col} IS NULL THEN NULL
+  WHEN instr(substr(${col}, 1, instr(${col}, '/') - 1), '.') > 0 AND instr(${rest}, '/') > 0
+    THEN substr(${rest}, 1, instr(${rest}, '/') - 1)
   ELSE 'local' END`;
+};
+const ORG_SQL = orgSql("w.repo");
+const ORG_OF_REPO = orgSql("r.repo");
 
 const OPEN_FLAG = "f.work_item_id = w.id AND f.cleared_at IS NULL AND f.dismissed = 0";
 const HOUR = 3_600_000;
@@ -127,14 +131,16 @@ function whereOf(q: TrackQuery, now: Date, skip: Dim | null): Where {
     parts.push(`${col} IN (${marks(values.length)})`);
     params.push(...values);
   };
-  // Owners and repos match case-insensitively; the stored value keeps the case it was written in.
-  const inLower = (dim: Dim, expr: string, values: readonly string[]): void => {
+  // An item matches a repo or an owner when any repo it touched does (D190).
+  const anyRepo = (dim: Dim, expr: string, values: readonly string[]): void => {
     if (skip === dim || values.length === 0) return;
-    parts.push(`lower(${expr}) IN (${marks(values.length)})`);
+    parts.push(
+      `EXISTS (SELECT 1 FROM item_repos r WHERE r.item_key = w.item_key AND lower(${expr}) IN (${marks(values.length)}))`,
+    );
     params.push(...values.map((v) => v.toLowerCase()));
   };
-  inLower("org", ORG_SQL, q.org);
-  inLower("repo", "w.repo", q.repo);
+  anyRepo("org", ORG_OF_REPO, q.org);
+  anyRepo("repo", "r.repo", q.repo);
   inList("branch", "w.branch", q.branch);
   inList("stage", "w.stage", q.stage);
   inList("proof", "w.proof_status", q.proof);
@@ -158,9 +164,10 @@ function whereOf(q: TrackQuery, now: Date, skip: Dim | null): Where {
   if (q.q !== "") {
     const like = `%${escapeLike(q.q.toLowerCase())}%`;
     parts.push(
-      `(lower(w.title) ${LIKE} OR lower(coalesce(w.repo, '')) ${LIKE} OR lower(coalesce(w.branch, '')) ${LIKE})`,
+      `(lower(w.title) ${LIKE} OR lower(coalesce(w.repo, '')) ${LIKE} OR lower(coalesce(w.branch, '')) ${LIKE}
+        OR EXISTS (SELECT 1 FROM item_repos r WHERE r.item_key = w.item_key AND lower(r.repo) ${LIKE}))`,
     );
-    params.push(like, like, like);
+    params.push(like, like, like, like);
   }
   return { sql: parts.length > 0 ? parts.join(" AND ") : "1", params };
 }
@@ -211,19 +218,33 @@ function facetsOf(store: Store, q: TrackQuery, now: Date): TrackFacets {
     if (k === "today" || k === "week" || k === "older") age[k] = Number(r["n"]);
   }
   const he = countBy(store, "w.has_edits", whereOf(q, now, "hasEdits"));
+  // An item counts once per repo and once per owner it touched, so the counts can add up to more than the
+  // rows (D190). Each count is still of distinct items.
   const orgs: Counts = {};
   const wo = whereOf(q, now, "org");
   for (const r of store.db
     .prepare(
-      `SELECT MIN(${ORG_SQL}) AS k, COUNT(*) AS n FROM work_items w WHERE ${wo.sql} AND w.repo IS NOT NULL
-       GROUP BY lower(${ORG_SQL}) ORDER BY n DESC, k LIMIT 200`,
+      `SELECT MIN(${ORG_OF_REPO}) AS k, COUNT(DISTINCT w.item_key) AS n FROM work_items w
+       JOIN item_repos r ON r.item_key = w.item_key WHERE ${wo.sql}
+       GROUP BY lower(${ORG_OF_REPO}) ORDER BY n DESC, k LIMIT 200`,
     )
     .all(...wo.params)) {
     orgs[String(r["k"])] = Number(r["n"]);
   }
+  const repos: Counts = {};
+  const wr = whereOf(q, now, "repo");
+  for (const r of store.db
+    .prepare(
+      `SELECT r.repo AS k, COUNT(DISTINCT w.item_key) AS n FROM work_items w
+       JOIN item_repos r ON r.item_key = w.item_key WHERE ${wr.sql}
+       GROUP BY r.repo ORDER BY n DESC, k LIMIT 200`,
+    )
+    .all(...wr.params)) {
+    repos[String(r["k"])] = Number(r["n"]);
+  }
   return {
     org: orgs,
-    repo: countBy(store, "w.repo", whereOf(q, now, "repo"), "AND w.repo IS NOT NULL"),
+    repo: repos,
     branch: countBy(store, "w.branch", whereOf(q, now, "branch"), "AND w.branch IS NOT NULL"),
     stage: zeroed(TRACK_STAGES, countBy(store, "w.stage", whereOf(q, now, "stage"))),
     proof: zeroed(PROOF_STATES, countBy(store, "w.proof_status", whereOf(q, now, "proof"))),
@@ -284,6 +305,7 @@ const toTrackItem = (
   id: i.itemKey,
   title: i.title,
   repo: i.repo,
+  repos: i.repos,
   repoUrl: repoUrlOf(i.repo),
   org: orgOf(i.repo),
   branch: i.branch,

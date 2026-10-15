@@ -182,3 +182,59 @@ export function resolveRepo(
   const ref = cwd ? (repoForCwd(cwd, index) ?? gitRepoOfCwd(cwd, budget)) : null;
   return ref ? repoValue(ref) : null;
 }
+
+/** Most distinct folders one item may ask about; the newest events come first, so a long item keeps its recent repos. */
+export const MAX_REPO_FOLDERS = 60;
+const parentOf = (p: string): string => {
+  const q = p.replaceAll("\\", "/");
+  return q.slice(0, Math.max(0, q.lastIndexOf("/")));
+};
+const absolute = (p: string): boolean => /^(?:[A-Za-z]:[\\/]|\/)/.test(p);
+
+/**
+ * Every repo an item touched (D190), primary first: the repo of each folder a linked event ran in and of each
+ * folder holding an edited file. A folder in no repo adds nothing. Inferred links are left out (they never
+ * feed stages), so a classifier grouping does not make an item look cross-repo.
+ */
+export function itemRepoSet(
+  store: Store,
+  itemKey: string,
+  primary: string | null,
+  index: ReadonlyMap<string, RepoRef>,
+  budget?: GitBudget,
+): string[] {
+  const rows = store.db
+    .prepare(
+      `SELECT d FROM (
+         SELECT COALESCE(json_extract(e.payload_json, '$.cwd'), json_extract(e.payload_json, '$.worktree')) AS d,
+                e.occurred_at AS t, 0 AS file
+         FROM links l JOIN events e ON e.id = l.event_id
+         WHERE l.item_key = ? AND l.undone_at IS NULL AND l.method != 'inferred'
+         UNION ALL
+         SELECT json_extract(e.payload_json, '$.path'), e.occurred_at, 1
+         FROM links l JOIN events e ON e.id = l.event_id
+         WHERE l.item_key = ? AND l.undone_at IS NULL AND l.method != 'inferred' AND e.kind = 'file.edited'
+         UNION ALL
+         SELECT j.value, e.occurred_at, 1
+         FROM links l JOIN events e ON e.id = l.event_id, json_each(e.payload_json, '$.paths') j
+         WHERE l.item_key = ? AND l.undone_at IS NULL AND l.method != 'inferred' AND e.kind = 'file.edited'
+           AND json_type(e.payload_json, '$.paths') = 'array'
+       ) WHERE d IS NOT NULL AND typeof(d) = 'text' ORDER BY t DESC`,
+    )
+    .all(itemKey, itemKey, itemKey);
+  const folders = new Map<string, string>();
+  for (const r of rows) {
+    const d = String(r["d"]);
+    if (!absolute(d)) continue;
+    const folder = Number(r["file"]) === 1 ? parentOf(d) : d;
+    if (!folders.has(norm(folder))) folders.set(norm(folder), folder);
+    if (folders.size >= MAX_REPO_FOLDERS) break;
+  }
+  const out: string[] = primary ? [primary] : [];
+  for (const folder of folders.values()) {
+    const ref = repoForCwd(folder, index) ?? gitRepoOfCwd(folder, budget);
+    const value = ref ? repoValue(ref) : null;
+    if (value && !out.some((o) => o.toLowerCase() === value.toLowerCase())) out.push(value);
+  }
+  return out;
+}
