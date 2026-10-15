@@ -1439,3 +1439,14 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Why:** The notice is Claude Code's, not the person's, so a title built from it is wrong on every row it touches, and it would also go to the classifier as the request. One shared function keeps the title, the classifier and later features (such as session-text search) on the same definition of "what the person wrote".
 - **Alternatives:** Skip only `isMeta` lines (the notice is not always flagged). Match the notice string only (misses reminders and wrappers). Let the classifier ignore them (still sends the text).
 - **Impact:** `request-title.ts`, `claude-code.ts`, `classify-job.ts`, `titles.ts`, `ingest.ts`, `stages.ts`; the work-item-model spec. The pattern list needs a line when Claude Code adds a new wrapper; a test per pattern guards the list.
+
+### D184. Themed select lists, and an untitled item is never named by a session id
+
+- **Status:** proposed
+- **Context:** The Group by, Sort by and per-page controls were native `<select>` elements. Their open list is drawn by the browser or operating system, so in dark mode it showed a white and blue menu that ignored the theme. Separately, an item with no name and no known repo or branch was titled "Session fbb8415b · Oct 15", a raw id.
+- **Decision:**
+  1. Every select on the Track page is the page's own `Select` component: a button (role combobox) and a themed list under it, using the page's border, radius, background and accent tokens, with a focus ring and the pointer cursor. Keys: Arrow Up and Down, Home, End, Enter or Space to choose, Esc to close, typing jumps to a match. No new dependency and no portal.
+  2. An item with no name, repo or branch is titled "Untitled session · <date>". Titles never contain a session id; the sessions list in the detail still labels a session by its short id, because there it identifies a session.
+- **Why:** A list that follows the theme and the keyboard needs no browser-specific styling, and a person cannot read a hash.
+- **Alternatives:** Style the native select (the open list stays the browser's). bits-ui or shadcn-svelte Select (a portal and floating layer that is hard to test and to keep inside the sticky toolbar; the tokens are the same, so it can replace this component later). Derive a title from the first prompt words when none exists (D191 already uses the first request when there is one; a fallback from prompt text stays out because of the privacy rule in D84).
+- **Impact:** `Select.svelte`, `Toolbar`, `Pagination`, `Suggestions`, `core/track.ts` (`fallbackTitle`), the UI `humanTitle`, the tour text and the guide. Existing stored titles update at the next stage pass.

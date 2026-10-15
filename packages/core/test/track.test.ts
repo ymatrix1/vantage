@@ -172,7 +172,7 @@ describe("fallbackTitle", () => {
       "main · Oct 14",
     );
     expect(fallbackTitle({ repo: null, branch: null, firstActivity: first, id: "abcdef123456" })).toBe(
-      "Session abcdef12 · Oct 14",
+      "Untitled session · Oct 14",
     );
     expect(fallbackTitle({ repo: "r", branch: null, firstActivity: "", id: "x" })).toBe("r");
   });

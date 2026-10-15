@@ -2,6 +2,7 @@
   // Search, filter chips with live counts, sort and group-by. It owns no data: every change goes up
   // through onchange and comes back as the new `view` (the URL is the source of truth, see App).
   import { GROUP_VALUES, SINCE_VALUES, SORT_VALUES, Q_MAX, type Facets, type GroupBy, type Since, type Sort } from "./contract";
+  import Select from "./Select.svelte";
   import { FILTER_KEYS, activeFilters, defaultOrder, type FilterKey, type ViewState } from "./view";
 
   let {
@@ -104,31 +105,29 @@
       />
     </label>
 
-    <label class="flex items-center gap-2 text-xs text-muted-foreground">
+    <div class="flex items-center gap-2 text-xs text-muted-foreground">
       <span>Group by</span>
-      <select
-        class="ctl ctl-select"
+      <Select
+        label="Group by"
         value={view.group}
-        onchange={(e) => onchange({ group: GROUP_VALUES.find((g) => g === e.currentTarget.value) ?? "attention", page: 1 })}
-      >
-        {#each GROUP_VALUES as g (g)}<option value={g}>{GROUP_LABEL[g]}</option>{/each}
-      </select>
-    </label>
+        options={GROUP_VALUES.map((g) => ({ value: g, label: GROUP_LABEL[g] }))}
+        onchange={(v) => onchange({ group: GROUP_VALUES.find((g) => g === v) ?? "attention", page: 1 })}
+      />
+    </div>
 
     <div class="flex items-center gap-2 text-xs text-muted-foreground">
-      <label class="flex items-center gap-2">
+      <div class="flex items-center gap-2">
         <span>Sort by</span>
-        <select
-          class="ctl ctl-select"
+        <Select
+          label="Sort by"
           value={view.sort}
-          onchange={(e) => {
-            const sort = SORT_VALUES.find((s) => s === e.currentTarget.value) ?? "activity";
+          options={SORT_VALUES.map((s) => ({ value: s, label: SORT_LABEL[s] }))}
+          onchange={(v) => {
+            const sort = SORT_VALUES.find((s) => s === v) ?? "activity";
             onchange({ sort, order: defaultOrder(sort), page: 1 });
           }}
-        >
-          {#each SORT_VALUES as s (s)}<option value={s}>{SORT_LABEL[s]}</option>{/each}
-        </select>
-      </label>
+        />
+      </div>
       <button
         type="button"
         class="ctl ctl-icon"

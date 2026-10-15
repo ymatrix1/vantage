@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Select from "./Select.svelte";
   import { PAGE_SIZES, type PageInfo } from "./contract";
 
   let {
@@ -30,15 +31,14 @@
     <button type="button" class="rounded-md border border-border px-2 py-1 disabled:opacity-40" disabled={atEnd} aria-label="Last page" onclick={() => onpage(page.pages)}>Last</button>
   </div>
   {#if !top}
-  <label class="flex items-center gap-2 text-xs text-muted-foreground">
-    Per page
-    <select
-      class="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground"
-      value={String(page.pageSize)}
-      onchange={(e) => onsize(Number(e.currentTarget.value))}
-    >
-      {#each PAGE_SIZES as n (n)}<option value={String(n)}>{n}</option>{/each}
-    </select>
-  </label>
+  <div class="flex items-center gap-2 text-xs text-muted-foreground">
+      <span>Per page</span>
+      <Select
+        label="Per page"
+        value={String(page.pageSize)}
+        options={PAGE_SIZES.map((n) => ({ value: String(n), label: String(n) }))}
+        onchange={(v) => onsize(Number(v))}
+      />
+    </div>
   {/if}
 </nav>

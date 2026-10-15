@@ -254,7 +254,7 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 
 /**
  * Title for an item with no name of its own, from repo, branch and first activity date only
- * (`claude-code · main · Oct 14`). Never from prompt text (a privacy decision, see D84's scope).
+ * (`claude-code · main · Oct 14`; `Untitled session · Oct 14` with neither). Never from prompt text (a privacy decision, see D84's scope).
  */
 export function fallbackTitle(parts: {
   repo: string | null;
@@ -267,7 +267,8 @@ export function fallbackTitle(parts: {
     ? null
     : `${MONTHS[new Date(t).getUTCMonth()] ?? ""} ${new Date(t).getUTCDate()}`;
   const named = [parts.repo, parts.branch].filter((x): x is string => !!x);
-  if (named.length === 0) return ["Session " + parts.id.slice(0, 8), date].filter(Boolean).join(" · ");
+  // Never a raw session id: an id says nothing to a person (D184).
+  if (named.length === 0) return ["Untitled session", date].filter(Boolean).join(" · ");
   return [...named, date].filter(Boolean).join(" · ");
 }
 

@@ -4,8 +4,8 @@ import type { TrackRow } from "./contract";
 
 const AGENT_PREFIX = /^(?:claude|codex|cursor|copilot)\//i;
 const RANDOM_SUFFIX = /-[0-9a-f]{6}$/;
-/** `fallbackTitle` output in the daemon (`repo · branch · Oct 14`), or an unnamed `Session abc123`. */
-const FALLBACK = /^Session\s|^(?:.+ · )+[A-Z][a-z]{2} \d{1,2}$/;
+/** `fallbackTitle` output in the daemon (`repo · branch · Oct 14`), an `Untitled session · Oct 14`, or an older `Session abc123`. */
+const FALLBACK = /^(?:Session |Untitled session)|^(?:.+ · )+[A-Z][a-z]{2} \d{1,2}$/;
 
 /** A branch without the agent's `claude/` prefix and without a random six-hex suffix. */
 export function cleanBranch(branch: string): string {

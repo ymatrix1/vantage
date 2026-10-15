@@ -3,6 +3,7 @@
   // through `onchange` when titles may have changed. Nothing is applied without a preview the user confirms, and every
   // change is one batch with one undo. All text from the API renders as text.
   import { onMount } from "svelte";
+  import Select from "./Select.svelte";
   import {
     apply,
     decideOne,
@@ -154,24 +155,40 @@
           {confirming.byKind.title} titles · {confirming.byKind.topic} topics · {confirming.byKind.group} groups
         </p>
         <div class="my-2 flex flex-wrap gap-3">
-          <label
-            >Confidence
-            <select bind:value={minConfidence} onchange={repreview}>
-              <option value="0.9">at least 0.9</option>
-              <option value="0.8">at least 0.8</option>
-              <option value="0.5">at least 0.5</option>
-              <option value="0">any</option>
-            </select>
-          </label>
-          <label
-            >Kind
-            <select bind:value={kind} onchange={repreview}>
-              <option value="all">all</option>
-              <option value="title">titles</option>
-              <option value="topic">topics</option>
-              <option value="group">groups</option>
-            </select>
-          </label>
+          <div class="flex items-center gap-2">
+            <span>Confidence</span>
+            <Select
+              label="Confidence"
+              value={minConfidence}
+              options={[
+                { value: "0.9", label: "at least 0.9" },
+                { value: "0.8", label: "at least 0.8" },
+                { value: "0.5", label: "at least 0.5" },
+                { value: "0", label: "any" },
+              ]}
+              onchange={(v) => {
+                minConfidence = v;
+                repreview();
+              }}
+            />
+          </div>
+          <div class="flex items-center gap-2">
+            <span>Kind</span>
+            <Select
+              label="Kind"
+              value={kind}
+              options={[
+                { value: "all", label: "all" },
+                { value: "title", label: "titles" },
+                { value: "topic", label: "topics" },
+                { value: "group", label: "groups" },
+              ]}
+              onchange={(v) => {
+                kind = v === "title" || v === "topic" || v === "group" ? v : "all";
+                repreview();
+              }}
+            />
+          </div>
         </div>
         <ul class="mb-2 space-y-1">
           {#each confirming.sample as s (s.id)}
