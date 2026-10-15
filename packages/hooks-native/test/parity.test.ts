@@ -88,6 +88,20 @@ describe.skipIf(!usable)("native hook parity with the Node hook", () => {
     expect(r.line.indexOf('"z_last"')).toBeLessThan(r.line.indexOf('"a_first"'));
   });
 
+  it("VANTAGE_SKIP=1 exits 0 and writes nothing, like the Node hook; 0 means off", T, () => {
+    const stop = JSON.stringify({ hook_event_name: "Stop", session_id: "s-skip" });
+    const outcome = (fn: typeof node) => {
+      const home = fresh();
+      const skipped = fn(stop, { VANTAGE_HOME: home, VANTAGE_SKIP: "1" }).status;
+      const wroteWhenSkipped = existsSync(join(home, "spool"));
+      const off = fn(payload, { VANTAGE_HOME: home, VANTAGE_SKIP: "0" }).status;
+      return { skipped, wroteWhenSkipped, off, lines: spoolLines(home).length };
+    };
+    const expected = { skipped: 0, wroteWhenSkipped: false, off: 0, lines: 1 };
+    expect(outcome(node)).toEqual(expected);
+    expect(outcome(native)).toEqual(expected);
+  });
+
   it("exits 0 and writes nothing for input that is not a JSON object", T, () => {
     for (const input of ["not json", "[1]", "null", '"s"', ""]) {
       const home = fresh();

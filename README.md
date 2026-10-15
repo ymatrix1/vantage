@@ -123,6 +123,31 @@ It reports items (total and active in 24 h, 7 d and 30 d), readable titles versu
 
 The output holds numbers and fixed labels only: no titles, commands, paths or repo names (the one echo is the `--repo` text you typed), so it is safe to paste into an issue. Days are UTC.
 
+### Classifying with Haiku
+
+Optional and off by default. `vantage classify` asks **your own Claude Code** (`claude -p`, Haiku) to suggest titles, topics and groupings for items, so the Track page reads better. It runs in your Claude Code, so it uses your plan limits and Claude Code already sees this data. Status, stage and proof never come from the model: it only suggests text.
+
+```bash
+vantage classify --dry-run     # how many items, calls and bytes, and the exact message; calls nothing
+vantage classify               # run in the background (needs the three switches below)
+vantage classify accept        # preview, confirm, apply one batch (0.8 confidence and up)
+vantage classify accept --all  # everything; also --kind titles|topics|groups and --repo NAME
+vantage classify undo          # revert the last batch
+```
+
+Turn it on in `~/.vantage/config.toml`:
+
+```toml
+[engines.classify]
+enabled = true
+[data_policy]
+outside_calls = true
+[data_policy.allow]
+transcripts = true
+```
+
+Per item it sends only the repo name, branch, the first sentence of the first request (300 characters, URLs and secret-looking text removed), up to 10 file names (no paths), counts and the current title. Never commands, transcripts or paths. Nothing is applied until you confirm a preview; every batch has one undo; `auto_accept` is off unless you set it. Details: [classify spec](docs/specs/classify.md).
+
 ### Where your data lives
 
 All local, under `~/.vantage` (or `VANTAGE_HOME`): `spool/` (one line per hook event, **including the tool input Claude Code passes to the hook**), `vantage.db` (events, links, stages, proofs), `token` (the Track page token), `status.json` and `health.json`. **Request titles are stored locally:** the first sentence of a session's first request (cleaned of paths, URLs and anything that looks like a secret, at most 80 characters) becomes that session's item title and is kept in `vantage.db`, nowhere else. Turn it off with `item_titles_from_requests = false` in `config.toml`, see what is stored with `vantage titles`, and delete it with `vantage titles clear`. The daemon listens on `127.0.0.1` only, with a token and Host and Origin checks. Nothing leaves the machine, and no outside model is called. See [privacy](docs/ARCHITECTURE.md#privacy) and the [data policy](docs/specs/settings.md).

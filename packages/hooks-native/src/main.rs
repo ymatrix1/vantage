@@ -89,7 +89,16 @@ fn run() -> Option<()> {
     f.write_all(line.as_bytes()).ok()
 }
 
+/// `VANTAGE_SKIP` set to anything but empty or `0` means a session Vantage started itself (the classifier's
+/// `claude -p`): record nothing, same as `packages/hooks/src/bin.ts`.
+fn skipped() -> bool {
+    std::env::var("VANTAGE_SKIP").map(|v| !v.trim().is_empty() && v.trim() != "0").unwrap_or(false)
+}
+
 fn main() {
+    if skipped() {
+        return;
+    }
     let _ = run();
 }
 

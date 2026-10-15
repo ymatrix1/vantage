@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -42,6 +42,21 @@ describe("collector", () => {
     const t0 = performance.now();
     for (let i = 0; i < 10; i++) collect(payload, home);
     expect((performance.now() - t0) / 10).toBeLessThan(100);
+  });
+
+  it("VANTAGE_SKIP=1 exits 0 and writes nothing, for every hook including Stop", () => {
+    home = mkdtempSync(join(tmpdir(), "vantage-hooks-"));
+    for (const name of ["PostToolUse", "Stop", "SessionStart"]) {
+      const { status } = run(JSON.stringify({ hook_event_name: name, session_id: "s-skip" }), {
+        VANTAGE_HOME: home,
+        VANTAGE_SKIP: "1",
+      });
+      expect(status).toBe(0);
+    }
+    expect(existsSync(join(home, "spool"))).toBe(false);
+    // "0" means off: the hook records as usual.
+    run('{"hook_event_name":"PostToolUse","session_id":"s-1"}', { VANTAGE_HOME: home, VANTAGE_SKIP: "0" });
+    expect(readdirSync(join(home, "spool"))).toHaveLength(1);
   });
 
   it("exits 0 and writes the spool when no daemon is running", () => {

@@ -5,7 +5,7 @@ import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { proofFamily, type ProofFamily } from "@vantage/core";
-import { vantageHomeDir } from "@vantage/daemon";
+import { classifyReport, renderReport, vantageHomeDir, type ClassifyReport } from "@vantage/daemon";
 
 export interface StatsOptions {
   /** ISO timestamp; only items last active, and events that happened, at or after it count. */
@@ -81,6 +81,8 @@ export interface Stats {
     recognised: { family: ProofFamily; count: number }[];
     notRecognised: number;
   };
+  /** Classifier agreement with the deterministic anchors (docs/specs/classify.md#evaluation); null when there are no suggestions. */
+  classifier: ClassifyReport | null;
   events: { total: number; bySource: { source: string; count: number }[] };
   db: { sizeBytes: number };
   stagePass: { lastAt: string | null; ageSeconds: number | null };
@@ -340,6 +342,7 @@ export function computeStats(db: DatabaseSync, opts: StatsOptions, now: Date, db
         .toSorted((a, b) => b.count - a.count || a.family.localeCompare(b.family)),
       notRecognised: cmdUnrecognised,
     },
+    classifier: classifierSection(db),
     events: { total: eventTotal, bySource: bySource.slice(0, 8) },
     db: { sizeBytes: dbSizeBytes },
     stagePass: {
@@ -348,6 +351,15 @@ export function computeStats(db: DatabaseSync, opts: StatsOptions, now: Date, db
     },
     days: perDay(db, opts, now),
   };
+}
+
+function classifierSection(db: DatabaseSync): ClassifyReport | null {
+  try {
+    const r = classifyReport({ db });
+    return r.total > 0 ? r : null;
+  } catch {
+    return null; // a store from before the classifier has no suggestions table
+  }
 }
 
 /** One row per UTC day, oldest first, ending today. */
@@ -679,6 +691,11 @@ export function renderStats(st: Stats, trend: boolean): string[] {
     out.push(
       `Events by source: ${st.events.bySource.length === 0 ? "none" : st.events.bySource.map((b) => `${b.source} ${b.count}`).join(", ")}`,
     );
+    if (st.classifier) {
+      out.push("");
+      out.push("Classifier suggestions vs deterministic anchors:");
+      for (const l of renderReport(st.classifier)) out.push(l);
+    }
     out.push("");
   }
   out.push(`Per day, last ${st.days.length} days:`);
