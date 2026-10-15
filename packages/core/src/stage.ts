@@ -87,6 +87,13 @@ export interface StageOptions {
    * Without `now` the window cannot be applied and every flag is raised as before.
    */
   flagWindowHours?: number;
+  /**
+   * When each item was first seen (item key to ISO time; the stage pass passes `work_items.created_at`).
+   * `forgotten` is not raised for an item with no code edit whose last activity was already older than
+   * the threshold at that moment: a backfilled conversation, not work that was dropped (proposed D94).
+   * An item missing from the map counts as first seen at `now`.
+   */
+  firstSeen?: ReadonlyMap<string, string>;
 }
 
 export const DEFAULT_FLAG_WINDOW_HOURS = 48;
@@ -371,7 +378,9 @@ function evaluate(itemKey: string, events: readonly VantageEvent[], opts: StageO
   const days = opts.forgottenDays ?? 5;
   if (opts.now && stage !== "proven" && lastActivity) {
     const idle = (opts.now.getTime() - Date.parse(lastActivity)) / 86_400_000;
-    if (idle > days) {
+    const seen = Date.parse(opts.firstSeen?.get(itemKey) ?? opts.now.toISOString());
+    const bornStale = codeEdits === 0 && (seen - Date.parse(lastActivity)) / 86_400_000 > days;
+    if (idle > days && !bornStale) {
       flags.push({
         kind: "forgotten",
         severity: "amber",

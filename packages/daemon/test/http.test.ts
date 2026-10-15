@@ -166,6 +166,7 @@ describe("read-only API over a synthetic store", () => {
       "needs_you",
       "in_progress",
       "waiting",
+      "forgotten",
       "done",
     ]);
     const needs = body.groups[0].items;

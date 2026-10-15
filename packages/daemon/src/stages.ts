@@ -71,7 +71,11 @@ export function runStagePass(store: Store, opts: StagePassOptions = {}, now = ne
     requestTitles === false ? new Map<string, string>() : requestTitleMap(store);
   const linked = linkStoredEvents(store, link ?? {}, now);
   const { ids, events } = loadEvents(store);
-  const items = computeStages(events, linked.links, { now, ...stageOpts });
+  const firstSeen = new Map<string, string>();
+  for (const r of store.db.prepare("SELECT item_key, created_at FROM work_items").all()) {
+    firstSeen.set(text(r, "item_key"), text(r, "created_at"));
+  }
+  const items = computeStages(events, linked.links, { now, firstSeen, ...stageOpts });
   const at = now.toISOString();
   const eventId = (e: { source: string; sourceId: string }): number =>
     ids.get(`${e.source}|${e.sourceId}`) ?? 0;
