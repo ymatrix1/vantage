@@ -101,17 +101,32 @@ export function parseLog(output: string): GitCommit[] {
   return commits;
 }
 
-/** Strips scheme, credentials, `.git` and case so ssh and https forms of one remote match. */
-export function normalizeRemoteUrl(url: string): string {
+/** Scheme, credentials, port, `.git` and trailing slashes stripped; case kept. */
+function stripRemote(url: string): string {
   let u = url.trim();
   const scp = /^[^@/\s]+@([^:/\s]+):(.+)$/.exec(u);
   if (scp) u = `${scp[1]}/${scp[2]}`;
   else u = u.replace(/^[a-z+]+:\/\//i, "").replace(/^[^@/]+@/, "");
-  u = u
+  return u
     .replace(/^([^/]+):\d+\//, "$1/")
     .replace(/\/+$/, "")
     .replace(/\.git$/, "");
-  return u.toLowerCase();
+}
+
+/** Strips scheme, credentials, `.git` and case so ssh and https forms of one remote match. */
+export function normalizeRemoteUrl(url: string): string {
+  return stripRemote(url).toLowerCase();
+}
+
+/**
+ * Host, owner and repo of a remote, with the case the remote was written in (display keeps `Flip-to`;
+ * matching uses the lower-cased key). The owner is the first path segment and the repo the rest, so a
+ * GitLab subgroup stays part of the repo. Null without a host, an owner and a repo.
+ */
+export function remoteParts(url: string | null): { host: string; org: string; repoName: string } | null {
+  if (!url) return null;
+  const m = /^([^/]+)\/([^/]+)\/(.+)$/.exec(stripRemote(url));
+  return m?.[1] && m[2] && m[3] ? { host: m[1], org: m[2], repoName: m[3] } : null;
 }
 
 /**
@@ -134,8 +149,14 @@ export interface ScanState {
 /** Who a repo is, carried on `worktree.scanned` so a path can be mapped to its repo later (read time). */
 export interface RepoInfo {
   key: string;
-  /** `owner/repo` from the normalised remote; the main worktree's folder name when there is no remote. */
+  /** `org/repo` from the remote, case kept; the main worktree's folder name when there is no remote. */
   name: string;
+  /** The owner (first path segment of the remote), case kept; `local` for a repo with no remote. */
+  org: string;
+  /** The repo without its owner; the main worktree's folder name when there is no remote. */
+  repoName: string;
+  /** The remote's host, or null without a remote. */
+  host: string | null;
   /** `https://host/owner/repo`, or null for no remote or an odd one. */
   remoteUrl: string | null;
 }
@@ -148,11 +169,14 @@ export function repoInfoOf(
 ): RepoInfo | null {
   const key = repoKey(remote, firstCommit);
   if (!key) return null;
+  const parts = remoteParts(remote);
   const path = remote ? normalizeRemoteUrl(remote) : "";
-  const slash = path.indexOf("/");
   return {
     key,
-    name: slash > 0 && slash < path.length - 1 ? path.slice(slash + 1) : mainFolder,
+    name: parts ? `${parts.org}/${parts.repoName}` : mainFolder,
+    org: parts?.org ?? "local",
+    repoName: parts?.repoName ?? mainFolder,
+    host: parts?.host ?? null,
     remoteUrl: repoUrlOf(path),
   };
 }

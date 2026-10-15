@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import type { TraceResponse } from "@vantage/core/track";
   import { describeError, fetchTrace, fetchTrack } from "$lib/api";
-  import { COLLAPSED_BY_DEFAULT, GROUP_VALUES, type GroupBy, type TrackRow, type TrackView } from "$lib/contract";
+  import { COLLAPSED_BY_DEFAULT, type GroupBy, type TrackRow, type TrackView } from "$lib/contract";
   import Dots from "$lib/Dots.svelte";
   import { foldGroups } from "$lib/fold";
   import Legend from "$lib/Legend.svelte";
@@ -174,7 +174,7 @@
     if (n >= 1 && n <= data.page.pages) go({ page: n });
   }
 
-  const KEY_GROUP: Record<string, GroupBy> = { "1": GROUP_VALUES[0], "2": GROUP_VALUES[1], "3": GROUP_VALUES[2], "4": GROUP_VALUES[3] };
+  const KEY_GROUP: Record<string, GroupBy> = { "1": "attention", "2": "repo", "3": "stage", "4": "none" };
 
   function onKey(e: KeyboardEvent): void {
     if (e.ctrlKey || e.metaKey || e.altKey) return;

@@ -79,6 +79,7 @@ const ingest = (titles = true): void => {
 };
 const items = (): { title: string; source: string | undefined; id: string }[] =>
   trackView(store, NOW, {
+    org: [],
     repo: [],
     branch: [],
     stage: [],

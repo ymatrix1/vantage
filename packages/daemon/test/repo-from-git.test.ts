@@ -62,8 +62,8 @@ describe("gitRepoOfCwd", () => {
     g(main, "worktree", "add", "-q", "-b", "feat/x", wt);
     const a = gitRepoOfCwd(main);
     const b = gitRepoOfCwd(`${wt}/`.replace(/\/$/, ""));
-    expect(a && repoValue(a)).toBe("example.invalid/acme/web");
-    expect(b && repoValue(b)).toBe("example.invalid/acme/web");
+    expect(a && repoValue(a)).toBe("example.invalid/Acme/Web");
+    expect(b && repoValue(b)).toBe("example.invalid/Acme/Web");
   });
 
   it("uses the main worktree's folder, never a linked worktree's, for a repo with no remote", () => {

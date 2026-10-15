@@ -83,6 +83,7 @@ const ok = (qs: string): TrackQuery => {
 describe("parseTrackQuery", () => {
   it("defaults: 7d, activity desc, grouped by attention, page 1 of 25", () => {
     expect(ok("")).toEqual({
+      org: [],
       repo: [],
       branch: [],
       stage: [],

@@ -8,6 +8,7 @@ import {
   STALE_PASS_MS,
   TRACK_STAGES,
   attentionOf,
+  orgOf,
   projectNameOf,
   repoUrlOf,
   type AgeBucket,
@@ -65,6 +66,7 @@ const STAGE_LABEL: Record<string, string> = {
 
 /** What `GET /api/track` with no parameters means (docs/specs/web-ui.md). */
 export const DEFAULT_QUERY: TrackQuery = {
+  org: [],
   repo: [],
   branch: [],
   stage: [],
@@ -85,7 +87,15 @@ interface Where {
   sql: string;
   params: Param[];
 }
-type Dim = "repo" | "branch" | "stage" | "proof" | "flag" | "since" | "hasEdits";
+type Dim = "org" | "repo" | "branch" | "stage" | "proof" | "flag" | "since" | "hasEdits";
+
+// The owner of `w.repo` (`host/Owner/repo`): the second path segment when the first looks like a host,
+// `local` for a folder name, null without a repo. Built from SQL string functions so it filters and groups.
+const REST = "substr(w.repo, instr(w.repo, '/') + 1)";
+const ORG_SQL = `CASE WHEN w.repo IS NULL THEN NULL
+  WHEN instr(substr(w.repo, 1, instr(w.repo, '/') - 1), '.') > 0 AND instr(${REST}, '/') > 0
+    THEN substr(${REST}, 1, instr(${REST}, '/') - 1)
+  ELSE 'local' END`;
 
 const OPEN_FLAG = "f.work_item_id = w.id AND f.cleared_at IS NULL AND f.dismissed = 0";
 const HOUR = 3_600_000;
@@ -116,7 +126,14 @@ function whereOf(q: TrackQuery, now: Date, skip: Dim | null): Where {
     parts.push(`${col} IN (${marks(values.length)})`);
     params.push(...values);
   };
-  inList("repo", "w.repo", q.repo);
+  // Owners and repos match case-insensitively; the stored value keeps the case it was written in.
+  const inLower = (dim: Dim, expr: string, values: readonly string[]): void => {
+    if (skip === dim || values.length === 0) return;
+    parts.push(`lower(${expr}) IN (${marks(values.length)})`);
+    params.push(...values.map((v) => v.toLowerCase()));
+  };
+  inLower("org", ORG_SQL, q.org);
+  inLower("repo", "w.repo", q.repo);
   inList("branch", "w.branch", q.branch);
   inList("stage", "w.stage", q.stage);
   inList("proof", "w.proof_status", q.proof);
@@ -193,7 +210,18 @@ function facetsOf(store: Store, q: TrackQuery, now: Date): TrackFacets {
     if (k === "today" || k === "week" || k === "older") age[k] = Number(r["n"]);
   }
   const he = countBy(store, "w.has_edits", whereOf(q, now, "hasEdits"));
+  const orgs: Counts = {};
+  const wo = whereOf(q, now, "org");
+  for (const r of store.db
+    .prepare(
+      `SELECT MIN(${ORG_SQL}) AS k, COUNT(*) AS n FROM work_items w WHERE ${wo.sql} AND w.repo IS NOT NULL
+       GROUP BY lower(${ORG_SQL}) ORDER BY n DESC, k LIMIT 200`,
+    )
+    .all(...wo.params)) {
+    orgs[String(r["k"])] = Number(r["n"]);
+  }
   return {
+    org: orgs,
     repo: countBy(store, "w.repo", whereOf(q, now, "repo"), "AND w.repo IS NOT NULL"),
     branch: countBy(store, "w.branch", whereOf(q, now, "branch"), "AND w.branch IS NOT NULL"),
     stage: zeroed(TRACK_STAGES, countBy(store, "w.stage", whereOf(q, now, "stage"))),
@@ -224,6 +252,14 @@ function groupTotals(store: Store, q: TrackQuery, w: Where): Map<string, number>
     out.set("forgotten", forgotten);
     out.set("in_progress", Number(r?.["n"] ?? 0) - needs - forgotten - done);
     out.set("done", done);
+  } else if (q.group === "org") {
+    for (const r of store.db
+      .prepare(
+        `SELECT lower(${ORG_SQL}) AS k, COUNT(*) AS n FROM work_items w WHERE ${w.sql} GROUP BY lower(${ORG_SQL})`,
+      )
+      .all(...w.params)) {
+      out.set(`org:${typeof r["k"] === "string" ? r["k"] : ""}`, Number(r["n"]));
+    }
   } else if (q.group === "repo") {
     for (const r of store.db
       .prepare(`SELECT w.repo AS k, COUNT(*) AS n FROM work_items w WHERE ${w.sql} GROUP BY w.repo`)
@@ -248,6 +284,7 @@ const toTrackItem = (
   title: i.title,
   repo: i.repo,
   repoUrl: repoUrlOf(i.repo),
+  org: orgOf(i.repo),
   branch: i.branch,
   stage: i.stage,
   proofStatus: i.proofStatus,
@@ -302,17 +339,32 @@ export function trackView(store: Store, now = new Date(), q: TrackQuery = DEFAUL
   } else if (q.group === "none") {
     groups.push({ id: "all", label: "All items", total, items });
   } else {
-    const key = (i: TrackItem): string => (q.group === "repo" ? `repo:${i.repo ?? ""}` : `stage:${i.stage}`);
+    const key = (i: TrackItem): string =>
+      q.group === "repo"
+        ? `repo:${i.repo ?? ""}`
+        : q.group === "org"
+          ? `org:${(i.org ?? "").toLowerCase()}`
+          : `stage:${i.stage}`;
     const byId = new Map<string, TrackItem[]>();
     for (const i of items) byId.set(key(i), [...(byId.get(key(i)) ?? []), i]);
-    const label = (id: string): string =>
-      q.group === "repo"
-        ? (projectNameOf(id.slice(5)) ?? "No repo")
-        : (STAGE_LABEL[id.slice(6)] ?? id.slice(6));
+    const label = (id: string): string => {
+      if (q.group === "repo") return projectNameOf(id.slice(5)) ?? "No repo";
+      if (q.group === "org") {
+        // Show the owner as most of its repos spell it (ties: the smaller spelling); no remote is "Local".
+        const spellings = new Map<string, number>();
+        for (const i of byId.get(id) ?? []) spellings.set(i.org ?? "", (spellings.get(i.org ?? "") ?? 0) + 1);
+        const shown = [...spellings].toSorted((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))[0]?.[0] ?? "";
+        return shown === "" ? "No repo" : shown === "local" ? "Local" : shown;
+      }
+      return STAGE_LABEL[id.slice(6)] ?? id.slice(6);
+    };
     const rank = (id: string): number =>
       q.group === "stage" ? TRACK_STAGES.findIndex((s) => `stage:${s}` === id) : 0;
     const ids = [...byId.keys()].toSorted(
-      (a, b) => rank(a) - rank(b) || (a === "repo:" ? 1 : 0) - (b === "repo:" ? 1 : 0) || a.localeCompare(b),
+      (a, b) =>
+        rank(a) - rank(b) ||
+        (a === "repo:" || a === "org:" ? 1 : 0) - (b === "repo:" || b === "org:" ? 1 : 0) ||
+        a.localeCompare(b),
     );
     for (const id of ids) {
       groups.push({ id, label: label(id), total: totals.get(id) ?? 0, items: byId.get(id) ?? [] });
