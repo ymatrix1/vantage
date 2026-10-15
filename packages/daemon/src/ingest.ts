@@ -113,7 +113,7 @@ function* jsonlFiles(dir: string): Generator<string> {
 export function ingestSpool(store: Store, spoolDir: string, now: Date = new Date()): IngestResult {
   const stamp = now.toISOString();
   const result: IngestResult = { files: 0, inserted: 0 };
-  const ctx: IngestContext = { repoRoots: knownRepoRoots(store) };
+  const ctx: IngestContext = { repoRoots: knownRepoRoots(store), taskText: store.captureTaskText };
   for (const path of jsonlFiles(spoolDir)) {
     const key = `spool:${relative(spoolDir, path)}`;
     const { lines, nextOffset } = tailLines(path, store.getCursor(key));
@@ -140,7 +140,7 @@ export function backfillTranscripts(
   const stamp = now.toISOString();
   const cutoff = now.getTime() - days * 86_400_000;
   const result: IngestResult = { files: 0, inserted: 0 };
-  const ctx: IngestContext = { repoRoots: knownRepoRoots(store) };
+  const ctx: IngestContext = { repoRoots: knownRepoRoots(store), taskText: store.captureTaskText };
   backfillEventBranches(store, projectsDir, now, days);
   for (const path of jsonlFiles(projectsDir)) {
     if (statSync(path).mtimeMs < cutoff) continue;

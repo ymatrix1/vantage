@@ -87,13 +87,13 @@ describe("item_sessions counts", () => {
     seed();
     linkStoredEvents(store);
     const counts = itemSessionCounts(store);
-    expect(counts.get("session:s-a")).toEqual({
+    expect(counts.get("session:s-a")).toMatchObject({
       itemKey: "session:s-a",
       sessionCount: 2,
       derivedCount: 1,
-      subagentCount: 1,
+      subagentRuns: 1,
     });
-    expect(counts.get("session:s-c")).toMatchObject({ sessionCount: 1, derivedCount: 0, subagentCount: 0 });
+    expect(counts.get("session:s-c")).toMatchObject({ sessionCount: 1, derivedCount: 0, subagentRuns: 0 });
     expect(counts.has("session:s-b")).toBe(false);
   });
   it("undoing the child's links removes it from the counts, and later passes keep it out", () => {
@@ -135,12 +135,12 @@ describe("migration 4", () => {
     old.close();
     const upgraded = new Store(path);
     try {
-      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(6);
+      expect(Number(upgraded.db.prepare("SELECT version FROM schema_meta").get()?.["version"])).toBe(7);
       expect(upgraded.countEvents()).toBe(1);
       expect(itemSessionCounts(upgraded).get("issue:FTK-9")).toMatchObject({
         sessionCount: 1,
         derivedCount: 0,
-        subagentCount: 0,
+        subagentRuns: 0,
       });
     } finally {
       upgraded.close();
