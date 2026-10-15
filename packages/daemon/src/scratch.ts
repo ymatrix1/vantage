@@ -1,4 +1,4 @@
-// Which edited files git ignores (proposed D102). The stage pass asks once per path, in batches, and
+// Which edited files git ignores (proposed D140). The stage pass asks once per path, in batches, and
 // keeps the answers for a while; a repo or path git cannot answer for stays unclassified, which means
 // "counts as code" in the stage machine. Read-only: only `rev-parse` and `check-ignore` run.
 import { execFileSync } from "node:child_process";

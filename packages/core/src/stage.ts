@@ -103,7 +103,7 @@ export interface StageOptions {
   /**
    * Edited paths (as `normalizeEditPath` writes them) that git says are ignored in their repo. With the
    * lexical `isScratchPath`, an edit whose paths are all scratch does not count as a code or
-   * documentation edit (proposed D102). Without it only the lexical rule applies.
+   * documentation edit (proposed D140). Without it only the lexical rule applies.
    */
   scratchPaths?: ReadonlySet<string>;
   /**

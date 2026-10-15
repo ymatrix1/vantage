@@ -14,7 +14,7 @@ export interface StagePassOptions extends StageOptions {
   link?: Omit<LinkOptions, "undone">;
   /** Use stored first-request titles for provisional session items (default on, D95). */
   requestTitles?: boolean;
-  /** Ask git which edited files are ignored (default on, proposed D102); off leaves only the name rules. */
+  /** Ask git which edited files are ignored (default on, proposed D140); off leaves only the name rules. */
   gitScratch?: boolean;
 }
 

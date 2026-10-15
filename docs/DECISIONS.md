@@ -1251,7 +1251,7 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** Keep grouping by attention (mixes projects, hides which repo needs you). Store the project in a new column (a migration for what the stage pass can rewrite). Build PR links from branch names (invents a link that may not exist). Show the worktree folder as the subtitle (what the user disliked).
 - **Impact:** Adds `projects.ts` and `item-detail.ts` to the daemon, a route in `http.ts`, and `Header`, `Row`, `Detail`, title, link and project helpers to the UI; changes the default Track grouping to project; updates the web-ui and UX specs. Limits: projects are ordered by the rows on the current page (the API pages rows, not projects), and group totals include rows the page folds into "Conversations without code". Revisit when the API can sort and page by project.
 
-### D102. Edits to scratch and git-ignored files are not code edits
+### D140. Edits to scratch and git-ignored files are not code edits
 
 - **Status:** proposed
 - **Context:** On the real Track page, flag reasons read "Session stopped after editing daemon.log without proof". The stage machine (D71) counts every `file.edited` event as a code edit, so a log, temp output or ignored file expires proof and raises `unproven_claim` and `thrashing`. D70 separates writes inside the repo from writes outside it, but a log inside the repo is still inside it.

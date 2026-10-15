@@ -1,6 +1,6 @@
 // Scratch files: logs, temp output, build leftovers and the like. An edit that touches only scratch
 // files is not a code change, so it must not expire proof or raise `unproven_claim` or `thrashing`
-// (proposed D102). Pure. The daemon adds what git says (ignored files) through `scratchPaths`; this is
+// (proposed D140). Pure. The daemon adds what git says (ignored files) through `scratchPaths`; this is
 // the lexical part that needs no git and no file system.
 
 /** The form paths take in `StageOptions.scratchPaths`: forward slashes, lower case. */

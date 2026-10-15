@@ -29,4 +29,4 @@ Guessing that an untracked, not-ignored file is throwaway (`docs2.py` still coun
 
 ## Summary of Changes
 
-core: `scratch.ts` (name rules), `StageOptions.scratchPaths` and `repoRelative`, `ItemState.scratchEdits` and `scratchFiles`; scratch-only edits skip stage, proof expiry, thrash cycles and claims. daemon: `scratch.ts` (repo lookup, batched `git check-ignore`, 5-minute bounded cache, never throws), used by the stage pass (`gitScratch: false` turns it off). Tests with real temp git repos. Docs: ingestion, proof, ROADMAP, proposed D102.
+core: `scratch.ts` (name rules), `StageOptions.scratchPaths` and `repoRelative`, `ItemState.scratchEdits` and `scratchFiles`; scratch-only edits skip stage, proof expiry, thrash cycles and claims. daemon: `scratch.ts` (repo lookup, batched `git check-ignore`, 5-minute bounded cache, never throws), used by the stage pass (`gitScratch: false` turns it off). Tests with real temp git repos. Docs: ingestion, proof, ROADMAP, proposed D140.

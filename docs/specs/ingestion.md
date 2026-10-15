@@ -122,7 +122,7 @@ The transcript backfill also reads the head of each session file (the first 256 
 
 ### Scratch files
 
-An edit whose paths are all scratch (a log, temp output, a cache folder, or a file git ignores in its repo and does not track) is kept as an event and linked to its item, but the stage machine does not count it as a code or documentation edit ([D102](../DECISIONS.md), proposed): it does not move the stage, expire proof, or raise `unproven_claim` or `thrashing`. The item state records `scratchEdits` and the scratch base names. The stage pass asks git (`rev-parse`, `check-ignore`, read-only, batched, cached for 5 minutes, bounded) for absolute edited paths; with no git, a path outside a repo, a relative path or any failure only the name rules apply, and an unclassified edit keeps counting as code. An untracked file git does not ignore counts as code.
+An edit whose paths are all scratch (a log, temp output, a cache folder, or a file git ignores in its repo and does not track) is kept as an event and linked to its item, but the stage machine does not count it as a code or documentation edit ([D140](../DECISIONS.md), proposed): it does not move the stage, expire proof, or raise `unproven_claim` or `thrashing`. The item state records `scratchEdits` and the scratch base names. The stage pass asks git (`rev-parse`, `check-ignore`, read-only, batched, cached for 5 minutes, bounded) for absolute edited paths; with no git, a path outside a repo, a relative path or any failure only the name rules apply, and an unclassified edit keeps counting as code. An untracked file git does not ignore counts as code.
 
 ### Test run counts
 

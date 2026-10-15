@@ -68,7 +68,7 @@ These never count as passing, even with exit 0:
 
 ## What counts as an edit
 
-Proof expires when a code edit lands after it. Edits that touch only scratch files (logs, temp output, caches, files git ignores) are not code edits and expire nothing; see [ingestion](ingestion.md#scratch-files) and D102 (proposed). A tracked file always counts.
+Proof expires when a code edit lands after it. Edits that touch only scratch files (logs, temp output, caches, files git ignores) are not code edits and expire nothing; see [ingestion](ingestion.md#scratch-files) and D140 (proposed). A tracked file always counts.
 
 ## Recognizing the command
 
