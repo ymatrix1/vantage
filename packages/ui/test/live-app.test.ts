@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, FakeSocket, fakeApi, item, renderApp, rows, track } from "./helpers";
+import { listCalls, cleanup, FakeSocket, fakeApi, item, renderApp, rows, track } from "./helpers";
 
 beforeEach(() =>
   vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "setTimeout", "clearTimeout"] }),
@@ -9,8 +9,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-const trackCalls = (api: ReturnType<typeof fakeApi>): number =>
-  api.mock.calls.filter(([u]) => u.startsWith("/api/track")).length;
+const trackCalls = (api: ReturnType<typeof fakeApi>): number => listCalls(api).length;
 
 async function ready() {
   const api = fakeApi({ track: () => ({ body: track([item({ id: "a", title: "Before" })]) }) });

@@ -25,6 +25,17 @@ beforeEach(() => {
   projects = join(dir, "projects");
   mkdirSync(join(projects, "demo"), { recursive: true });
   store = new Store(join(dir, "v.db"));
+  // The session ran in a scanned worktree of acme/demo, so the fallback title names that repo.
+  store.insertEvent(
+    {
+      source: "git",
+      sourceId: "git:github.com/acme/demo#abc:scan:/home/u/demo:x:1",
+      kind: "worktree.scanned",
+      timestamp: "2026-01-05T07:00:00Z",
+      payload: { worktree: "/home/u/demo", branch: "main", head: "aaaaaaa", dirty: [] },
+    },
+    "2026-01-05T07:00:00Z",
+  );
 });
 afterEach(() => {
   store.close();
@@ -68,6 +79,7 @@ const ingest = (titles = true): void => {
 };
 const items = (): { title: string; source: string | undefined; id: string }[] =>
   trackView(store, NOW, {
+    org: [],
     repo: [],
     branch: [],
     stage: [],
@@ -157,7 +169,7 @@ describe("request titles", () => {
     ingest();
     runStagePass(store, {}, NOW);
     expect(listRequestTitles(store)).toEqual([]);
-    expect(items()[0]).toMatchObject({ title: "demo · main · Jan 5", source: "fallback" });
+    expect(items()[0]).toMatchObject({ title: "acme/demo · main · Jan 5", source: "fallback" });
   });
 
   it("an empty prompt stores nothing", () => {
@@ -238,7 +250,7 @@ describe("the switch", () => {
     ingest(false);
     runStagePass(store, { requestTitles: false }, NOW);
     expect(listRequestTitles(store)).toEqual([]);
-    expect(items()[0]).toMatchObject({ title: "demo · main · Jan 5", source: "fallback" });
+    expect(items()[0]).toMatchObject({ title: "acme/demo · main · Jan 5", source: "fallback" });
   });
 
   it("turning it off later falls back at once even though titles are stored, and on restores them", () => {
@@ -247,7 +259,7 @@ describe("the switch", () => {
     runStagePass(store, {}, NOW);
     expect(items()[0]?.source).toBe("request");
     runStagePass(store, { requestTitles: false }, NOW);
-    expect(items()[0]).toMatchObject({ title: "demo · main · Jan 5", source: "fallback" });
+    expect(items()[0]).toMatchObject({ title: "acme/demo · main · Jan 5", source: "fallback" });
     runStagePass(store, { requestTitles: true }, NOW);
     expect(items()[0]).toMatchObject({ title: "Add pagination", source: "request" });
   });
@@ -276,7 +288,7 @@ describe("see and clear", () => {
     expect(clearRequestTitles(store)).toBe(1);
     runStagePass(store, {}, NOW);
     expect(dump()).not.toContain("Add pagination");
-    expect(items()[0]).toMatchObject({ title: "demo · main · Jan 5", source: "fallback" });
+    expect(items()[0]).toMatchObject({ title: "acme/demo · main · Jan 5", source: "fallback" });
     ingest();
     expect(listRequestTitles(store)).toEqual([]);
   });

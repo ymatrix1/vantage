@@ -1,5 +1,7 @@
 # Spec: web UI
 
+> **Terms:** [worktree](../GLOSSARY.md#worktree). Plain-language definitions are in the [glossary](../GLOSSARY.md).
+
 > **Terms:** [daemon](../GLOSSARY.md#daemon), [flag](../GLOSSARY.md#flag), [Needs you](../GLOSSARY.md#needs-you). Plain-language definitions are in the [glossary](../GLOSSARY.md).
 
 Pages and layouts are in [UX](../UX.md). This spec covers what the UX doc doesn't: navigation, screen states, keyboard, and the API between UI and daemon. Static mockups: [docs/mockups/](../mockups/index.html). Framework: Svelte ([D62](../DECISIONS.md#d62-svelte-for-the-web-ui)).
@@ -38,9 +40,28 @@ Every page and panel handles all five states.
 | `z` | Park item |
 | `r` | Resume with context |
 | `a` | Ask for proof |
-| `e` | Explain the selected item, project or week |
+| `e` | On Track: open every row of the selected group. Elsewhere (later): explain the selected item, project or week |
 | `1` / `2` / `3` / `4` | Group Track by attention / repo / stage / no grouping (proposed D85; no `g` chords, since `g s` is Sources) |
 | `?` | Show this map and the dot legend |
+
+## Track layout
+
+Proposed D100. Each level answers one question; the evidence is one click away.
+
+| Level | Question | What it shows |
+|---|---|---|
+| L0 header | How is it going? | One sticky line: "Last 7 days: 98 in progress, 20 need you (12 unproven, 5 stuck), 37 older", the date range and a Stale or Offline badge. Each number filters the list when clicked |
+| L1 projects | Which project? | The default grouping. One collapsible section per repo (`owner/repo` from the git remote, never a worktree folder) with "N need you, M in progress, last active X ago" and a repo link; most "needs you" first, then most recent |
+| L2 rows | Which item? | Title: ticket title or key, else the branch without `claude/` and a random six-hex suffix, else the fallback title. Subtitle: branch and a short time (never the worktree folder). The six dots with the stage label, the flag reason in words, a "N sessions" chip when above 1 and a branch link icon |
+| L3 detail | Why, and what is behind it? | Inline under the row (click or `Enter`; `Esc` closes all; `e` opens every row of the group): why it needs you, sessions (derived ones nested), files touched by base name, branch, last commit and folder, stage history, proofs, linked events, and actions: open branch, open last commit, copy branch name, copy the `cd` command |
+
+**Links** come only from the remote, the branch and a hex sha: `https://host/owner/repo`, `/tree/<branch>`, `/commit/<sha>`, each segment escaped, `target="_blank"`, `rel="noopener noreferrer"`. No PR or ticket link is invented: the slots wait for the GitHub source and the tracker (D90). A path with a quote, `$` or a backtick gets no `cd` button.
+
+**Pager and toolbar.** The summary line and the toolbar are sticky. The pager ("26 to 50 of 312", first, previous, next, last) shows above and below the list; the page-size selector is at the bottom. `[` and `]` page.
+
+**Header counts** need totals for the same filters grouped by attention, so the page makes a second request (`group=attention&pageSize=1`) next to the list request.
+
+**Known limits.** The API pages rows, not projects, so a project shows only its rows on the current page and projects are ordered by those rows. Group totals include the rows the page folds into "Conversations without code".
 
 ## Track controls
 
@@ -78,8 +99,8 @@ HTTP on `127.0.0.1`, token required on every `/api/*` call as `Authorization: Be
 | Method and path | Purpose |
 |---|---|
 | `GET /api/focus` | Top 3 items plus digest groups |
-| `GET /api/track` | Track rows: filtered, sorted, paged and grouped, with `page`, `facets`, `lastPassAt`, `stale` and per-source health. Parameters below (proposed [D84](../DECISIONS.md)) |
-| `GET /api/items/:id` | Item detail: stage, behaviors, proofs, review, after-ship, history, links |
+| `GET /api/track` | Track rows: filtered, sorted, paged and grouped, with `page`, `facets`, `lastPassAt`, `stale` and per-source health. Parameters below (proposed [D84](../DECISIONS.md)). Each row's `repo` is its git repo (the remote path, or the main folder for a repo with no remote; null when the folder is in no repo) `repoUrl` its `https` link and `org` its owner (`local` with no remote), never a worktree folder (proposed [D99](../DECISIONS.md)); `group=repo` ends with a "No repo" group |
+| `GET /api/items/:id` | Item detail. Phase 1 (proposed D100): repo and repo URL, branch, worktree path, last commit sha, sessions with their parent, edited files by base name. Later: behaviors, review, after-ship, links |
 | `GET /api/journal?since=` | Timeline entries |
 | `GET /api/inbox` | Mentions, review requests, commitments by person |
 | `GET /api/sources` | Health per source |
@@ -101,7 +122,7 @@ HTTP on `127.0.0.1`, token required on every `/api/*` call as `Authorization: Be
 | `GET /api/items/:id/trace` | Why this item changed: events, rules fired, resulting changes |
 | `GET /api/live` (WebSocket) | Pushes `item.changed`, `flag.raised`, `source.health` events |
 
-Phase 1 ships only `GET /api/track`, `GET /api/items/:id/trace`, `GET /api/diagnostics` and `GET /api/live`; the item id is the URL-encoded `item_key` (for example `issue%3AFTK-2`). `/api/live` (proposed D81) passes the same Host, Origin and token checks as every route before the upgrade; the token rides in the `Sec-WebSocket-Protocol` header (`vantage.v1, <token>`), never the URL. It pushes `item.changed` (id and changed fields), `flag.raised` (id, kind, severity), `source.health` and `resync` after each stage pass, with no transcript or command text, and caps at 8 connections with a 15 s ping. The page refetches `/api/track` on every connect and polls it every 5 seconds only while the socket is down, reconnecting with backoff from 1 s to 30 s.
+Phase 1 ships only `GET /api/track`, `GET /api/items/:id`, `GET /api/items/:id/trace`, `GET /api/diagnostics` and `GET /api/live`; the item id is the URL-encoded `item_key` (for example `issue%3AFTK-2`). `/api/live` (proposed D81) passes the same Host, Origin and token checks as every route before the upgrade; the token rides in the `Sec-WebSocket-Protocol` header (`vantage.v1, <token>`), never the URL. It pushes `item.changed` (id and changed fields), `flag.raised` (id, kind, severity), `source.health` and `resync` after each stage pass, with no transcript or command text, and caps at 8 connections with a 15 s ping. The page refetches `/api/track` on every connect and polls it every 5 seconds only while the socket is down, reconnecting with backoff from 1 s to 30 s.
 
 ### `GET /api/track` parameters
 
@@ -109,7 +130,9 @@ All optional. A list is comma-separated (`stage=asked,built`); an empty value me
 
 | Parameter | Values | Default |
 |---|---|---|
-| `repo`, `branch` | up to 50 names, 200 characters each, matched exactly | all |
+| `org` | up to 50 owners (`Flip-to`, `local`), matched case-insensitively (proposed [D99](../DECISIONS.md)) | all |
+| `repo` | up to 50 repo paths (`host/Owner/repo`), matched case-insensitively | all |
+| `branch` | up to 50 names, 200 characters each, matched exactly | all |
 | `stage` | `asked`, `built`, `proven`, `reviewed`, `shipped`, `verified` | all |
 | `proof` | `none`, `fresh`, `expired`, `failed`, `weak`, `not_required` | all |
 | `flag` | `thrashing`, `unproven_claim`, `forgotten`, `none` (an item matches if it has any listed flag; `none` matches items with no open flag) | all |
@@ -117,13 +140,13 @@ All optional. A list is comma-separated (`stage=asked,built`); an empty value me
 | `hasEdits` | `true`, `false`: any code edit linked (false for conversations and documentation-only items) | both |
 | `q` | at most 80 characters; case-insensitive substring over title, repo and branch only (ASCII case folding) | none |
 | `sort`, `order` | `activity`, `stage`, `title`, `repo`, `flags`; `asc`, `desc` | `activity` `desc` |
-| `group` | `attention`, `repo`, `stage`, `none` | `attention` |
+| `group` | `attention`, `org`, `repo`, `stage`, `none` | `attention` |
 | `page`, `pageSize` | integers from 1 (`pageSize` up to 100) | `1`, `25` |
 
 Response, on top of the Phase 1 fields (`generatedAt`, `lastPassAt`, `stale`, `sources`):
 
 - `page`: `{page, pageSize, total, pages}`. `total` counts the whole filter; `pages` is at least 1. A page past the end returns `200` with no items.
-- `groups`: `{id, label, total, items, attention?}`. `total` counts the whole filter; `items` are only this page's rows. Pagination runs over the flat sorted list and groups are derived from the page. `group=attention` always lists its five groups (`needs_you`, `in_progress`, `waiting`, `forgotten`, `done`): `needs_you` holds only items with `thrashing` or `unproven_claim`, and `forgotten` holds items whose only flag is `forgotten` (low urgency; the UI collapses it; proposed [D94](../DECISIONS.md)); `repo` and `stage` list only groups that have rows on the page (`repo:<name>`, `repo:` for no repo, `stage:<name>`); `none` is one group `all`.
+- `groups`: `{id, label, total, items, attention?}`. `total` counts the whole filter; `items` are only this page's rows. Pagination runs over the flat sorted list and groups are derived from the page. `group=attention` always lists its five groups (`needs_you`, `in_progress`, `waiting`, `forgotten`, `done`): `needs_you` holds only items with `thrashing` or `unproven_claim`, and `forgotten` holds items whose only flag is `forgotten` (low urgency; the UI collapses it; proposed [D94](../DECISIONS.md)); `org`, `repo` and `stage` list only groups that have rows on the page (`org:<owner in lower case>`, `org:` and `repo:` for no repo, `repo:<name>`, `stage:<name>`); `none` is one group `all`.
 - `facets`: `{repo, branch, stage, proof, flag, age: {today, week, older}, hasEdits: {true, false}}`: counts per value, each over the items that pass every filter except that dimension's own (the `since` filter does not apply to `age`), so the UI can show what selecting a value would give. `stage`, `proof`, `flag`, `age` and `hasEdits` list every known value, zero included. `repo` and `branch` list at most 200 values, largest first. `today` is the last 24 hours and `week` the 7 days before that.
 - Each item adds `branch`, `hasEdits`, `firstActivity`, `sessionCount` (sessions feeding it, default 1) and `derivedCount` (how many continue another session, default 0; D86); each flag's `reason` is a short sentence naming files by base name only. An item with no title of its own is titled from repo, branch and first activity date (`claude-code · main · Oct 14`), never from prompt text.
 

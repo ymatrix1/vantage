@@ -6,14 +6,14 @@ import type { ViewState } from "./view";
 export const OLDER_AFTER_MS = 7 * 86_400_000;
 
 /**
- * Only when grouped by attention. Rows with `hasEdits === false` go to "Conversations without code"
+ * Only when grouped by attention or by project. Rows with `hasEdits === false` go to "Conversations without code"
  * (its total is the filter-wide count from `facets.hasEdits`, so it is right across pages); with a
  * 30-day or all-time range, remaining rows older than 7 days go to "Older" (counted on this page only).
  * Other groups keep the daemon's totals, which still include the folded rows.
  */
 export function foldGroups(view: ViewState, data: TrackView, now: Date): TrackGroup[] {
   const real = data.groups.filter((g) => g.total > 0 || g.items.length > 0);
-  if (view.group !== "attention") return real;
+  if (view.group !== "attention" && view.group !== "repo") return real;
   const fold = view.hasEdits === null;
   const olderOk = view.since === "30d" || view.since === "all";
   const cutoff = now.getTime() - OLDER_AFTER_MS;

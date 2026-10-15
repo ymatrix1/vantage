@@ -2,9 +2,10 @@
 // work_items, proofs, flags and stage_changes (docs/specs/data-schema.md). Every pass replays all
 // events, so the tables are derived state and can be rebuilt at any time. Also the read side the
 // Stop gate, status line and Track page call.
-import { computeStages, fallbackTitle } from "@vantage/core";
+import { computeStages, fallbackTitle, projectNameOf } from "@vantage/core";
 import type { ItemState, LinkOptions, StageOptions } from "@vantage/core";
 import { linkStoredEvents, loadEvents } from "./linking.ts";
+import { GIT_QUESTIONS_PER_PASS, resolveRepo, worktreeRepos } from "./projects.ts";
 import type { Store } from "./store.ts";
 import { requestTitleMap } from "./titles.ts";
 
@@ -92,8 +93,28 @@ export function runStagePass(store: Store, opts: StagePassOptions = {}, now = ne
       }
       db.prepare("DELETE FROM work_items WHERE id = ?").run(id);
     }
+    const worktrees = worktreeRepos(store);
+    const gitBudget = { left: GIT_QUESTIONS_PER_PASS };
     for (const item of items) {
-      const { title, repo, source } = titleOf(item, requests);
+      const named = titleOf(item, requests);
+      const { source } = named;
+      // The repo a person knows (git identity), never the worktree folder an agent session ran in.
+      const repo = resolveRepo(store, item.itemKey, named.repo, worktrees, gitBudget);
+      // A detached HEAD has no branch name to show; the repo is the next best thing.
+      const shown = repo ? (projectNameOf(repo) ?? repo) : null;
+      let title = named.title;
+      // An untitled session reads from the resolved repo, never from the folder it ran in.
+      if (named.source === "fallback") {
+        title = fallbackTitle({
+          repo: shown,
+          branch: item.branch,
+          firstActivity: item.firstActivity,
+          id: item.itemKey.split(":").slice(1).join(":"),
+        });
+      }
+      // A worktree item is titled with a folder name; its branch is a better name.
+      if (item.itemKey.startsWith("worktree:") && item.branch) title = item.branch;
+      if (title === "HEAD") title = `detached HEAD${shown ? ` in ${shown}` : ""}`;
       db.prepare(
         `INSERT INTO work_items (item_key, title, title_source, repo, branch, has_edits, stage, proof_status, proof_level, docs_only,
            first_activity, last_activity, created_at, updated_at)
