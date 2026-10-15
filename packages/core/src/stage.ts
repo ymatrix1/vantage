@@ -439,3 +439,33 @@ export function computeStages(
   }
   return [...groups.keys()].toSorted().map((key) => evaluate(key, groups.get(key) ?? [], opts));
 }
+
+export type ProofFamily =
+  | "vitest"
+  | "jest"
+  | "pytest"
+  | "go_test"
+  | "dotnet_test"
+  | "dbt"
+  | "cargo_test"
+  | "other_test_runner"
+  | "data_tool";
+
+/**
+ * Which recognised check family a command belongs to, or null when the stage machine would not count it
+ * as a check. Uses the same allowlist as proof detection, so measurements and the machine cannot drift.
+ */
+export function proofFamily(command: string): ProofFamily | null {
+  const hit = classify(command);
+  if (!hit) return null;
+  if (hit.type === "data_check") return "data_tool";
+  const s = hit.segment;
+  if (/^(?:npx\s+|pnpm\s+(?:exec\s+)?|yarn\s+(?:run\s+)?|bunx?\s+)?vitest\b/.test(s)) return "vitest";
+  if (/^(?:npx\s+|pnpm\s+(?:exec\s+)?|yarn\s+(?:run\s+)?|bunx?\s+)?jest\b/.test(s)) return "jest";
+  if (/^(?:python3?\s+-m\s+)?pytest\b/.test(s)) return "pytest";
+  if (/^go\s+test\b/.test(s)) return "go_test";
+  if (/^dotnet\s+test\b/.test(s)) return "dotnet_test";
+  if (/^dbt\b/.test(s)) return "dbt";
+  if (/^cargo\s+test\b/.test(s)) return "cargo_test";
+  return "other_test_runner";
+}

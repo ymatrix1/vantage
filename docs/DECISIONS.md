@@ -1139,6 +1139,20 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Alternatives:** A longer dash pattern or a darker ring (still a ring at 16 px). A cross or a slash (reads as failed or blocked). Leaving the status line alone (the two surfaces would disagree).
 - **Impact:** Changes `Dots.svelte`, adds `Legend.svelte` and `stage-label.ts`, `packages/core/src/status-line.ts` and its tests; updates the visual-language, UX, web-ui and status-line specs. Static mockups in `docs/mockups/` still show the old dashed ring. Revisit if a source for Reviewed, Shipped or Verified makes skipped rare.
 
+### D88. `vantage stats`: aggregates only, read-only, goals as starting points (proposed)
+
+- **Status:** proposed
+- **Context:** The first real run showed about 300 items in Needs you and hundreds of untitled Session rows, and the Phase 1 exit is a week of daily use. The user needs numbers, not impressions, that are safe to paste into an issue (privacy boundary). The specs list "usage metrics" but define no command, no metric definitions and no goals.
+- **Decision:**
+  1. **Read-only, store only.** `vantage stats` opens `vantage.db` with `readOnly: true`, so it works with the daemon running or stopped and never writes. It does not call the daemon or read the spool.
+  2. **Aggregates only.** The output holds numbers and fixed labels: no titles, commands, paths, session ids or repo names. Source and flag names print only when they match a plain word pattern, else as `other`. The single echo is the `--repo` text the user typed.
+  3. **Definitions.** *Needs you* is an item with an open, undismissed flag (D75); *recent* means the item had activity in the last 48 h. *Readable title* is any item except a provisional `session:` item, whose title is only `Session xxxxxxxx` or `repo · branch · date` (D84: never from prompt text). *Edited items Proven* is Proven items over items in Built or Proven, docs-only excluded (D71); a Built item has no fresh proof by definition, so a share of those would always read 100%. *Built, proof lost* counts Built items whose proof status is `expired`, `failed` or `weak`. *Checks run* classifies `command.ran` events with the stage machine's own allowlist (`proofFamily` in core), counts by family and reports the rest as one number, never as text. *Needs you* is also split by flag kind, with a total and a 48 h count each. *Derived sessions* are live-linked sessions with a `session.derived` event, read from the `item_sessions` view (D86) and shown as a share of linked sessions only when at least one exists. Days are UTC.
+  4. **`--repo NAME`** matches a path segment of the event's `cwd` or `repoRoot`, case-insensitive, because `work_items.repo` and `events.repo` are not filled today.
+  5. **Goals are starting points:** Needs you under 10 (last 48 h under 5), readable titles at least 80%, sessions anchored by issue, branch or worktree at least 70%, edited items Proven at least 50%, last stage pass within 5 minutes (D75), database within the 500 MB budget. They are constants in code for now and shown with a symbol (✅ at the goal, ⚠️ past it, ❌ far past it); reading them from `config.toml` is a follow-up bean.
+- **Why:** The kill rule needs a measurement that does not depend on impressions, and one that can leave the machine in a bug report must not carry content. Reusing the stored derived tables keeps the numbers identical to what the Track page shows.
+- **Alternatives:** Ask the daemon over HTTP (needs the token and a running daemon); recompute from events (can drift from what the page shows); print sample titles for context (leaks content); goals in `config.toml` now (no TOML parser, D78); a `Metrics` table sampled every minute (the specs' later design; this command covers the exit week without it).
+- **Impact:** New command in the CLI and its README and operations-spec text. The repo filter and the fallback-title rule depend on today's schema; revisit them when `work_items.repo` is filled or a real request title lands.
+
 ### D94. `forgotten` is its own low-urgency group, and a backfilled conversation is never forgotten
 
 - **Status:** proposed
