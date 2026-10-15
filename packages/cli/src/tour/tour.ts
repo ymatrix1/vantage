@@ -31,7 +31,11 @@ export interface TourDeps {
 /** `pt` when the system locale is Portuguese (LC_ALL, LC_MESSAGES, LANG, then the runtime locale), else `en`. */
 export function detectLang(env: NodeJS.ProcessEnv): TourLang {
   const raw =
-    env["LC_ALL"] || env["LC_MESSAGES"] || env["LANG"] || Intl.DateTimeFormat().resolvedOptions().locale || "";
+    env["LC_ALL"] ||
+    env["LC_MESSAGES"] ||
+    env["LANG"] ||
+    Intl.DateTimeFormat().resolvedOptions().locale ||
+    "";
   return /^pt/i.test(raw) ? "pt" : "en";
 }
 
@@ -116,7 +120,8 @@ async function runDemo(args: string[], io: TourIo, deps: TourDeps, text: TourTex
       io.out(deps.url(daemon.port, daemon.token));
       io.out(text.demo.fake);
       io.out(text.demo.stop);
-      if (!deps.uiDir) io.err("The UI is not built. Run `pnpm build` to get the Track page; the API still works.");
+      if (!deps.uiDir)
+        io.err("The UI is not built. Run `pnpm build` to get the Track page; the API still works.");
       await (io.stopSignal ?? new Promise<void>(() => undefined));
     } finally {
       await daemon.stop();

@@ -51,9 +51,11 @@ export function removeDemoHome(home: string): boolean {
 
 /** True when `a` and `b` are the same folder (case-insensitive on Windows). */
 export function sameFolder(a: string, b: string): boolean {
-  const norm = (p: string): string => (process.platform === "win32" ? resolve(p).toLowerCase() : resolve(p));
-  return norm(a) === norm(b);
+  return normalize(a) === normalize(b);
 }
+
+const normalize = (p: string): string =>
+  process.platform === "win32" ? resolve(p).toLowerCase() : resolve(p);
 
 /** Writes the synthetic events and runs one stage pass so the Track page has rows at once. */
 export function seedDemoHome(home: string, now: Date = new Date()): void {
@@ -69,7 +71,14 @@ export function seedDemoHome(home: string, now: Date = new Date()): void {
       payload: Record<string, unknown>,
     ): void => {
       store.insertEvent(
-        { sourceId: `demo:${++seq}`, source: SOURCE, kind, timestamp: at(msAgo), sessionId: session, payload },
+        {
+          sourceId: `demo:${++seq}`,
+          source: SOURCE,
+          kind,
+          timestamp: at(msAgo),
+          sessionId: session,
+          payload,
+        },
         at(msAgo),
       );
     };
@@ -89,7 +98,14 @@ export function seedDemoHome(home: string, now: Date = new Date()): void {
 
     // 1. Proven, L2: the test command names the edited file.
     edit("demo-s01", shop, "feat/checkout-retry", "checkout.ts", 5 * H);
-    run("demo-s01", shop, "feat/checkout-retry", "pnpm vitest run checkout.test.ts checkout.ts", true, 5 * H - 60_000);
+    run(
+      "demo-s01",
+      shop,
+      "feat/checkout-retry",
+      "pnpm vitest run checkout.test.ts checkout.ts",
+      true,
+      5 * H - 60_000,
+    );
     // 2. Proven, L1: a plain test run.
     edit("demo-s02", shop, "feat/promo-banner", "banner.ts", 4 * H);
     run("demo-s02", shop, "feat/promo-banner", "pnpm test", true, 4 * H - 60_000);

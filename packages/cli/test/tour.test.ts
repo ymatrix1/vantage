@@ -3,7 +3,16 @@
 import { createHash } from "node:crypto";
 import { request } from "node:http";
 import { createServer } from "node:net";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -13,6 +22,17 @@ import { DEMO_ITEMS, DEMO_PREFIX, removeDemoHome, seedDemoHome } from "../src/to
 import { en } from "../src/tour/en.ts";
 import { pt } from "../src/tour/pt.ts";
 import { TOURS, TOUR_STEPS, detectLang, runTour } from "../src/tour/tour.ts";
+
+const count = (xs: string[], x: string): number => xs.filter((y) => y === x).length;
+
+/** A promise and the function that resolves it, for the stop signal. */
+function deferred(): { promise: Promise<void>; resolve: () => void } {
+  const box: { resolve: () => void } = { resolve: () => undefined };
+  const promise = new Promise<void>((r) => {
+    box.resolve = r;
+  });
+  return { promise, resolve: () => box.resolve() };
+}
 
 let base = "";
 let realHome = "";
@@ -71,7 +91,8 @@ describe("the tour text", () => {
       const all = t.steps.map((s) => s.lines.join("\n"));
       expect(all[1]).toContain("Asked → Built → Proven → Reviewed → Shipped → Verified");
       expect(all[3]).toContain("pnpm test || true");
-      for (const cmd of ["start", "open", "doctor", "stats", "add", "remove"]) expect(all[6]).toContain(`vantage ${cmd}`);
+      for (const cmd of ["start", "open", "doctor", "stats", "add", "remove"])
+        expect(all[6]).toContain(`vantage ${cmd}`);
       expect(all[7]).toContain("~/.vantage");
       expect(all[7]).toContain("vantage uninstall");
     }
@@ -121,9 +142,9 @@ describe("vantage tour", () => {
   it("--lang picks the language; the default follows the locale", async () => {
     expect((await run(["--no-pause", "--lang", "pt"])).out.join("\n")).toContain("Passo 1 de 8");
     expect((await run(["--no-pause"], { LANG: "pt_BR.UTF-8" })).out.join("\n")).toContain("Passo 1 de 8");
-    expect((await run(["--no-pause"], { LC_ALL: "en_GB.UTF-8", LANG: "pt_BR.UTF-8" })).out.join("\n")).toContain(
-      "Step 1 of 8",
-    );
+    expect(
+      (await run(["--no-pause"], { LC_ALL: "en_GB.UTF-8", LANG: "pt_BR.UTF-8" })).out.join("\n"),
+    ).toContain("Step 1 of 8");
     expect(detectLang({ LANG: "pt_PT" })).toBe("pt");
     expect(detectLang({ LANG: "de_DE" })).toBe("en");
     expect((await run(["--lang", "fr"])).code).toBe(2);
@@ -160,9 +181,12 @@ describe("the demo store", () => {
       expect(items).toHaveLength(12);
       expect(DEMO_ITEMS).toHaveLength(12);
       const by = <T>(f: (i: (typeof items)[number]) => T): T[] => items.map(f);
-      const count = (xs: string[], x: string): number => xs.filter((y) => y === x).length;
       const stages = by((i) => i.stage);
-      expect({ asked: count(stages, "asked"), built: count(stages, "built"), proven: count(stages, "proven") }).toEqual({
+      expect({
+        asked: count(stages, "asked"),
+        built: count(stages, "built"),
+        proven: count(stages, "proven"),
+      }).toEqual({
         asked: 2,
         built: 8,
         proven: 2,
@@ -198,7 +222,8 @@ describe("the demo store", () => {
         store.db.prepare("SELECT title FROM session_titles").all(),
       ]);
       expect(dump).not.toMatch(/yuri|ymatrix|flip|C:\\\\Users|\/Users\/|\/home\//i);
-      for (const m of dump.matchAll(/"cwd":"([^"]+)"/g)) expect(m[1]).toMatch(/^\/demo\/demo-(shop|api|docs)$/);
+      for (const m of dump.matchAll(/"cwd":"([^"]+)"/g))
+        expect(m[1]).toMatch(/^\/demo\/demo-(shop|api|docs)$/);
       for (const m of dump.matchAll(/"session_id":"([^"]+)"/g)) expect(m[1]).toMatch(/^demo-s\d+[abc]?$/);
     } finally {
       store.close();
@@ -210,7 +235,7 @@ const demoDirs = (): string[] => readdirSync(join(base, "tmp")).filter((n) => n.
 const hashTree = (dir: string): string => {
   const h = createHash("sha256");
   const walk = (d: string): void => {
-    for (const n of readdirSync(d).sort()) {
+    for (const n of readdirSync(d).toSorted()) {
       const p = join(d, n);
       h.update(p.slice(dir.length));
       if (statSync(p).isDirectory()) walk(p);
@@ -224,7 +249,12 @@ const hashTree = (dir: string): string => {
 function get(port: number, path: string, token: string): Promise<{ status: number; body: string }> {
   return new Promise((resolve, reject) => {
     const req = request(
-      { host: "127.0.0.1", port, path, headers: { host: `127.0.0.1:${port}`, authorization: `Bearer ${token}` } },
+      {
+        host: "127.0.0.1",
+        port,
+        path,
+        headers: { host: `127.0.0.1:${port}`, authorization: `Bearer ${token}` },
+      },
       (res) => {
         let body = "";
         res.on("data", (c: Buffer) => (body += c.toString()));
@@ -239,9 +269,8 @@ function get(port: number, path: string, token: string): Promise<{ status: numbe
 describe("vantage tour --demo", () => {
   it("serves the synthetic home on a free port, leaves the real home alone, and cleans up on exit", async () => {
     const hashBefore = hashTree(realHome);
-    const listingBefore = readdirSync(realHome).sort();
-    let stop: () => void = () => undefined;
-    const stopSignal = new Promise<void>((resolve) => (stop = resolve));
+    const listingBefore = readdirSync(realHome).toSorted();
+    const { promise: stopSignal, resolve: stop } = deferred();
     const out: string[] = [];
     // The real environment is hostile on purpose: the demo must ignore all three of these.
     const env = {
@@ -278,7 +307,7 @@ describe("vantage tour --demo", () => {
     expect(demoDirs()).toEqual([]);
     expect(out.at(-1)).toBe(en.demo.cleaned);
     await expect(get(port, "/api/track", token)).rejects.toBeTruthy();
-    expect(readdirSync(realHome).sort()).toEqual(listingBefore);
+    expect(readdirSync(realHome).toSorted()).toEqual(listingBefore);
     expect(hashTree(realHome)).toBe(hashBefore);
     expect(existsSync(join(base, "real-repo"))).toBe(false);
     expect(existsSync(join(base, "real-projects"))).toBe(false);
@@ -321,8 +350,7 @@ describe("vantage tour --demo", () => {
   });
 
   it("prints the demo text in Portuguese with --lang pt", async () => {
-    let stop: () => void = () => undefined;
-    const stopSignal = new Promise<void>((resolve) => (stop = resolve));
+    const { promise: stopSignal, resolve: stop } = deferred();
     const out: string[] = [];
     const done = runTour(
       ["--demo", "--lang", "pt"],

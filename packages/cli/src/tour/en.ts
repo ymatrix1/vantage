@@ -2,7 +2,8 @@
 import type { TourText } from "./types.ts";
 
 export const en: TourText = {
-  intro: "Vantage tour: 8 short steps, about 3 minutes. Nothing is read from your machine and nothing is sent.",
+  intro:
+    "Vantage tour: 8 short steps, about 3 minutes. Nothing is read from your machine and nothing is sent.",
   stepLabel: (n, total) => `Step ${n} of ${total}`,
   pressEnter: "Press Enter to continue (Ctrl+C to stop)",
   steps: [

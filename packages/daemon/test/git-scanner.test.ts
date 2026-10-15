@@ -60,6 +60,19 @@ describe("git scanner", () => {
     });
   });
 
+  it("names the repo on every scanned worktree from the remote, not from the worktree folder", async () => {
+    const repo = makeRepo("identity");
+    const wt = join(root, "identity-linked-9f9f9f");
+    g(repo, "worktree", "add", "-q", "-b", "feat/id", wt);
+    const events = await createGitScanner({ repos: [repo], env }).scan(new Date("2026-01-05T10:00:00Z"));
+    const infos = events.filter((e) => e.kind === "worktree.scanned").map((e) => e.payload["repo"]);
+    expect(infos).toHaveLength(2);
+    for (const info of infos) {
+      expect(info).toMatchObject({ name: "acme/demo", remoteUrl: "https://example.invalid/acme/demo" });
+    }
+    expect(new Set(infos.map((i) => JSON.stringify(i))).size).toBe(1);
+  });
+
   it("emits commits, checkouts, merges and dirty files across scans", async () => {
     const repo = makeRepo("flow");
     const wt = join(root, "flow-wt");

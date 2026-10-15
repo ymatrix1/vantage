@@ -1,6 +1,6 @@
 # Spec: web UI
 
-> **Terms:** [daemon](../GLOSSARY.md#daemon), [flag](../GLOSSARY.md#flag), [Needs you](../GLOSSARY.md#needs-you). Plain-language definitions are in the [glossary](../GLOSSARY.md).
+> **Terms:** [daemon](../GLOSSARY.md#daemon), [flag](../GLOSSARY.md#flag), [Needs you](../GLOSSARY.md#needs-you), [worktree](../GLOSSARY.md#worktree). Plain-language definitions are in the [glossary](../GLOSSARY.md).
 
 Pages and layouts are in [UX](../UX.md). This spec covers what the UX doc doesn't: navigation, screen states, keyboard, and the API between UI and daemon. Static mockups: [docs/mockups/](../mockups/index.html). Framework: Svelte ([D62](../DECISIONS.md#d62-svelte-for-the-web-ui)).
 
@@ -78,7 +78,7 @@ HTTP on `127.0.0.1`, token required on every `/api/*` call as `Authorization: Be
 | Method and path | Purpose |
 |---|---|
 | `GET /api/focus` | Top 3 items plus digest groups |
-| `GET /api/track` | Track rows: filtered, sorted, paged and grouped, with `page`, `facets`, `lastPassAt`, `stale` and per-source health. Parameters below (proposed [D84](../DECISIONS.md)) |
+| `GET /api/track` | Track rows: filtered, sorted, paged and grouped, with `page`, `facets`, `lastPassAt`, `stale` and per-source health. Parameters below (proposed [D84](../DECISIONS.md)). Each row's `repo` is its git repo (the remote path, or the main folder for a repo with no remote; null when the folder is in no repo) `repoUrl` its `https` link and `org` its owner (`local` with no remote), never a worktree folder (proposed [D99](../DECISIONS.md)); `group=repo` ends with a "No repo" group |
 | `GET /api/items/:id` | Item detail: stage, behaviors, proofs, review, after-ship, history, links |
 | `GET /api/journal?since=` | Timeline entries |
 | `GET /api/inbox` | Mentions, review requests, commitments by person |
@@ -109,7 +109,9 @@ All optional. A list is comma-separated (`stage=asked,built`); an empty value me
 
 | Parameter | Values | Default |
 |---|---|---|
-| `repo`, `branch` | up to 50 names, 200 characters each, matched exactly | all |
+| `org` | up to 50 owners (`Flip-to`, `local`), matched case-insensitively (proposed [D99](../DECISIONS.md)) | all |
+| `repo` | up to 50 repo paths (`host/Owner/repo`), matched case-insensitively | all |
+| `branch` | up to 50 names, 200 characters each, matched exactly | all |
 | `stage` | `asked`, `built`, `proven`, `reviewed`, `shipped`, `verified` | all |
 | `proof` | `none`, `fresh`, `expired`, `failed`, `weak`, `not_required` | all |
 | `flag` | `thrashing`, `unproven_claim`, `forgotten`, `none` (an item matches if it has any listed flag; `none` matches items with no open flag) | all |
@@ -117,13 +119,13 @@ All optional. A list is comma-separated (`stage=asked,built`); an empty value me
 | `hasEdits` | `true`, `false`: any code edit linked (false for conversations and documentation-only items) | both |
 | `q` | at most 80 characters; case-insensitive substring over title, repo and branch only (ASCII case folding) | none |
 | `sort`, `order` | `activity`, `stage`, `title`, `repo`, `flags`; `asc`, `desc` | `activity` `desc` |
-| `group` | `attention`, `repo`, `stage`, `none` | `attention` |
+| `group` | `attention`, `org`, `repo`, `stage`, `none` | `attention` |
 | `page`, `pageSize` | integers from 1 (`pageSize` up to 100) | `1`, `25` |
 
 Response, on top of the Phase 1 fields (`generatedAt`, `lastPassAt`, `stale`, `sources`):
 
 - `page`: `{page, pageSize, total, pages}`. `total` counts the whole filter; `pages` is at least 1. A page past the end returns `200` with no items.
-- `groups`: `{id, label, total, items, attention?}`. `total` counts the whole filter; `items` are only this page's rows. Pagination runs over the flat sorted list and groups are derived from the page. `group=attention` always lists its five groups (`needs_you`, `in_progress`, `waiting`, `forgotten`, `done`): `needs_you` holds only items with `thrashing` or `unproven_claim`, and `forgotten` holds items whose only flag is `forgotten` (low urgency; the UI collapses it; proposed [D94](../DECISIONS.md)); `repo` and `stage` list only groups that have rows on the page (`repo:<name>`, `repo:` for no repo, `stage:<name>`); `none` is one group `all`.
+- `groups`: `{id, label, total, items, attention?}`. `total` counts the whole filter; `items` are only this page's rows. Pagination runs over the flat sorted list and groups are derived from the page. `group=attention` always lists its five groups (`needs_you`, `in_progress`, `waiting`, `forgotten`, `done`): `needs_you` holds only items with `thrashing` or `unproven_claim`, and `forgotten` holds items whose only flag is `forgotten` (low urgency; the UI collapses it; proposed [D94](../DECISIONS.md)); `org`, `repo` and `stage` list only groups that have rows on the page (`org:<owner in lower case>`, `org:` and `repo:` for no repo, `repo:<name>`, `stage:<name>`); `none` is one group `all`.
 - `facets`: `{repo, branch, stage, proof, flag, age: {today, week, older}, hasEdits: {true, false}}`: counts per value, each over the items that pass every filter except that dimension's own (the `since` filter does not apply to `age`), so the UI can show what selecting a value would give. `stage`, `proof`, `flag`, `age` and `hasEdits` list every known value, zero included. `repo` and `branch` list at most 200 values, largest first. `today` is the last 24 hours and `week` the 7 days before that.
 - Each item adds `branch`, `hasEdits`, `firstActivity`, `sessionCount` (sessions feeding it, default 1) and `derivedCount` (how many continue another session, default 0; D86); each flag's `reason` is a short sentence naming files by base name only. An item with no title of its own is titled from repo, branch and first activity date (`claude-code · main · Oct 14`), never from prompt text.
 
