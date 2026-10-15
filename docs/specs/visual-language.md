@@ -15,18 +15,18 @@ Vantage is **visual first**: shape, color, size and position carry state; a few 
 
 ## The dot alphabet
 
-The dot is the atom of the UI. Meaning is carried by **shape first**, then color, so it works for colorblind users and in any theme.
+The dot is the atom of the UI. By default each state is a **full-colour filled circle** (D183, which supersedes the shape-first rule of D34); the setting **Colour-blind friendly** switches to the shape-first style with a colour-blind-safe palette. Status is never colour-only: every dot has a title and a spelled-out accessible name, and every dot colour keeps at least 3:1 contrast against the page in light and dark.
 
-| State | Shape | Color |
+| State | Default (colour) | Colour-blind friendly (shape first) |
 |---|---|---|
-| Done | Filled | Green |
-| In progress | Thick ring | Blue |
-| No proof | Half filled | Amber |
-| Needs you | Ring with a small badge dot | Red |
-| Skipped or not set up | Short dash, no ring (a ring, even dashed, read as "not yet" at 16 px) | Gray |
-| Not yet | Thin ring | Light gray |
+| Done | Green filled circle | Filled, green |
+| In progress | Blue filled circle | Thick ring, blue |
+| No proof | Amber filled circle | Half filled, amber |
+| Needs you or failed | Red filled circle | Ring with a small badge dot, red |
+| Skipped or not set up | Short grey dash | Short dash, no ring (a ring, even dashed, read as "not yet" at 16 px) |
+| Not yet | Muted grey filled circle | Thin ring, light grey |
 
-The Track page explains these in a legend ("What the dots mean") and writes the current stage beside each row's dots, for example "Built · no proof yet" ([web UI spec](web-ui.md#track-controls), proposed D91).
+The setting lives in the Help panel, is saved in local storage and can be set once with `?cb=1`. The Track page explains these in a legend ("What the dots mean") and writes the current stage beside each row's dots, for example "Built · no proof yet" ([web UI spec](web-ui.md#track-controls), proposed D91).
 
 ## Proof level ring
 

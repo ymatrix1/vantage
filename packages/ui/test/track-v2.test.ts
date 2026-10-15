@@ -375,7 +375,7 @@ describe("pager and toolbar", () => {
     expect(navs[0]?.querySelector("select")).toBeNull();
     expect(navs[1]?.querySelector("select")).not.toBeNull();
     const sticky = root.querySelector("[data-testid='sticky-top']");
-    expect(sticky?.classList.contains("sticky")).toBe(true);
+    expect(sticky?.classList.contains("md:sticky")).toBe(true);
     expect(sticky?.querySelector("input[type='search']")).not.toBeNull();
     expect(sticky?.querySelector("[aria-label='Summary']")).not.toBeNull();
   });

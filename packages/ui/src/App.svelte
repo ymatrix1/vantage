@@ -9,6 +9,7 @@
   import Overview from "$lib/Overview.svelte";
   import { applyPush, mergeCounts, startLive } from "$lib/live";
   import Pagination from "$lib/Pagination.svelte";
+  import { loadSettings } from "$lib/settings.svelte";
   import { sectionsOf } from "$lib/projects";
   import Row from "$lib/Row.svelte";
   import { summaryOf, type Summary } from "$lib/summary";
@@ -250,6 +251,7 @@
   }
 
   onMount(() => {
+    loadSettings();
     void load();
     const onPop = (): void => {
       view = parseView(window.location.search.slice(1));
@@ -291,13 +293,10 @@
 
 <svelte:window onkeydown={onKey} />
 
-<div
-  class="min-h-screen"
-  style="--dot-green: oklch(0.65 0.17 150); --dot-blue: oklch(0.6 0.17 250); --dot-amber: oklch(0.75 0.16 75); --dot-red: oklch(0.6 0.22 27); --dot-gray: oklch(0.6 0 0); --dot-light: oklch(0.8 0 0);"
->
+<div class="min-h-screen">
   <main class="mx-auto max-w-4xl px-6 pb-6">
     <!-- Sticky: the summary line and the controls stay in view while the list scrolls. -->
-    <div class="sticky top-0 z-20 -mx-6 mb-2 border-b border-border bg-background px-6 pt-4" data-testid="sticky-top">
+    <div class="z-20 md:sticky md:top-0 -mx-6 mb-2 border-b border-border bg-background px-6 pt-4" data-testid="sticky-top">
       <div class="flex items-center justify-between gap-3">
         <h1 class="text-xl font-semibold">Track</h1>
         <button

@@ -49,3 +49,29 @@ describe("summaryOf, the overview's data", () => {
     expect(s.stages).toEqual({ asked: 1, built: 5, proven: 2 });
   });
 });
+
+const propsFor = (repo: string | null) => ({
+  item: item({ repo, branch: repo ? "feat/x" : null }),
+  idx: 0,
+  selected: false,
+  isOpen: false,
+  now,
+  trace: null,
+  detail: null,
+  detailFailed: false,
+  traceFailed: false,
+  onselect: () => {},
+});
+
+describe("row columns", () => {
+  it("a row without a branch link still reserves the icon column, so dots and stage text line up", async () => {
+    const { render } = await import("./helpers");
+    const Row = (await import("../src/lib/Row.svelte")).default;
+    const root = render(Row, propsFor(null));
+    const slot = root.querySelector("li > div > button")?.nextElementSibling;
+    expect(slot?.className).toMatch(/w-10/);
+    expect(root.querySelector("button span.shrink-0 [role='img']")?.parentElement?.className).toContain(
+      "w-[",
+    );
+  });
+});

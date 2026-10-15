@@ -66,7 +66,7 @@ describe("dot legend", () => {
     expect(drawn).toEqual(["done", "current", "no_proof", "needs_you", "skipped", "not_yet"]);
     expect(text).toContain("No source can measure this yet.");
     expect(text).toContain("Edited, but no passing check since.");
-    expect(text).toContain("shape carries the meaning");
+    expect(text).toContain("state in words");
     expect(text).toContain("never moves a dot");
     // The skipped dot in the legend is the dash; the not-yet dot is the ring.
     expect(panel.querySelector("svg[data-state='skipped'] path")?.getAttribute("d")).toBe("M5 8h6");

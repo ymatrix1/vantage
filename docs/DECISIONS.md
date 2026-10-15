@@ -480,8 +480,9 @@ Rules:
 
 ### D34. Visual first with a dot alphabet
 
-- **Status:** accepted 2026-10-14
+- **Status:** superseded
 - **Decided by:** user
+- **Superseded by:** D183
 
 - **Context:** The user wants to read less: colors, drawings and visuals instead of text. A first attempt removed titles and used emoji, which made items unidentifiable and rendered inconsistently.
 - **Decision:** Shape, color, size and position carry state; 2–4 word titles carry identity; about 30 words per screen. Six dot states differ by shape first, then color. Proof level shows as 1 to 4 green arcs around the Proven dot (count, not shine, which blurred at small sizes). Flags use one line-icon set, never emoji.
@@ -1069,6 +1070,20 @@ From research [R2](research/claude-code-hooks.md), 2026-10-14.
 - **Impact:** Adds work for a tracker adapter (Phase 6, `vantage-vncu` research) and credential storage (`vantage-5fek`), and for the `issue_policy` setting and the "sessions without an issue" count in the page and in `vantage stats`. No code changes in this record. Until a tracker is connected, the soft titles from the first request and the lineage grouping (parallel work) carry the load. Revisit if the chosen tracker cannot be read with a user-scoped token, or if the week of use shows few sessions without an issue.
 
 ---
+
+### D183. Dots are full-colour filled circles by default; the shape-first style is a "Colour-blind friendly" setting
+
+- **Status:** accepted 2026-10-15
+- **Decided by:** user ("yes lets change, add a config to change but DEFAULT is full colour"), relayed in chat by the parent session; the user should confirm the wording when reviewing the PR
+- **Context:** D34 made the dots differ by shape first (ring, half, dash) and colour second, so they work for colour-blind users. In daily use the user found the rings and half shapes hard to read at a glance and asked for plain colour.
+- **Decision:**
+  1. Default: each dot is a filled circle in the colour of its state: done green, current blue, built without proof amber, needs you or failed red, not yet grey, skipped a short grey dash.
+  2. Setting "Colour-blind friendly" (default off, in the Help panel, saved in the browser's local storage, `?cb=1` sets it once): the D34 shapes (ring, half, dash, badge dot) with a colour-blind-safe palette (Okabe-Ito hues).
+  3. Floor in both styles: every dot has a title and its row has an accessible name that spells each state in words, so colour is never the only signal; every dot colour has at least 3:1 contrast against the page background in light and dark (measured, values in `app.css`).
+  4. The legend ("What the dots mean") describes the active style.
+- **Why:** Plain colour is the fastest read for most people; the setting keeps D34's accessibility for those who need it, and words back both styles.
+- **Alternatives:** Keep shape-first only (the user's complaint). Colour only with no setting (excludes colour-blind users). Follow the operating system's contrast preference only (not a clear control).
+- **Impact:** `Dot.svelte`, `settings.svelte.ts`, `legend.ts`, `Legend.svelte`, `app.css`, [visual language](specs/visual-language.md), [UX](UX.md). Supersedes the shape-first rule of D34 for the default; the status line keeps its glyphs (D41, D74).
 
 ## Proposed (pending confirmation)
 
