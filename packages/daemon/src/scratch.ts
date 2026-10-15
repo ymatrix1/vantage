@@ -89,6 +89,8 @@ export interface GitClassification {
   relative: Map<string, string>;
 }
 
+const slashed = (x: string): string => x.replaceAll("\\", "/");
+
 /**
  * Path of `path` inside `root` (forward slashes), or the path itself when it is not under it. Git prints
  * the real path of the repo root, while an event may carry another spelling of the same folder (a
@@ -96,7 +98,6 @@ export interface GitClassification {
  * existing folder resolved.
  */
 function relativeTo(path: string, root: string): string {
-  const slashed = (x: string): string => x.replaceAll("\\", "/");
   const r = slashed(root).replace(/\/$/, "").toLowerCase();
   const inside = (p: string): string | null =>
     p.toLowerCase().startsWith(`${r}/`) ? p.slice(r.length + 1) : null;
