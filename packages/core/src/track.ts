@@ -261,17 +261,14 @@ export function fallbackTitle(parts: {
   branch: string | null;
   firstActivity: string;
   id: string;
-  /** Base name of the last file the item edited; tells apart sessions of one repo on one day. */
-  file?: string | null;
 }): string {
   const t = Date.parse(parts.firstActivity);
   const date = Number.isNaN(t)
     ? null
     : `${MONTHS[new Date(t).getUTCMonth()] ?? ""} ${new Date(t).getUTCDate()}`;
   const named = [parts.repo, parts.branch].filter((x): x is string => !!x);
-  const file = parts.file ? `edited ${parts.file}` : null;
-  if (named.length === 0) return ["Session " + parts.id.slice(0, 8), date, file].filter(Boolean).join(" · ");
-  return [...named, date, file].filter(Boolean).join(" · ");
+  if (named.length === 0) return ["Session " + parts.id.slice(0, 8), date].filter(Boolean).join(" · ");
+  return [...named, date].filter(Boolean).join(" · ");
 }
 
 export interface TrackGroup {

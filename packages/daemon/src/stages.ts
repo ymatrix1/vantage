@@ -159,7 +159,6 @@ export function runStagePass(store: Store, opts: StagePassOptions = {}, now = ne
           branch: item.branch,
           firstActivity: item.firstActivity,
           id: item.itemKey.split(":").slice(1).join(":"),
-          file: lastEditedFile(store, item.itemKey),
         });
       }
       // A worktree item is titled with a folder name; its branch is a better name.
@@ -172,7 +171,6 @@ export function runStagePass(store: Store, opts: StagePassOptions = {}, now = ne
               branch: null,
               firstActivity: item.firstActivity,
               id: item.itemKey.split(":").slice(1).join(":"),
-              file: lastEditedFile(store, item.itemKey),
             });
         if (!item.branch) source = "fallback";
       }
@@ -252,15 +250,24 @@ export function runStagePass(store: Store, opts: StagePassOptions = {}, now = ne
       persistFlags(store, id, item, at);
     }
   });
-  // Untitled items that still read the same (a fork of a session, two sessions in one repo on one day) get a short
-  // id suffix, so no two rows in a list look identical.
-  store.db
-    .prepare(
-      `UPDATE work_items SET title = title || ' · #' || substr(replace(item_key, 'session:', ''), 1, 4)
-       WHERE title_source = 'fallback' AND title IN
-         (SELECT title FROM work_items WHERE title_source = 'fallback' GROUP BY title HAVING COUNT(*) > 1)`,
-    )
-    .run();
+  // Untitled items that read the same (a fork of a session, two sessions in one repo on one day) are told apart:
+  // first by the last file each edited, then by a short id, so no two rows in a list look identical.
+  const collisions = (): { key: string; title: string }[] =>
+    store.db
+      .prepare(
+        `SELECT item_key, title FROM work_items WHERE title_source = 'fallback' AND title IN
+           (SELECT title FROM work_items WHERE title_source = 'fallback' GROUP BY title HAVING COUNT(*) > 1)`,
+      )
+      .all()
+      .map((r) => ({ key: text(r, "item_key"), title: text(r, "title") }));
+  const retitle = (key: string, title: string): void => {
+    store.db.prepare("UPDATE work_items SET title = ? WHERE item_key = ?").run(title, key);
+  };
+  for (const c of collisions()) {
+    const file = lastEditedFile(store, c.key);
+    if (file) retitle(c.key, `${c.title} · edited ${file}`);
+  }
+  for (const c of collisions()) retitle(c.key, `${c.title} · #${c.key.replace("session:", "").slice(0, 4)}`);
   store.db.prepare("DELETE FROM item_repos WHERE item_key NOT IN (SELECT item_key FROM work_items)").run();
   return { items: items.length, proofs: proofCount };
 }
