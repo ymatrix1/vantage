@@ -2,7 +2,7 @@
 // `requestTitle` in core, kept in `session_titles` and used only as the title of that session's
 // provisional item. Local only; nothing here logs, sends or re-exposes the text.
 import { closeSync, openSync, readSync } from "node:fs";
-import { firstRequestTitle, latestSessionName, parseTranscriptLine } from "@vantage/core";
+import { firstRequestTitle, latestSessionName, looksInjectedTitle, parseTranscriptLine } from "@vantage/core";
 import type { Store } from "./store.ts";
 
 /** The first request sits near the top of a transcript; never read more than this per file. */
@@ -38,7 +38,8 @@ export function headLines(path: string, maxBytes: number = HEAD_BYTES): string[]
  * Re-running is idempotent: the session id is the key and an existing title is kept.
  */
 export function captureRequestTitle(store: Store, path: string, key: string, own: string, now: string): void {
-  const marker = `titles:${key}`;
+  // `titles2:` replaced `titles:` when injected text stopped counting as a request (D194): every head is read once more.
+  const marker = `titles2:${key}`;
   if (store.getCursor(marker) !== 0) return;
   const parsed = headLines(path).flatMap((l) => {
     const p = parseTranscriptLine(l);
@@ -76,9 +77,29 @@ export function listRequestTitles(store: Store): StoredRequestTitle[] {
     }));
 }
 
-/** session id to title, read once per stage pass. */
+/** session id to title, read once per stage pass. A title that is really injected text is never used (D194). */
 export function requestTitleMap(store: Store): Map<string, string> {
-  return new Map(listRequestTitles(store).map((t) => [t.sessionId, t.title]));
+  return new Map(
+    listRequestTitles(store)
+      .filter((t) => !looksInjectedTitle(t.title))
+      .map((t) => [t.sessionId, t.title]),
+  );
+}
+
+/** Deletes stored titles that are injected text (captured before D194), once; returns how many. */
+export function repairRequestTitles(store: Store, now: string): number {
+  const marker = "titles-repair:d194";
+  if (store.getCursor(marker) !== 0) return 0;
+  return store.transaction(() => {
+    let n = 0;
+    for (const t of listRequestTitles(store)) {
+      if (!looksInjectedTitle(t.title)) continue;
+      store.db.prepare("DELETE FROM session_titles WHERE session_id = ?").run(t.sessionId);
+      n++;
+    }
+    store.setCursor(marker, 1, now);
+    return n;
+  });
 }
 
 /**

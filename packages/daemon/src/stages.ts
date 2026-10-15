@@ -137,7 +137,18 @@ export function runStagePass(store: Store, opts: StagePassOptions = {}, now = ne
         });
       }
       // A worktree item is titled with a folder name; its branch is a better name.
-      if (item.itemKey.startsWith("worktree:") && item.branch) title = item.branch;
+      // Never by its folder: an agent tool picked that name. Without a branch it reads like an untitled session.
+      if (item.itemKey.startsWith("worktree:")) {
+        title = item.branch
+          ? item.branch
+          : fallbackTitle({
+              repo: shown,
+              branch: null,
+              firstActivity: item.firstActivity,
+              id: item.itemKey.split(":").slice(1).join(":"),
+            });
+        if (!item.branch) source = "fallback";
+      }
       if (title === "HEAD") title = `detached HEAD${shown ? ` in ${shown}` : ""}`;
       const pick = isExplicitKey(item.itemKey) ? undefined : accepted.get(item.itemKey);
       if (pick !== undefined) {

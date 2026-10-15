@@ -120,3 +120,46 @@ describe("group by branch", () => {
     expect(view.groups.map((g) => [g.id, g.label, g.total])).toEqual([["branch:feat/a", "feat/a", 1]]);
   });
 });
+
+describe("injected first messages (D194)", () => {
+  const injected = msg(
+    "user",
+    "u0",
+    0,
+    "You are operating in a git worktree. Run commands here. SECRETBODY",
+    "main",
+  );
+  const real = msg("user", "u1", 1, "Add pagination to the track page. Then more.", "main");
+  const edit2 = msg(
+    "assistant",
+    "a1",
+    2,
+    [{ type: "tool_use", id: "t1", name: "Edit", input: { file_path: "/w/a.ts" } }],
+    "main",
+  );
+
+  it("never title an item; the next real request does", () => {
+    run([injected, real, edit2]);
+    expect(listItems(store)[0]).toMatchObject({
+      title: "Add pagination to the track page",
+      titleSource: "request",
+    });
+  });
+
+  it("leave an item with no real request on the fallback title, never the notice", () => {
+    run([injected, edit2]);
+    const item = listItems(store)[0];
+    expect(item?.titleSource).toBe("fallback");
+    expect(item?.title).not.toContain("worktree");
+  });
+
+  it("are repaired once: a stored notice title is dropped and the real one is captured", () => {
+    store.db
+      .prepare("INSERT INTO session_titles (session_id, title, captured_at) VALUES (?, ?, ?)")
+      .run(SID, "You are operating in a git worktree", "2026-01-04T00:00:00Z");
+    run([injected, real, edit2]);
+    expect(
+      store.db.prepare("SELECT title FROM session_titles WHERE session_id = ?").get(SID)?.["title"],
+    ).toBe("Add pagination to the track page");
+  });
+});
