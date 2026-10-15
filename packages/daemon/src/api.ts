@@ -19,6 +19,7 @@ import {
   type TrackQuery,
   type TrackView,
 } from "@vantage/core";
+import { itemSessionCounts } from "./lineage.ts";
 import { linksForItem } from "./linking.ts";
 import { getItem, summary, type ItemSummary } from "./stages.ts";
 import type { Store } from "./store.ts";
@@ -94,6 +95,7 @@ const escapeLike = (v: string): string => v.replace(/[\\%_]/g, (c) => `\\${c}`);
 // Sort expressions come from this allow-list only; the query value picks a key, never text.
 const STAGE_RANK = `CASE w.stage ${TRACK_STAGES.map((st, i) => `WHEN '${st}' THEN ${i}`).join(" ")} ELSE ${TRACK_STAGES.length} END`;
 const FLAG_COUNT = `(SELECT COUNT(*) FROM flags f WHERE ${OPEN_FLAG})`;
+const URGENT_FLAG_COUNT = `(SELECT COUNT(*) FROM flags f WHERE ${OPEN_FLAG} AND f.kind <> 'forgotten')`;
 const SORT_SQL: Record<SortKey, string> = {
   activity: "w.last_activity",
   stage: STAGE_RANK,
@@ -206,15 +208,19 @@ function groupTotals(store: Store, q: TrackQuery, w: Where): Map<string, number>
   if (q.group === "attention") {
     const r = store.db
       .prepare(
-        `SELECT SUM(CASE WHEN fl > 0 THEN 1 ELSE 0 END) AS needs,
+        `SELECT SUM(CASE WHEN urgent > 0 THEN 1 ELSE 0 END) AS needs,
+           SUM(CASE WHEN urgent = 0 AND fl > 0 THEN 1 ELSE 0 END) AS forgotten,
            SUM(CASE WHEN fl = 0 AND stage = 'verified' THEN 1 ELSE 0 END) AS done, COUNT(*) AS n
-         FROM (SELECT w.stage AS stage, ${FLAG_COUNT} AS fl FROM work_items w WHERE ${w.sql})`,
+         FROM (SELECT w.stage AS stage, ${FLAG_COUNT} AS fl, ${URGENT_FLAG_COUNT} AS urgent
+               FROM work_items w WHERE ${w.sql})`,
       )
       .get(...w.params);
     const needs = Number(r?.["needs"] ?? 0);
     const done = Number(r?.["done"] ?? 0);
+    const forgotten = Number(r?.["forgotten"] ?? 0);
     out.set("needs_you", needs);
-    out.set("in_progress", Number(r?.["n"] ?? 0) - needs - done);
+    out.set("forgotten", forgotten);
+    out.set("in_progress", Number(r?.["n"] ?? 0) - needs - forgotten - done);
     out.set("done", done);
   } else if (q.group === "repo") {
     for (const r of store.db
@@ -232,7 +238,10 @@ function groupTotals(store: Store, q: TrackQuery, w: Where): Map<string, number>
   return out;
 }
 
-const toTrackItem = (i: ItemSummary): TrackItem => ({
+const toTrackItem = (
+  i: ItemSummary,
+  sessions?: { sessionCount: number; derivedCount: number },
+): TrackItem => ({
   id: i.itemKey,
   title: i.title,
   repo: i.repo,
@@ -244,6 +253,9 @@ const toTrackItem = (i: ItemSummary): TrackItem => ({
   hasEdits: i.hasEdits,
   flags: i.flags.map((f) => ({ kind: f.kind, severity: f.severity, reason: f.reason })),
   firstActivity: i.firstActivity,
+  // An item with no linked session event (git only) counts as one session with none derived.
+  sessionCount: sessions?.sessionCount ?? 1,
+  derivedCount: sessions?.derivedCount ?? 0,
   lastActivity: i.lastActivity,
 });
 
@@ -266,7 +278,10 @@ export function trackView(store: Store, now = new Date(), q: TrackQuery = DEFAUL
       `SELECT w.* FROM work_items w WHERE ${w.sql} ORDER BY ${SORT_SQL[q.sort]} ${order}, ${tie}w.item_key LIMIT ? OFFSET ?`,
     )
     .all(...w.params, q.pageSize, (q.page - 1) * q.pageSize)
-    .map((r) => toTrackItem(summary(store, r)));
+    .map((r) => {
+      const sum = summary(store, r);
+      return toTrackItem(sum, itemSessionCounts(store, sum.itemKey).get(sum.itemKey));
+    });
 
   const totals = groupTotals(store, q, w);
   const groups: TrackView["groups"] = [];
