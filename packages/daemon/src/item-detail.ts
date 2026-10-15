@@ -2,6 +2,7 @@
 // detail. Pure reads over events and links. Files are base names only; the path is the worktree's.
 import { repoUrlOf, type ItemDetailView, type ItemSession } from "@vantage/core";
 import { itemCwd } from "./projects.ts";
+import { requestTitleMap, sessionNameMap } from "./titles.ts";
 import type { Store } from "./store.ts";
 
 const MAX_FILES = 40;
@@ -43,6 +44,15 @@ function sessionsOf(store: Store, itemKey: string): ItemSession[] {
        GROUP BY e.session_id ORDER BY MIN(e.occurred_at)`,
     )
     .all(itemKey);
+  const names = sessionNameMap(store);
+  const requests = requestTitleMap(store);
+  const cwdOf = store.db.prepare(
+    `SELECT COALESCE(json_extract(e.payload_json, '$.cwd'), json_extract(e.payload_json, '$.worktree')) AS c
+     FROM links l JOIN events e ON e.id = l.event_id
+     WHERE l.item_key = ? AND l.undone_at IS NULL AND e.session_id = ?
+       AND COALESCE(json_extract(e.payload_json, '$.cwd'), json_extract(e.payload_json, '$.worktree')) IS NOT NULL
+     ORDER BY e.occurred_at DESC LIMIT 1`,
+  );
   const parent = store.db.prepare(
     `SELECT json_extract(payload_json, '$.parentSessionId') AS p FROM events
      WHERE kind = 'session.derived' AND session_id = ? ORDER BY occurred_at LIMIT 1`,
@@ -54,6 +64,8 @@ function sessionsOf(store: Store, itemKey: string): ItemSession[] {
     return [
       {
         id,
+        name: names.get(id) ?? requests.get(id) ?? null,
+        cwd: str(cwdOf.get(itemKey, id)?.["c"]),
         parentId: p && p !== id ? p : null,
         firstAt: String(r["a"]),
         lastAt: String(r["b"]),

@@ -39,6 +39,7 @@
     attention: "Attention",
     org: "Organization",
     repo: "Repo",
+    branch: "Branch",
     stage: "Stage",
     none: "No grouping",
   };

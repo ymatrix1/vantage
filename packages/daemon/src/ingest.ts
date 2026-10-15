@@ -15,7 +15,7 @@ import type { IngestContext, TranscriptLine, VantageEvent } from "@vantage/core"
 import type { Store } from "./store.ts";
 import { tailLines } from "./tail.ts";
 import { headLines } from "./titles.ts";
-import { captureRequestTitle } from "./titles.ts";
+import { captureRequestTitle, captureSessionName } from "./titles.ts";
 
 export interface IngestResult {
   files: number;
@@ -208,6 +208,7 @@ export function backfillTranscripts(
     if (requestTitles && own) captureRequestTitle(store, path, key, own, stamp);
     const { lines, nextOffset } = tailLines(path, before);
     if (lines.length === 0 && nextOffset === before) continue;
+    if (requestTitles && own) captureSessionName(store, lines, own, stamp);
     const parsed: TranscriptLine[] = [];
     const all: TranscriptLine[] = [];
     for (const l of lines) {

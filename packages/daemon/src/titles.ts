@@ -2,7 +2,7 @@
 // `requestTitle` in core, kept in `session_titles` and used only as the title of that session's
 // provisional item. Local only; nothing here logs, sends or re-exposes the text.
 import { closeSync, openSync, readSync } from "node:fs";
-import { firstRequestTitle, parseTranscriptLine } from "@vantage/core";
+import { firstRequestTitle, latestSessionName, parseTranscriptLine } from "@vantage/core";
 import type { Store } from "./store.ts";
 
 /** The first request sits near the top of a transcript; never read more than this per file. */
@@ -88,4 +88,36 @@ export function requestTitleMap(store: Store): Map<string, string> {
  */
 export function clearRequestTitles(store: Store): number {
   return store.transaction(() => Number(store.db.prepare("DELETE FROM session_titles").run().changes));
+}
+
+/**
+ * Keeps the name Claude Code gave session `own` from newly read transcript lines (D191). A custom name is
+ * never replaced by a generated one; otherwise the latest name wins. Idempotent.
+ */
+export function captureSessionName(store: Store, lines: readonly string[], own: string, now: string): void {
+  const found = latestSessionName(lines, own);
+  if (!found) return;
+  const { name, source } = found;
+  store.db
+    .prepare(
+      `INSERT INTO session_names (session_id, name, source, captured_at) VALUES (?, ?, ?, ?)
+       ON CONFLICT (session_id) DO UPDATE SET name = excluded.name, source = excluded.source, captured_at = excluded.captured_at
+       WHERE excluded.source = 'custom' OR session_names.source = 'agent'`,
+    )
+    .run(own, name, source, now);
+}
+
+/** session id to its Claude Code name, read once per stage pass. */
+export function sessionNameMap(store: Store): Map<string, string> {
+  return new Map(
+    store.db
+      .prepare("SELECT session_id, name FROM session_names")
+      .all()
+      .map((r) => [String(r["session_id"]), String(r["name"])]),
+  );
+}
+
+/** Deletes every stored session name and returns how many; the next transcript pass reads them again only for new lines. */
+export function clearSessionNames(store: Store): number {
+  return store.transaction(() => Number(store.db.prepare("DELETE FROM session_names").run().changes));
 }

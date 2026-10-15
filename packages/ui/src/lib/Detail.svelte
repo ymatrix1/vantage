@@ -3,7 +3,8 @@
   // where it lives, the timeline and proofs (Trace), and actions. Every string renders as text.
   import { projectNameOf, type ItemDetailView, type ItemSession, type TraceResponse } from "@vantage/core/track";
   import type { TrackRow } from "./contract";
-  import { branchLink, cdCommand, commitLink, repoLink } from "./links";
+  import { branchLink, cdCommand, commitLink, repoLink, resumeCommand } from "./links";
+  import { sessionLabel } from "./proof-line";
   import { ago } from "./relative-time";
   import { nestSessions, type SessionNode } from "./sessions";
   import Trace from "./Trace.svelte";
@@ -36,7 +37,11 @@
   const hiddenFiles = $derived(Math.max(0, (detail?.files.total ?? 0) - Math.min(files.length, FILES_SHOWN)));
   let copied = $state<string | null>(null);
 
-  const short = (id: string): string => id.slice(0, 8);
+  /** The newest session is the one to reopen from the item's action bar. */
+  const latest = $derived(
+    detail ? ([...detail.sessions].toSorted((a, b) => (a.lastAt < b.lastAt ? 1 : -1))[0] ?? null) : null,
+  );
+  const resumeLatest = $derived(latest ? resumeCommand(latest.id, latest.cwd ?? detail?.worktreePath) : null);
 
   async function copy(what: string, text: string): Promise<void> {
     try {
@@ -51,8 +56,11 @@
 {#snippet sessionNode(n: SessionNode, depth: number)}
   <li>
     <span class="text-muted-foreground" style={`padding-left: ${depth * 1}rem`}>
-      {#if depth > 0}continues above:{" "}{/if}<span class="text-foreground">Session {short(n.session.id)}</span>, {ago(n.session.lastAt, now)}, {n.session.events} events
+      {#if depth > 0}continues above:{" "}{/if}<span class="text-foreground" title={n.session.id}>{sessionLabel(n.session.name, n.session.id)}</span>, {ago(n.session.lastAt, now)}, {n.session.events} events
     </span>
+    {#if resumeCommand(n.session.id, n.session.cwd)}
+      <button type="button" class="ml-2 rounded-md border border-border px-1.5 text-xs hover:bg-muted" onclick={() => void copy("Resume command", resumeCommand(n.session.id, n.session.cwd) ?? "")}>Open in Claude</button>
+    {/if}
     {#if n.children.length > 0}
       <ul>
         {#each n.children as c (c.session.id)}{@render sessionNode(c, depth + 1)}{/each}
@@ -131,6 +139,9 @@
     {/if}
     {#if branch}
       <button type="button" class="rounded-md border border-border px-2 py-1 text-xs hover:bg-muted" onclick={() => void copy("Branch name", branch)}>Copy branch name</button>
+    {/if}
+    {#if resumeLatest}
+      <button type="button" class="rounded-md border border-border px-2 py-1 text-xs hover:bg-muted" title="Copies the command that reopens the latest session in its folder" onclick={() => void copy("Resume command", resumeLatest)}>Open in Claude</button>
     {/if}
     {#if cd}
       <button type="button" class="rounded-md border border-border px-2 py-1 text-xs hover:bg-muted" onclick={() => void copy("cd command", cd)}>Copy cd command</button>
