@@ -1,4 +1,4 @@
-"""Checks for the SQLite migration files in packages/daemon/migrations (D93). Pure functions over names
+"""Checks for the SQLite migration files in packages/daemon/migrations (D98). Pure functions over names
 and text, so they are easy to test.
 
 - Every file is named NNNN-slug.sql (four digits, lowercase words joined by dashes).
