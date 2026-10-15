@@ -216,15 +216,27 @@ describe("the demo store", () => {
     seedDemoHome(home);
     const store = new Store(join(home, "vantage.db"));
     try {
-      const dump = JSON.stringify([
-        listItems(store),
-        store.db.prepare("SELECT payload_json, session_id FROM events").all(),
-        store.db.prepare("SELECT title FROM session_titles").all(),
-      ]);
-      expect(dump).not.toMatch(/yuri|ymatrix|flip|C:\\\\Users|\/Users\/|\/home\//i);
-      for (const m of dump.matchAll(/"cwd":"([^"]+)"/g))
-        expect(m[1]).toMatch(/^\/demo\/demo-(shop|api|docs)$/);
-      for (const m of dump.matchAll(/"session_id":"([^"]+)"/g)) expect(m[1]).toMatch(/^demo-s\d+[abc]?$/);
+      const events = store.db.prepare("SELECT payload_json, session_id FROM events").all();
+      expect(events.length).toBeGreaterThan(20);
+      const payloads = events.map((e) => {
+        const p: Record<string, unknown> = JSON.parse(String(e["payload_json"]));
+        expect(String(e["session_id"])).toMatch(/^demo-s\d+[abc]?$/);
+        // Paths point into the temp demo home (which holds the machine's temp path); check the rest of each.
+        for (const k of ["cwd", "path"]) {
+          const v = p[k];
+          if (typeof v !== "string") continue;
+          expect(v.startsWith(home)).toBe(true);
+          p[k] = v.slice(home.length);
+        }
+        expect(typeof p["cwd"] === "string" ? p["cwd"] : "/demo-api").toMatch(/demo-(shop|api|docs)$/);
+        return p;
+      });
+      const titles = store.db.prepare("SELECT title FROM session_titles").all();
+      const items = listItems(store);
+      const dump = JSON.stringify([payloads, titles, items]);
+      expect(dump).not.toMatch(/yuri|ymatrix|flip|Users|\/home\//i);
+      for (const i of items)
+        expect(i.repo === null || i.repo.startsWith("github.com/demo-org/demo-")).toBe(true);
     } finally {
       store.close();
     }
@@ -297,7 +309,7 @@ describe("vantage tour --demo", () => {
     expect(dirs).toHaveLength(1);
     const track = await get(port, "/api/track", token);
     expect(track.status).toBe(200);
-    expect(track.body).toContain("demo-api");
+    expect(track.body).toContain("github.com/demo-org/demo-api");
     expect(JSON.parse(track.body)).toBeTruthy();
     expect(out.join("\n")).toContain("Everything in it is invented");
 

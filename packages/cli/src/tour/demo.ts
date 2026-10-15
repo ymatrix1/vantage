@@ -1,6 +1,7 @@
 // `vantage tour --demo`: a temporary, synthetic Vantage home (docs/specs/first-run.md#the-guided-tour).
 // Everything here is invented: repos named demo-*, paths under /demo, titles that say they are fake. Nothing is
 // read from the real home, the real Claude Code folder or any repo, and nothing is written outside the temp dir.
+import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join, resolve, sep } from "node:path";
@@ -57,6 +58,23 @@ export function sameFolder(a: string, b: string): boolean {
 const normalize = (p: string): string =>
   process.platform === "win32" ? resolve(p).toLowerCase() : resolve(p);
 
+/**
+ * A tiny empty git repo inside the demo home, with a made-up remote, so the Track page can show a repo name
+ * and group by it. Without git the demo still works: items just have no repo.
+ */
+function demoRepo(home: string, name: string): { cwd: string } {
+  const dir = join(home, "repos", name);
+  mkdirSync(dir, { recursive: true });
+  try {
+    const opts = { cwd: dir, stdio: "ignore" as const, timeout: 10_000 };
+    execFileSync("git", ["init", "-q"], opts);
+    execFileSync("git", ["remote", "add", "origin", `https://github.com/demo-org/${name}.git`], opts);
+  } catch {
+    // no git on this machine: the demo has no repo names, which is fine
+  }
+  return { cwd: dir };
+}
+
 /** Writes the synthetic events and runs one stage pass so the Track page has rows at once. */
 export function seedDemoHome(home: string, now: Date = new Date()): void {
   mkdirSync(home, { recursive: true });
@@ -82,11 +100,11 @@ export function seedDemoHome(home: string, now: Date = new Date()): void {
         at(msAgo),
       );
     };
-    const shop = { cwd: "/demo/demo-shop" };
-    const api = { cwd: "/demo/demo-api" };
-    const docs = { cwd: "/demo/demo-docs" };
+    const shop = demoRepo(home, "demo-shop");
+    const api = demoRepo(home, "demo-api");
+    const docs = demoRepo(home, "demo-docs");
     const edit = (s: string, repo: { cwd: string }, branch: string, file: string, msAgo: number): void =>
-      put(s, "file.edited", msAgo, { ...repo, branch, path: `${repo.cwd}/${file}` });
+      put(s, "file.edited", msAgo, { ...repo, branch, path: join(repo.cwd, file) });
     const run = (
       s: string,
       repo: { cwd: string },
