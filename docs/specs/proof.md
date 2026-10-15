@@ -68,6 +68,10 @@ These never count as passing, even with exit 0:
 - Commands that can't fail (`echo`, `true`, `exit 0`) or that only print.
 - A runner filtered to tests unrelated to the changed files (shown as L1, not L2).
 
+## What counts as an edit
+
+Proof expires when a code edit lands after it. Edits that touch only scratch files (logs, temp output, caches, files git ignores) are not code edits and expire nothing; see [ingestion](ingestion.md#scratch-files) and D140 (proposed). A tracked file always counts.
+
 ## Recognizing the command
 
 A shell command is split into its simple commands at `&&`, `||`, `;`, `|` and newlines, but never inside quotes, backticks or `$(...)`, after a backslash, or in a here-document body (`splitCommandSegments`, shared with the shell write detection). Each segment is read from its first word: leading `VAR=x`, `time`, `env` and `nohup` are skipped, `cd x &&` is its own segment, and the rest is matched against the runner allowlist. A segment that starts with a read-only command (`grep`, `rg`, `cat`, `head`, `tail`, `ls`, `find`, `echo`, `sed`, `git log` and similar) is never a check, even when its arguments name a runner: `grep -n "check_docs\|unittest" f` is a search, not a test run. This is a bug fix to how D71's allowlist is applied, not a change to it.
