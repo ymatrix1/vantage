@@ -1,5 +1,7 @@
 # Spec: Settings
 
+> **Terms:** [flag](../GLOSSARY.md#flag), [signal](../GLOSSARY.md#signal). Plain-language definitions are in the [glossary](../GLOSSARY.md).
+
 Where the user sees and controls which engine answers, what it may read, and how much it may run. Everything that leaves the machine is **off by default** (see [privacy](../ARCHITECTURE.md#privacy)).
 
 ## Where it lives

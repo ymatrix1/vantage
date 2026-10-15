@@ -1,5 +1,7 @@
 # Spec: lifecycle
 
+> **Terms:** [A2V](../GLOSSARY.md#a2v), [anchor](../GLOSSARY.md#anchor), [flag](../GLOSSARY.md#flag), [hook](../GLOSSARY.md#hook), [work item](../GLOSSARY.md#work-item), [worktree](../GLOSSARY.md#worktree). Plain-language definitions are in the [glossary](../GLOSSARY.md).
+
 Implements the track of the [A2V: Asked to Verified](../METHOD.md) method. Every work item sits in exactly one stage. Stages change only on evidence.
 
 ```

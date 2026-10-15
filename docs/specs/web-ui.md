@@ -1,5 +1,7 @@
 # Spec: web UI
 
+> **Terms:** [daemon](../GLOSSARY.md#daemon), [flag](../GLOSSARY.md#flag), [Needs you](../GLOSSARY.md#needs-you), [worktree](../GLOSSARY.md#worktree). Plain-language definitions are in the [glossary](../GLOSSARY.md).
+
 Pages and layouts are in [UX](../UX.md). This spec covers what the UX doc doesn't: navigation, screen states, keyboard, and the API between UI and daemon. Static mockups: [docs/mockups/](../mockups/index.html). Framework: Svelte ([D62](../DECISIONS.md#d62-svelte-for-the-web-ui)).
 
 ## Navigation

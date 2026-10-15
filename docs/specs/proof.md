@@ -1,5 +1,7 @@
 # Spec: proof
 
+> **Terms:** [daemon](../GLOSSARY.md#daemon), [flag](../GLOSSARY.md#flag), [hook](../GLOSSARY.md#hook), [spool](../GLOSSARY.md#spool). Plain-language definitions are in the [glossary](../GLOSSARY.md).
+
 Proof is what moves a card to **Proven** (and, after deploy, **Verified**). It's the heart of "evidence over claims", so it gets its own rules.
 
 ## What proof is

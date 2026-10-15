@@ -2,6 +2,8 @@
 
 > **Status:** draft. Mockups: [docs/mockups/visual.html](../mockups/visual.html#explain).
 
+> **Terms:** [A2V](../GLOSSARY.md#a2v), [answer first](../GLOSSARY.md#answer-first), [flag](../GLOSSARY.md#flag), [hook](../GLOSSARY.md#hook), [issue tree](../GLOSSARY.md#issue-tree), [MECE](../GLOSSARY.md#mece), [SCR](../GLOSSARY.md#scr). Plain-language definitions are in the [glossary](../GLOSSARY.md).
+
 Explain is a quick action that turns Vantage's evidence into a short, top-down, interactive explanation for someone with little time. It uses the agent the user already has connected (Claude Code, Codex).
 
 **Core rule: the model explains, it never decides status.** Stages, flags, proof and counts come from Vantage's evidence. The model only writes the narrative, groups items and drafts diagrams, and every claim must point at evidence.

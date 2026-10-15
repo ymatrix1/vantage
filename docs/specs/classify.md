@@ -1,5 +1,7 @@
 # Spec: Classify
 
+> **Terms:** [anchor](../GLOSSARY.md#anchor), [backfill](../GLOSSARY.md#backfill), [daemon](../GLOSSARY.md#daemon), [flag](../GLOSSARY.md#flag), [hook](../GLOSSARY.md#hook), [stop gate](../GLOSSARY.md#stop-gate), [work item](../GLOSSARY.md#work-item), [worktree](../GLOSSARY.md#worktree). Plain-language definitions are in the [glossary](../GLOSSARY.md).
+
 An opt-in job that asks the user's own Claude Code (`claude -p`, Haiku) to suggest titles, topics and groupings for work items. The model writes text only; status, stage, proof and flags stay evidence-only ([D57](../DECISIONS.md#d57-vantage-owns-status-and-tree-shape-the-model-writes-text-only)). Decisions: D110, D111, D112 (proposed).
 
 ## Why
