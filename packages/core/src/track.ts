@@ -36,6 +36,10 @@ export interface TrackItem {
   flags: { kind: string; severity: string; reason: string }[];
   /** The next three are always set by the daemon; optional so values built before D84 still type-check. */
   branch?: string | null;
+  /** `https://host/owner/repo` of the item's repo; null when it has no remote. Always set by the daemon. */
+  repoUrl?: string | null;
+  /** The repo's owner (`Flip-to`), `local` for a repo with no remote, null with no repo. Always set by the daemon. */
+  org?: string | null;
   /** False for a session with no code edits: the UI folds these into "Conversations without code". */
   hasEdits?: boolean;
   firstActivity?: string;
@@ -96,7 +100,7 @@ export const PROOF_STATES = ["none", "fresh", "expired", "failed", "weak", "not_
 export const FLAG_FILTERS = ["thrashing", "unproven_claim", "forgotten", "none"] as const;
 export const SINCE_VALUES = ["24h", "7d", "30d", "all"] as const;
 export const SORT_KEYS = ["activity", "stage", "title", "repo", "flags"] as const;
-export const GROUP_KEYS = ["attention", "repo", "stage", "none"] as const;
+export const GROUP_KEYS = ["attention", "org", "repo", "stage", "none"] as const;
 export const AGE_BUCKETS = ["today", "week", "older"] as const;
 export const MAX_PAGE_SIZE = 100;
 export const DEFAULT_PAGE_SIZE = 25;
@@ -111,6 +115,8 @@ export type AgeBucket = (typeof AGE_BUCKETS)[number];
 
 /** A validated `GET /api/track` query (docs/specs/web-ui.md#api-daemon-to-ui). Every field has a default. */
 export interface TrackQuery {
+  /** Owners, matched case-insensitively. */
+  org: string[];
   repo: string[];
   branch: string[];
   stage: TrackStage[];
@@ -141,6 +147,7 @@ const bad = (k: string): ParsedTrackQuery => ({ ok: false, error: `bad value for
  */
 export function parseTrackQuery(params: URLSearchParams): ParsedTrackQuery {
   const known = new Set([
+    "org",
     "repo",
     "branch",
     "stage",
@@ -185,6 +192,8 @@ export function parseTrackQuery(params: URLSearchParams): ParsedTrackQuery {
     return list.find((l) => l === v) ?? null;
   };
 
+  const org = free("org");
+  if (!org) return bad("org");
   const repo = free("repo");
   if (!repo) return bad("repo");
   const branch = free("branch");
@@ -221,6 +230,7 @@ export function parseTrackQuery(params: URLSearchParams): ParsedTrackQuery {
   return {
     ok: true,
     query: {
+      org,
       repo,
       branch,
       stage,
@@ -274,6 +284,8 @@ export interface TrackGroup {
 export type Counts = Record<string, number>;
 /** Counts per value, each over the items that pass every filter except that dimension's own. */
 export interface TrackFacets {
+  /** Owners, case of the first repo seen. */
+  org: Counts;
   repo: Counts;
   branch: Counts;
   stage: Counts;
@@ -335,4 +347,33 @@ export interface DiagnosticsResponse {
   items: number;
   lastPassAt: string | null;
   schemaVersion: number;
+}
+
+/**
+ * `https://host/owner/repo` from a normalised remote (`host/owner/repo`, optionally followed by
+ * `#<first commit>` as in `repoKey`). Null when it names no host and repo path, so a folder name or
+ * `no-remote` never becomes a link. Only characters a host and a repo path may hold pass.
+ */
+export function repoUrlOf(repo: string | null | undefined): string | null {
+  const path = (repo ?? "").split("#")[0] ?? "";
+  const m = /^([a-z0-9-]+(?:\.[a-z0-9-]+)+)\/([\w.-]+(?:\/[\w.-]+)+)$/i.exec(path);
+  return m ? `https://${m[1]}/${m[2]}` : null;
+}
+
+/** The project name a person reads: `owner/repo` for a remote, the folder name otherwise, null for none. */
+export function projectNameOf(repo: string | null | undefined): string | null {
+  const path = (repo ?? "").split("#")[0] ?? "";
+  if (path === "" || path === "no-remote") return null;
+  return repoUrlOf(path) ? path.slice(path.indexOf("/") + 1) : path;
+}
+
+/**
+ * The organisation of a stored repo (`host/Owner/repo`): its owner, case kept; `local` for a repo with no
+ * remote (a folder name); null when the item has no repo. Compare it case-insensitively.
+ */
+export function orgOf(repo: string | null | undefined): string | null {
+  const path = (repo ?? "").split("#")[0] ?? "";
+  if (path === "") return null;
+  const m = /^[a-z0-9-]+(?:\.[a-z0-9-]+)+\/([\w.-]+)\/[\w.-]+(?:\/[\w.-]+)*$/i.exec(path);
+  return m?.[1] ?? "local";
 }
