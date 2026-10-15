@@ -267,7 +267,8 @@ export function runStagePass(store: Store, opts: StagePassOptions = {}, now = ne
     const file = lastEditedFile(store, c.key);
     if (file) retitle(c.key, `${c.title} · edited ${file}`);
   }
-  for (const c of collisions()) retitle(c.key, `${c.title} · #${c.key.replace("session:", "").slice(0, 4)}`);
+  for (const c of collisions())
+    retitle(c.key, `${c.title} · #${c.key.startsWith("session:") ? c.key.slice(8, 12) : c.key.slice(-4)}`);
   store.db.prepare("DELETE FROM item_repos WHERE item_key NOT IN (SELECT item_key FROM work_items)").run();
   return { items: items.length, proofs: proofCount };
 }
